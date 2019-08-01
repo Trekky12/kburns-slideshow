@@ -1,0 +1,21 @@
+{
+    "ffmpeg": "ffmpeg.exe",
+    "ffprobe": "ffprobe.exe",
+
+    "IMAGE_EXTENSIONS": ["jpg", "jpeg", "png"],
+    "VIDEO_EXTENSIONS": ["mp4", "mpg", "avi"],
+    "AUDIO_EXTENSIONS": ["mp3", "ogg", "flac"],
+
+    "output_width": 1280,
+    "output_height": 800,
+    "slide_duration": 4,
+    "fade_duration": 1,
+    "fps": 60,
+    "zoom_rate": 0.1,
+    "zoom_direction": "random",
+    "scale_mode": "auto",
+    "loopable": false,
+    "overwrite": false,
+    "generate_temp": false,
+    "delete_temp": false
+}
