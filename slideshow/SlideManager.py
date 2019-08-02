@@ -17,9 +17,9 @@ class SlideManager:
         for position, file in enumerate(input_files):
             extension = file.split(".")[-1]
             slide = None
-            if extension in self.config["VIDEO_EXTENSIONS"]:
+            if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
                 slide = VideoSlide(file, position, self.config["ffprobe"], self.config["output_width"], self.config["output_height"])
-            elif extension in self.config["IMAGE_EXTENSIONS"]:
+            elif extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                 slide = ImageSlide(file, position, self.config["output_width"], self.config["output_height"], self.config["slide_duration"], self.config["fade_duration"], self.config["zoom_direction"], self.config["scale_mode"], self.config["zoom_rate"], self.config["fps"] )
             
             if slide is not None:
@@ -27,7 +27,7 @@ class SlideManager:
         
         for file in audio_files:
             extension = file.split(".")[-1]
-            if extension in self.config["AUDIO_EXTENSIONS"]:
+            if extension.lower() in [e.lower() for e in self.config["AUDIO_EXTENSIONS"]]:
                 audio = AudioFile(file, self.config["ffprobe"] )
                 self.background_tracks.append(audio)
 
