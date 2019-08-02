@@ -11,7 +11,7 @@ class CLI:
         
         self.parser = argparse.ArgumentParser()
 
-        self.parser.add_argument("-s", "--size", metavar='WIDTHxHEIGHT', help="Output width (default: %sx%s)" %(self.config["output_width"], self.config["output_height"]))
+        self.parser.add_argument("-S", "--size", metavar='WIDTHxHEIGHT', help="Output width (default: %sx%s)" %(self.config["output_width"], self.config["output_height"]))
         self.parser.add_argument("-sd", "--slide-duration", metavar='DURATION', type=float, help="Slide duration (seconds) (default: %s)" %(self.config["slide_duration"]))
         self.parser.add_argument("-fd", "--fade-duration", metavar='DURATION', type=float, help="Fade duration (seconds) (default: %s)" %(self.config["fade_duration"]))
         self.parser.add_argument("-fps", "--fps", metavar='FPS', type=int, help="Output framerate (frames per second) (default: %s)" %(self.config["fps"]))
@@ -31,6 +31,9 @@ class CLI:
         self.parser.add_argument("-a", "--audio", metavar='FILE', help="One or more background audio tracks", nargs='*')
         
         self.parser.add_argument("input_files", nargs='*')
+        
+        self.parser.add_argument("-s", "--save", metavar='FILE', help="save settings")
+        
         self.parser.add_argument("output_file")
         
         
@@ -68,5 +71,7 @@ class CLI:
         audio = []
         if args.audio is not None:
             audio = args.audio    
+            
+        self.config["save"] = args.save
         
         return self.config, args.input_files, audio, args.output_file

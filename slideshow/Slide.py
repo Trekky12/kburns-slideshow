@@ -16,4 +16,9 @@ class Slide:
         
     def getOverlay(self, isLast):
         return
+        
+    def getObject(self):
+        return {
+            "file": self.file
+        }
     

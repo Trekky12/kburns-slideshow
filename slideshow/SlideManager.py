@@ -1,5 +1,6 @@
 import subprocess
 import os
+import json
 from .Slide import Slide
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
@@ -164,6 +165,9 @@ class SlideManager:
         
     def createVideo(self, output_file):
     
+        if self.config["save"] is not None: 
+            self.saveConfig(self.config["save"])
+    
         filter_chains = self.getVideoFilterChains() + self.getAudioFilterChains()  
     
         # Run ffmpeg
@@ -191,4 +195,26 @@ class SlideManager:
         
         if self.config["delete_temp"]:
             for temp in self.tempfiles:
-                os.remove(temp) 
+                os.remove(temp)
+                
+    def saveConfig(self, filename):
+        content = {
+            "config": {
+                "output_width": self.config["output_width"],
+                "output_height": self.config["output_height"],
+                "slide_duration": self.config["slide_duration"],
+                "fade_duration": self.config["fade_duration"],
+                "fps": self.config["fps"],
+                "zoom_rate": self.config["zoom_rate"],
+                "zoom_direction": self.config["zoom_direction"],
+                "scale_mode": self.config["scale_mode"],
+                "loopable": self.config["loopable"],
+                "overwrite": self.config["overwrite"],
+                "generate_temp": self.config["generate_temp"],
+                "delete_temp": self.config["delete_temp"]
+            }, 
+            "slides": [slide.getObject() for slide in self.slides],
+            "audio":  [track.getObject() for track in self.getBackgroundTracks()]
+        }
+        with open('%s' %(filename), 'w') as file:
+            json.dump(content, file, indent=4)

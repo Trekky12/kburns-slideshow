@@ -7,7 +7,7 @@ class ImageSlide(Slide):
     def __init__(self, file, position, output_width, output_height, duration, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60):
         super().__init__(file, position, output_width, output_height, duration, fade_duration)
         
-        im = Image.open(file)
+        im = Image.open(self.file)
         width, height = im.size
         ratio = width / height
         
@@ -145,3 +145,13 @@ class ImageSlide(Slide):
         
     def getOverlay(self, isLast):
         return "overlay%s" %("=format=yuv420" if isLast else "")
+        
+    def getObject(self):
+        object = super().getObject()
+        object["slide_duration"] = self.duration
+        object["fade_duration"] = self.fade_duration
+        object["zoom_rate"] = self.zoom_rate
+        object["zoom_direction"] = "%s-%s-%s" %(self.direction_x, self.direction_y, self.direction_z)
+        
+        return object
+        
