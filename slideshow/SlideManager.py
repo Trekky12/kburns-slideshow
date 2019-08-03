@@ -172,10 +172,8 @@ class SlideManager:
         # background-tracks
         music_input_offset = len(self.getSlides())
         background_audio = ["[%s:a]" %(i+music_input_offset) for i, track in enumerate(self.background_tracks)]
+        
         if len(background_audio) > 0:
-            # merge background tracks
-            filter_chains.append("%s concat=n=%s:v=0:a=1[background_audio]" %("".join(background_audio), len(self.background_tracks)))
-
             # extract background audio sections between videos
             background_sections = []
             # is it starting with a video or an image?
@@ -193,17 +191,18 @@ class SlideManager:
             if section_start_slide is not None:
                 background_sections.append({ "start": self.getOffset(section_start_slide.position), "fade_in": section_start_slide.fade_duration, "end": self.getTotalDuration()-self.getSlides()[-1].fade_duration, "fade_out": self.getSlides()[-1].fade_duration })
                
-               
-            # split the background tracks in the necessary sections
-            filter_chains.append("[background_audio]asplit=%s %s" %(len(background_sections), "".join(["[b%s]" %(i) for i, section in enumerate(background_sections)])))
+            if len(background_sections) > 0:                
+                # merge background tracks
+                filter_chains.append("%s concat=n=%s:v=0:a=1[background_audio]" %("".join(background_audio), len(self.background_tracks)))
+            
+                # split the background tracks in the necessary sections
+                filter_chains.append("[background_audio]asplit=%s %s" %(len(background_sections), "".join(["[b%s]" %(i) for i, section in enumerate(background_sections)])))
 
-            # fade background sections in/out
-            for i, section in enumerate(background_sections):
-                audio_tracks.append("[b%sf]" %(i))
-                filter_chains.append("[b%s]afade=t=in:st=%s:d=%s,afade=t=out:st=%s:d=%s[b%sf]" %(i, section["start"], section["fade_in"], section["end"], section["fade_out"], i))
-
+                # fade background sections in/out
+                for i, section in enumerate(background_sections):
+                    audio_tracks.append("[b%sf]" %(i))
+                    filter_chains.append("[b%s]afade=t=in:st=%s:d=%s,afade=t=out:st=%s:d=%s[b%sf]" %(i, section["start"], section["fade_in"], section["end"], section["fade_out"], i))
     
-
         # video audio and background sections should be merged     
         if len(audio_tracks) > 0:
             filter_chains.append("%s amix=inputs=%s[aout]" %("".join(audio_tracks), len(audio_tracks))) 
