@@ -216,6 +216,10 @@ class SlideManager:
             self.saveConfig(self.config["save"])
     
         filter_chains = self.getVideoFilterChains() + self.getAudioFilterChains()  
+        
+        temp_filter_script = "temp-kburns-video-script.txt"
+        with open('%s' %(temp_filter_script), 'w') as file:
+            file.write(";".join(filter_chains))
     
         # Run ffmpeg
         cmd = [ self.config["ffmpeg"], "-hide_banner", 
@@ -224,7 +228,8 @@ class SlideManager:
             " ".join(["-i \"%s\" " %(slide.file) for slide in self.getSlides()]),
             " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
             # filters
-            "-filter_complex \"%s\"" % (";".join(filter_chains)),
+            #"-filter_complex \"%s\"" % (";".join(filter_chains)),
+            "-filter_complex_script \"%s\"" % (temp_filter_script),
             # define duration
             # if video should be loopable, skip the start fade-in (-ss) and the end fade-out (video is stopped after the fade-in of the last image which is the same as the first-image)
             "-ss %s -t %s" %(self.getSlides()[0].fade_duration, self.getOffset(-1)) if self.config["loopable"] else "-t %s" %(self.getTotalDuration()),
@@ -243,6 +248,8 @@ class SlideManager:
         if self.config["delete_temp"]:
             for temp in self.tempfiles:
                 os.remove(temp)
+                
+        os.remove(temp_filter_script)
                 
     def saveConfig(self, filename):
         content = {
