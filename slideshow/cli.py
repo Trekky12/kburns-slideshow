@@ -30,7 +30,8 @@ class CLI:
 
         self.parser.add_argument("-a", "--audio", metavar='FILE', help="One or more background audio tracks", nargs='*')
         
-        self.parser.add_argument("input_files", nargs='*')
+        self.parser.add_argument("-i", "--input-files", metavar='FILE', help="One or more input files", nargs='+')
+        self.parser.add_argument("-f", "--file-list", metavar='LIST',)
         
         self.parser.add_argument("-s", "--save", metavar='FILE', help="save settings")
         
@@ -39,6 +40,34 @@ class CLI:
         
     def parse(self):
         args = self.parser.parse_args()
+            
+        input_files = []
+        audio_files = []
+        
+        if args.input_files is not None:
+            input_files = args.input_files
+        
+        elif args.file_list is not None:
+        
+            try:
+                with open(args.file_list) as f:
+                    file_content = json.load(f)    
+                    
+                    # overwrite config with saved config
+                    if "config" in file_content:
+                        self.config.update(file_content["config"])
+                    
+                    # get slides from loaded file
+                    if "slides" in file_content:
+                        input_files = file_content["slides"]
+                    
+                    if "audio" in file_content:
+                        audio_files = file_content["audio"]
+            except:
+                self.parser.error("file must be a json file")
+        
+        if len(input_files) == 0:
+            self.parser.error("no input files specified")
             
         if args.size is not None:
             size = args.size.split("x")
@@ -63,15 +92,21 @@ class CLI:
         if args.scale_mode is not None:
             self.config["scale_mode"] = args.scale_mode
             
-        self.config["loopable"] = args.loopable
-        self.config["overwrite"] = args.y
-        self.config["generate_temp"] = args.temp
-        self.config["delete_temp"] = args.delete_temp
-        
-        audio = []
-        if args.audio is not None:
-            audio = args.audio    
+        if args.loopable is True:
+            self.config["loopable"] = True
             
+        if args.y is True:
+            self.config["overwrite"] = True
+            
+        if args.temp is True:
+            self.config["generate_temp"] = True
+            
+        if args.delete_temp is True:
+            self.config["delete_temp"] = True
+        
+        if args.audio is not None:
+            audio_files.extend(args.audio)
+        
         self.config["save"] = args.save
         
-        return self.config, args.input_files, audio, args.output_file
+        return self.config, input_files, audio_files, args.output_file

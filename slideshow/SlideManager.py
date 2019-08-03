@@ -15,20 +15,67 @@ class SlideManager:
         self.tempfiles = []
         
         for position, file in enumerate(input_files):
-            extension = file.split(".")[-1]
+        
             slide = None
-            if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                slide = VideoSlide(file, position, self.config["ffprobe"], self.config["output_width"], self.config["output_height"])
-            elif extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                slide = ImageSlide(file, position, self.config["output_width"], self.config["output_height"], self.config["slide_duration"], self.config["fade_duration"], self.config["zoom_direction"], self.config["scale_mode"], self.config["zoom_rate"], self.config["fps"] )
+            
+            filename = file
+            if isinstance(file, dict) and "file" in file:
+                filename = file["file"]
+             
+            if isinstance(filename, str):
+            
+                # use parameters of saved file
+                output_width = self.config["output_width"]
+                if isinstance(file, dict) and "output_width" in file:
+                    output_width = file["output_width"]
+                
+                output_height = self.config["output_height"]
+                if isinstance(file, dict) and "output_height" in file:
+                    output_height = file["output_height"]
+                    
+                slide_duration = self.config["slide_duration"]
+                if isinstance(file, dict) and "slide_duration" in file:
+                    slide_duration = file["slide_duration"]
+                    
+                fade_duration = self.config["fade_duration"]
+                if isinstance(file, dict) and "fade_duration" in file:
+                    fade_duration = file["fade_duration"]
+                    
+                zoom_direction = self.config["zoom_direction"]
+                if isinstance(file, dict) and "zoom_direction" in file:
+                    zoom_direction = file["zoom_direction"]
+                    
+                scale_mode = self.config["scale_mode"]
+                if isinstance(file, dict) and "scale_mode" in file:
+                    scale_mode = file["scale_mode"]
+                    
+                zoom_rate = self.config["zoom_rate"]
+                if isinstance(file, dict) and "zoom_rate" in file:
+                    zoom_rate = file["zoom_rate"]
+                    
+                fps = self.config["fps"]
+                if isinstance(file, dict) and "fps" in file:
+                    fps = file["fps"]
+                
+                extension = filename.split(".")[-1]
+                
+                if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
+                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height)
+                if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
+                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, fade_duration, zoom_direction, scale_mode, zoom_rate, fps )
             
             if slide is not None:
                 self.slides.append(slide)
         
         for file in audio_files:
-            extension = file.split(".")[-1]
+        
+            filename = file
+            if isinstance(file, dict) and "file" in file:
+                filename = file["file"]
+        
+            extension = filename.split(".")[-1]
             if extension.lower() in [e.lower() for e in self.config["AUDIO_EXTENSIONS"]]:
-                audio = AudioFile(file, self.config["ffprobe"] )
+                audio = AudioFile(filename, self.config["ffprobe"] )
                 self.background_tracks.append(audio)
 
     def getVideos(self):
