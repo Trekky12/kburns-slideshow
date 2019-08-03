@@ -60,7 +60,7 @@ class SlideManager:
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height)
+                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                     slide = ImageSlide(filename, position, output_width, output_height, slide_duration, fade_duration, zoom_direction, scale_mode, zoom_rate, fps )
             
@@ -107,7 +107,7 @@ class SlideManager:
                 tempvideo = "temp-kburns-%s.mp4" %(i)
                 cmd = [
                     self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
-                    "-i", slide.file,
+                    "-i \"%s\" " % (slide.file),
                     "-filter_complex", ",".join(slide.getFilter()),
                     "-crf", "0" ,"-preset", "ultrafast", "-tune", "stillimage",
                     "-c:v", "libx264", tempvideo
@@ -221,8 +221,8 @@ class SlideManager:
         cmd = [ self.config["ffmpeg"], "-hide_banner", 
             "-y" if self.config["overwrite"] else "",
             # slides
-            " ".join(["-i %s" %(slide.file) for slide in self.getSlides()]),
-            " ".join(["-i %s" %(track.file) for track in self.getBackgroundTracks()]),
+            " ".join(["-i \"%s\" " %(slide.file) for slide in self.getSlides()]),
+            " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
             # filters
             "-filter_complex \"%s\"" % (";".join(filter_chains)),
             # define duration
