@@ -18,7 +18,7 @@ logger.addHandler(handler)
 if __name__ == "__main__":
 
     config = {}
-    with open('slideshow/config.json') as config_file:
+    with open(os.path.dirname(os.path.realpath(__file__))+'/config.json') as config_file:
         config = json.load(config_file)    
     
     command_line = cli.CLI(config)
