@@ -1,5 +1,5 @@
 from .Slide import Slide
-from PIL import Image
+from PIL import Image, ExifTags
 import random
 
 class ImageSlide(Slide):
@@ -8,6 +8,31 @@ class ImageSlide(Slide):
         super().__init__(file, position, output_width, output_height, duration, fade_duration)
         
         im = Image.open(self.file)
+        
+        '''
+        iPhone images are rotated, so rotate them according to the EXIF information
+        https://stackoverflow.com/questions/37780729/ffmpeg-rotates-images
+        https://stackoverflow.com/questions/13872331/rotating-an-image-with-orientation-specified-in-exif-using-python-without-pil-in#26928142
+        '''
+        try:
+            for orientation in ExifTags.TAGS.keys():
+                if ExifTags.TAGS[orientation]=='Orientation':
+                    break
+            exif=dict(im._getexif().items())
+
+            if exif[orientation] == 3:
+                im = im.rotate(180, expand=True)
+            elif exif[orientation] == 6:
+                im = im.rotate(270, expand=True)
+            elif exif[orientation] == 8:
+                im = im.rotate(90, expand=True)
+            im.save(self.file)
+            im.close()
+
+        except (AttributeError, KeyError, IndexError):
+            # cases: image don't have getexif
+            pass
+        
         width, height = im.size
         ratio = width / height
         
