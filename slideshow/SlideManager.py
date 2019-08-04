@@ -2,10 +2,13 @@ import subprocess
 import os
 import json
 import sys
+import logging
 from .Slide import Slide
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
 from .AudioFile import AudioFile
+
+logger = logging.getLogger("kburns-slideshow")
 
 class SlideManager:
 
@@ -15,8 +18,11 @@ class SlideManager:
         self.config = config
         self.tempfiles = []
         
+        logger.debug("Init SlideManager")
         for position, file in enumerate(input_files):
-        
+            
+            logger.debug("Slide: %d, File: %s", position, file)
+            
             slide = None
             
             filename = file
@@ -67,9 +73,12 @@ class SlideManager:
             
             if slide is not None:
                 self.slides.append(slide)
+                logger.debug("added valid video/image file")
         
         for file in audio_files:
-        
+            
+            logger.debug("Audiofile: %s", file)
+            
             filename = file
             if isinstance(file, dict) and "file" in file:
                 filename = file["file"]
@@ -78,6 +87,7 @@ class SlideManager:
             if extension.lower() in [e.lower() for e in self.config["AUDIO_EXTENSIONS"]]:
                 audio = AudioFile(filename, self.config["ffprobe"] )
                 self.background_tracks.append(audio)
+                logger.debug("added valid audio file")
 
     def getVideos(self):
         return [slide for slide in self.getSlides() if isinstance(slide, VideoSlide)]
@@ -101,6 +111,9 @@ class SlideManager:
         return sum([slide.duration - slide.fade_duration for slide in self.getSlides()[:idx]])
         
     def getVideoFilterChains(self):
+    
+        logger.debug("get Video Filter Chains")
+        
         # Base black image
         filter_chains = [
           "color=c=black:r=%s:size=%sx%s:d=%s[black]" %(self.config["fps"], self.config["output_width"], self.config["output_height"], self.getTotalDuration())
@@ -160,6 +173,9 @@ class SlideManager:
         return len(self.background_tracks)> 0 or len([video for video in self.getVideos() if video.has_audio]) > 0
         
     def getAudioFilterChains(self):
+    
+        logger.debug("get Audio Filter Chains")
+        
         filter_chains = []
 
         # audio from video slides
@@ -209,20 +225,28 @@ class SlideManager:
                 for i, section in enumerate(background_sections):
                     audio_tracks.append("[b%sf]" %(i))
                     filter_chains.append("[b%s]afade=t=in:st=%s:d=%s,afade=t=out:st=%s:d=%s[b%sf]" %(i, section["start"], section["fade_in"], section["end"], section["fade_out"], i))
+            else:
+                logger.debug("no background section")
+        else:
+            logger.debug("no background music")
     
         # video audio and background sections should be merged     
         if len(audio_tracks) > 0:
             filter_chains.append("%s amix=inputs=%s[aout]" %("".join(audio_tracks), len(audio_tracks))) 
+        else:
+            logger.debug("no audio track")    
         
         return filter_chains
         
     def createVideo(self, output_file):
-    
+        logger.info("Create video %s", output_file)
+        
         # check if it is okay to have a shorter background track
         video_duration = self.getTotalDuration()
         audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
         if len(self.background_tracks)> 0 and audio_duration < video_duration:
             print("Background track is shorter than video length!")
+            logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
             
             if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
                 sys.exit(1)
@@ -258,15 +282,21 @@ class SlideManager:
             output_file
         ]  
 
+        logger.info("FFMPEG started")
         subprocess.call(" ".join(cmd))
+        logger.info("FFMPEG finished")
         
         if self.config["delete_temp"]:
+            logger.info("Delete temporary files")
             for temp in self.tempfiles:
                 os.remove(temp)
-                
+                logger.debug("Delete %s", temp)
+
         os.remove(temp_filter_script)
                 
     def saveConfig(self, filename):
+        logger.info("Save config to %s", filename)
+        
         content = {
             "config": {
                 "output_width": self.config["output_width"],

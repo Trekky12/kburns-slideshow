@@ -3,11 +3,16 @@ import itertools
 import json
 import os
 import sys
+import logging
+
+logger = logging.getLogger("kburns-slideshow")
 
 class CLI:
 
     def __init__(self, config):
         self.config = config
+        
+        logger.debug("Init CLI")
         
         self.parser = argparse.ArgumentParser()
 
@@ -46,9 +51,10 @@ class CLI:
         
         if args.input_files is not None:
             input_files = args.input_files
+            logger.debug("Load Files from command line: %s", input_files)
         
         elif args.file_list is not None:
-        
+            logger.debug("Load from file: %s", args.file_list)
             try:
                 with open(args.file_list) as f:
                     file_content = json.load(f)    
@@ -56,57 +62,76 @@ class CLI:
                     # overwrite config with saved config
                     if "config" in file_content:
                         self.config.update(file_content["config"])
+                        logger.debug("overwrite config")
                     
                     # get slides from loaded file
                     if "slides" in file_content:
                         input_files = file_content["slides"]
+                        logger.debug("get slides")
                     
                     if "audio" in file_content:
                         audio_files = file_content["audio"]
+                        logger.debug("get audio")
             except:
-                self.parser.error("file must be a json file")
+                self.parser.error("file must be a JSON file")
+                logger.error("file %s must be a JSON file", args.file_list)
         
         if len(input_files) == 0:
             self.parser.error("no input files specified")
+            logger.error("no input files specified")
             
         if args.size is not None:
             size = args.size.split("x")
             self.config["output_width"] = int(size[0])
             self.config["output_height"] = int(size[1])
+            logger.debug("Set size to %sx%s", int(size[0]), int(size[1]))
          
         if args.slide_duration is not None: 
             self.config["slide_duration"] = args.slide_duration
+            logger.debug("Set slide duration to %s", args.slide_duration)
 
         if args.fade_duration is not None: 
-            self.config["fade_duration"] = args.fade_duration    
+            self.config["fade_duration"] = args.fade_duration
+            logger.debug("Set fade duration to %s", args.fade_duration)
             
         if args.fps is not None: 
             self.config["fps"] = args.fps    
+            logger.debug("Set fps to %s", args.fps)
 
         if args.zoom_direction is not None:
-            self.config["zoom_direction"] = args.zoom_direction       
+            self.config["zoom_direction"] = args.zoom_direction
+            logger.debug("Set zoom direction to %s", args.zoom_direction)
             
         if args.zoom_rate is not None:
-            self.config["zoom_rate"] = args.zoom_rate    
+            self.config["zoom_rate"] = args.zoom_rate
+            logger.debug("Set zoom rate to %s", args.zoom_rate)
             
         if args.scale_mode is not None:
             self.config["scale_mode"] = args.scale_mode
+            logger.debug("Set scale mode to %s", args.scale_mode)
             
         if args.loopable is True:
             self.config["loopable"] = True
+            logger.debug("Set loopable")
             
         if args.y is True:
             self.config["overwrite"] = True
+            logger.debug("Set overwrite")
             
         if args.temp is True:
             self.config["generate_temp"] = True
+            logger.debug("Set generate temporary files")
             
         if args.delete_temp is True:
             self.config["delete_temp"] = True
+            logger.debug("Set delete temporary files")
         
         if args.audio is not None:
             audio_files.extend(args.audio)
+            logger.debug("Load audio files from command line: %s", args.audio)
         
         self.config["save"] = args.save
+        
+        logger.debug("Save config: %s", args.save)
         
         return self.config, input_files, audio_files, args.output_file
