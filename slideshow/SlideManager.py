@@ -1,6 +1,7 @@
 import subprocess
 import os
 import json
+import sys
 from .Slide import Slide
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
@@ -89,6 +90,12 @@ class SlideManager:
         
     def getTotalDuration(self):
         return sum([slide.duration - slide.fade_duration for slide in self.getSlides()])+self.getSlides()[-1].fade_duration
+    
+    def getVideoAudioDuration(self):
+        return sum([slide.duration for slide in self.getVideos() if slide.has_audio])
+    
+    def getAudioDuration(self):
+        return sum([slide.duration for slide in self.getBackgroundTracks()])
             
     def getOffset(self, idx):
         return sum([slide.duration - slide.fade_duration for slide in self.getSlides()[:idx]])
@@ -210,6 +217,15 @@ class SlideManager:
         return filter_chains
         
     def createVideo(self, output_file):
+    
+        # check if it is okay to have a shorter background track
+        video_duration = self.getTotalDuration()
+        audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
+        if len(self.background_tracks)> 0 and audio_duration < video_duration:
+            print("Background track is shorter than video length!")
+            
+            if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
+                sys.exit(1)
     
         if self.config["save"] is not None: 
             self.saveConfig(self.config["save"])
