@@ -238,6 +238,93 @@ class SlideManager:
         
         return filter_chains
         
+    def getDurationsFromAudio(self):
+        
+        logger.debug("get Durations from Audio Files")
+        
+        onsets = []
+        offset = 0
+        for track in self.getBackgroundTracks():
+            # add beginning of track
+            onsets.append(0+offset)
+            # get onsets of track
+            onsets = onsets + [float(onset)+offset for onset in track.getOnsets(self.config["aubio"])]
+            # next track has the offsets after the current
+            offset = offset + track.duration
+        
+        logger.debug("Timestamps: %s", onsets)
+        
+        durations = []
+        last_timestamp = 0;
+        for timestamp in onsets:
+            diff = timestamp - last_timestamp
+            if diff > 0:
+                durations.append(diff)
+                last_timestamp = timestamp
+        
+        return durations
+        
+    def adjustDurationsFromAudio(self):
+        
+        logger.debug("adjust slide durations")
+        
+        durations = self.getDurationsFromAudio()
+        
+        logger.debug("Durations: %s", durations)
+        logger.debug("Slide durations (before): %s", [slide.duration for slide in self.getSlides()])
+        
+        # change slide durations
+        min_duration = self.config["slide_duration_min"]
+        duration_idx = 0
+        for i, slide in enumerate(self.getSlides()):
+            # is there a duration available?
+            if not slide.has_audio and duration_idx < len(durations):
+            
+                duration = durations[duration_idx]
+
+                if isinstance(slide, VideoSlide):
+                    # video is longer than the duration to the next onset => skip to matching onset
+                    while slide.duration > duration: 
+                        if (duration_idx+1) < len(durations):
+                            duration = duration + durations[duration_idx+1]
+                            duration_idx = duration_idx+1
+                        else:
+                            duration = slide.duration
+
+                    # next onset is after the video
+                    if duration > slide.duration:
+                        durations[duration_idx] = duration-slide.duration
+
+                else:
+                    # the duration to the next onset is to short, 
+                    # accumulate the durations until the minimum duration is reached
+                    while duration < min_duration:
+                        # is the music long enough to append something
+                        if (duration_idx+1) < len(durations):
+                            duration = duration + durations[duration_idx+1]
+                            duration_idx = duration_idx+1
+                        # there is no more to add, so change it to the slide duration
+                        else:
+                            duration = slide.duration
+                    
+                    # the next onset is earlier than the initial slide duration => set the new duration
+                    if duration < slide.duration:
+                        slide.duration = duration
+                        duration_idx = duration_idx+1
+                    
+                    # next onset is later than the initial slide duration, so don't change the slide duration 
+                    # but subtract the slide duration from the expected duration
+                    # so the next slide duration is considering this
+                    else:
+                        durations[duration_idx] = duration-slide.duration
+
+        
+        logger.debug("Slide durations (after): %s", [slide.duration for slide in self.getSlides()])
+        
+        # onsets
+        slide_timestamps = [ sum([slide.duration for slide in self.getSlides()[:i+1] if not slide.has_audio]) for i, s in enumerate(self.getSlides()) if not s.has_audio ]
+        logger.debug("Onsets of slides: %s", slide_timestamps)
+        
     def createVideo(self, output_file):
         logger.info("Create video %s", output_file)
         

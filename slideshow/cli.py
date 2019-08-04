@@ -18,6 +18,7 @@ class CLI:
 
         self.parser.add_argument("-S", "--size", metavar='WIDTHxHEIGHT', help="Output width (default: %sx%s)" %(self.config["output_width"], self.config["output_height"]))
         self.parser.add_argument("-sd", "--slide-duration", metavar='DURATION', type=float, help="Slide duration (seconds) (default: %s)" %(self.config["slide_duration"]))
+        self.parser.add_argument("-sdm", "--slide-duration-min", metavar='DURATION', type=float, help="Slide duration minimum (seconds) (default: %s)" %(self.config["slide_duration_min"]))
         self.parser.add_argument("-fd", "--fade-duration", metavar='DURATION', type=float, help="Fade duration (seconds) (default: %s)" %(self.config["fade_duration"]))
         self.parser.add_argument("-fps", "--fps", metavar='FPS', type=int, help="Output framerate (frames per second) (default: %s)" %(self.config["fps"]))
 
@@ -89,6 +90,10 @@ class CLI:
         if args.slide_duration is not None: 
             self.config["slide_duration"] = args.slide_duration
             logger.debug("Set slide duration to %s", args.slide_duration)
+            
+        if args.slide_duration_min is not None: 
+            self.config["slide_duration_min"] = args.slide_duration_min
+            logger.debug("Set min slide duration to %s", args.slide_duration_min)
 
         if args.fade_duration is not None: 
             self.config["fade_duration"] = args.fade_duration

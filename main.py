@@ -26,4 +26,6 @@ if __name__ == "__main__":
 
     sm = SlideManager(config, input_files, audio_files)
 
+    sm.adjustDurationsFromAudio()
+
     sm.createVideo(output_file)
