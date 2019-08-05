@@ -31,18 +31,18 @@ class SlideManager:
              
             if isinstance(filename, str):
             
-                # use parameters of saved file
                 output_width = self.config["output_width"]
-                if isinstance(file, dict) and "output_width" in file:
-                    output_width = file["output_width"]
-                
                 output_height = self.config["output_height"]
-                if isinstance(file, dict) and "output_height" in file:
-                    output_height = file["output_height"]
+                fps = self.config["fps"]
                     
+                # use parameters of saved file
                 slide_duration = self.config["slide_duration"]
                 if isinstance(file, dict) and "slide_duration" in file:
                     slide_duration = file["slide_duration"]
+                    
+                slide_duration_min = self.config["slide_duration_min"]
+                if isinstance(file, dict) and "slide_duration_min" in file:
+                    slide_duration_min = file["slide_duration_min"]
                     
                 fade_duration = self.config["fade_duration"]
                 if isinstance(file, dict) and "fade_duration" in file:
@@ -52,24 +52,20 @@ class SlideManager:
                 if isinstance(file, dict) and "zoom_direction" in file:
                     zoom_direction = file["zoom_direction"]
                     
-                scale_mode = self.config["scale_mode"]
-                if isinstance(file, dict) and "scale_mode" in file:
-                    scale_mode = file["scale_mode"]
-                    
                 zoom_rate = self.config["zoom_rate"]
                 if isinstance(file, dict) and "zoom_rate" in file:
                     zoom_rate = file["zoom_rate"]
                     
-                fps = self.config["fps"]
-                if isinstance(file, dict) and "fps" in file:
-                    fps = file["fps"]
+                scale_mode = self.config["scale_mode"]
+                if isinstance(file, dict) and "scale_mode" in file:
+                    scale_mode = file["scale_mode"]
                 
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
                     slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, fade_duration, zoom_direction, scale_mode, zoom_rate, fps )
+                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps )
             
             if slide is not None:
                 self.slides.append(slide)
@@ -274,7 +270,6 @@ class SlideManager:
         logger.debug("Slide durations (before): %s", [slide.duration for slide in self.getSlides()])
         
         # change slide durations
-        min_duration = self.config["slide_duration_min"]
         duration_idx = 0
         for i, slide in enumerate(self.getSlides()):
             # is there a duration available?
@@ -298,7 +293,7 @@ class SlideManager:
                 else:
                     # the duration to the next onset is to short, 
                     # accumulate the durations until the minimum duration is reached
-                    while duration < min_duration:
+                    while duration < slide.slide_duration_min:
                         # is the music long enough to append something
                         if (duration_idx+1) < len(durations):
                             duration = duration + durations[duration_idx+1]
