@@ -1,6 +1,6 @@
 class Slide:
 
-    def __init__(self, file, position, output_width, output_height, duration, fade_duration = 1):
+    def __init__(self, file, position, output_width, output_height, duration, fade_duration = 1, title = None):
         self.file = file
         self.position = position
         self.video = False
@@ -9,7 +9,7 @@ class Slide:
         self.output_height = output_height
         self.duration = duration
         self.fade_duration = fade_duration
-
+        self.title = title
         
     def getFilter(self):
         return
@@ -18,7 +18,10 @@ class Slide:
         return
         
     def getObject(self):
-        return {
+        object = {
             "file": self.file
         }
-    
+        if self.title is not None:
+            object["title"] = self.title
+            
+        return object

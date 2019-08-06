@@ -3,6 +3,8 @@ import os
 import json
 import sys
 import logging
+import datetime
+import re
 from .Slide import Slide
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
@@ -60,12 +62,16 @@ class SlideManager:
                 if isinstance(file, dict) and "scale_mode" in file:
                     scale_mode = file["scale_mode"]
                 
+                title = None
+                if isinstance(file, dict) and "title" in file:
+                    title = file["title"]
+                    
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration)
+                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration, title)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps )
+                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title)
             
             if slide is not None:
                 self.slides.append(slide)
@@ -106,7 +112,7 @@ class SlideManager:
     def getOffset(self, idx):
         return sum([slide.duration - slide.fade_duration for slide in self.getSlides()[:idx]])
         
-    def getVideoFilterChains(self):
+    def getVideoFilterChains(self, burnSubtitles = False, srtFilename = ""):
     
         logger.debug("get Video Filter Chains")
         
@@ -125,7 +131,9 @@ class SlideManager:
                     self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
                     "-i \"%s\" " % (slide.file),
                     "-filter_complex", ",".join(slide.getFilter()),
-                    "-crf", "0" ,"-preset", "ultrafast", "-tune", "stillimage",
+                    #"-crf", "0" ,
+                    "-preset", "ultrafast", 
+                    "-tune", "stillimage",
                     "-c:v", "libx264", tempvideo
                 ]
 
@@ -153,12 +161,18 @@ class SlideManager:
 
 
         for i, slide in enumerate(self.getSlides()):
+            isLastSlide = i == len(self.getSlides()) - 1
             input_1 = "ov%s" %(i-1) if i > 0 else "black"
             input_2 = "v%s" %(i)
-            output = "out" if i == len(self.getSlides()) - 1 else "ov%s" %(i)
-            overlay_filter = "%s" %(slide.getOverlay(i == len(self.getSlides()) - 1))
+            output = "out" if isLastSlide else "ov%s" %(i)
+            overlay_filter = "%s" %(slide.getOverlay(isLastSlide))
             
-            filter_chains.append("[%s][%s]%s[%s]" %(input_1, input_2, overlay_filter, output))
+            subtitles = ""
+            # Burn subtitles to last element
+            if burnSubtitles and self.hasSubtitles() and isLastSlide:
+                subtitles = ",subtitles=%s" %(srtFilename)
+                
+            filter_chains.append("[%s][%s]%s%s[%s]" %(input_1, input_2, overlay_filter, subtitles, output))
             
         return filter_chains
         
@@ -167,6 +181,9 @@ class SlideManager:
         
     def hasAudio(self):
         return len(self.background_tracks)> 0 or len([video for video in self.getVideos() if video.has_audio]) > 0
+        
+    def hasSubtitles(self):
+        return len([slide for slide in self.getSlides() if slide.title is not None]) > 0        
         
     def getAudioFilterChains(self):
     
@@ -333,21 +350,33 @@ class SlideManager:
             if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
                 sys.exit(1)
     
+        # Save configuration
         if self.config["save"] is not None: 
             self.saveConfig(self.config["save"])
-    
-        filter_chains = self.getVideoFilterChains() + self.getAudioFilterChains()  
+            
+        # Subtitles
+        burnSubtitles = False if "mkv" in output_file.lower() else True
+        srtInput = len(self.getSlides()) + len(self.getBackgroundTracks())
+        srtFilename = "temp-kburns-subs.srt"
+        if self.hasSubtitles():
+            self.createSubtitles(srtFilename)
+
+        # Filters
+        filter_chains = self.getVideoFilterChains(burnSubtitles, srtFilename) + self.getAudioFilterChains()   
         
         temp_filter_script = "temp-kburns-video-script.txt"
         with open('%s' %(temp_filter_script), 'w') as file:
             file.write(";".join(filter_chains))
     
         # Run ffmpeg
-        cmd = [ self.config["ffmpeg"], "-hide_banner", 
+        cmd = [ self.config["ffmpeg"], 
+            "-hide_banner", 
             "-y" if self.config["overwrite"] else "",
             # slides
             " ".join(["-i \"%s\" " %(slide.file) for slide in self.getSlides()]),
             " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
+            # subtitles (only mkv)
+            "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
             # filters
             #"-filter_complex \"%s\"" % (";".join(filter_chains)),
             "-filter_complex_script \"%s\"" % (temp_filter_script),
@@ -357,10 +386,17 @@ class SlideManager:
             # define output
             "-map", "[out]:v",
             "-c:v", "libx264", 
+            #"-crf", "0" ,
+            "-preset", "ultrafast", 
+            "-tune", "stillimage",
             "-map [aout]:a" if self.hasAudio() else "",
             # audio compression and bitrate
-            "-c:a", "aac" if self.hasAudio() else "",
-            "-b:a", "160k" if self.hasAudio() else "",
+            "-c:a aac" if self.hasAudio() else "",
+            "-b:a 160k" if self.hasAudio() else "",
+            # map subtitles (only mkv)
+            "-map %s:s" %(srtInput) if self.hasSubtitles() and not burnSubtitles else "",
+            # set subtitles enabled (only mkv)
+            "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
             output_file
         ]  
 
@@ -375,6 +411,7 @@ class SlideManager:
                 logger.debug("Delete %s", temp)
 
         os.remove(temp_filter_script)
+        os.remove(srtFilename)
                 
     def saveConfig(self, filename):
         logger.info("Save config to %s", filename)
@@ -399,3 +436,19 @@ class SlideManager:
         }
         with open('%s' %(filename), 'w') as file:
             json.dump(content, file, indent=4)
+            
+    def createSubtitles(self, filename):
+        with open('%s' %(filename), 'w') as file:
+            subtitle_index = 1
+            for i, slide in enumerate(self.slides):
+                if slide.title is not None:
+                    offset = self.getOffset(i)
+                    st = datetime.timedelta(seconds=offset)
+                    srt_start = '%02d:%02d:%02d,%03d' % (st.seconds//3600, (st.seconds//60)%60, st.seconds, st.microseconds / 1000)
+                    st = datetime.timedelta(seconds=offset + slide.duration)
+                    srt_end = '%02d:%02d:%02d,%03d' % (st.seconds//3600, (st.seconds//60)%60, st.seconds, st.microseconds / 1000)
+
+                    file.write("%s\n" %(subtitle_index))
+                    file.write("%s --> %s\n" %(srt_start, srt_end))
+                    file.write("%s\n\n" % (slide.title))
+                    subtitle_index += 1
