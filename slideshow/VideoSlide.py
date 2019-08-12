@@ -3,12 +3,12 @@ import subprocess
 
 class VideoSlide(Slide):
 
-    def __init__(self, file, position, ffprobe, output_width, output_height, fade_duration = 1, title = None):
+    def __init__(self, file, position, ffprobe, output_width, output_height, fade_duration = 1, title = None, fps = 60, overlay_text = None):
         
         duration = subprocess.check_output("%s -show_entries format=duration -v error -of default=noprint_wrappers=1:nokey=1 %s" %(ffprobe, file))
         has_audio = subprocess.check_output("%s -select_streams a -show_entries stream=codec_type -v error -of default=noprint_wrappers=1:nokey=1 %s" %(ffprobe, file))
         
-        super().__init__(file, position, output_width, output_height, float(duration), fade_duration, title)
+        super().__init__(file, position, output_width, output_height, float(duration), fade_duration, title, overlay_text)
         self.video = True
         self.has_audio = "audio" in str(has_audio)
         

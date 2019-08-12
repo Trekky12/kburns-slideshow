@@ -66,12 +66,16 @@ class SlideManager:
                 if isinstance(file, dict) and "title" in file:
                     title = file["title"]
                     
+                overlay_text = None
+                if isinstance(file, dict) and "overlay" in file:
+                    overlay_text = file["overlay"]
+                    
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration, title)
+                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title)
+                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text)
             
             if slide is not None:
                 self.slides.append(slide)
@@ -98,7 +102,9 @@ class SlideManager:
         return [slide for slide in self.getSlides() if isinstance(slide, ImageSlide)]
     
     def getSlides(self):
-        return self.slides + [self.slides[0]] if self.config["loopable"] else self.slides
+        if self.config["loopable"]:
+            return self.slides + [self.slides[0]]
+        return self.slides
         
     def getTotalDuration(self):
         return sum([slide.duration - slide.fade_duration for slide in self.getSlides()])+self.getSlides()[-1].fade_duration
@@ -152,6 +158,21 @@ class SlideManager:
             else:
                 filters.append("tpad=stop_duration=%s:color=black" %(slide.duration))
 
+            # Overlay Text (e.g. Intro)
+            if slide.overlay_text is not None and "title" in slide.overlay_text:
+                duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 1
+                font = ":font='%s'" %(slide.overlay_text["font"]) if "font" in slide.overlay_text else ""
+                font_size = slide.overlay_text["font_size"] if "font_size" in slide.overlay_text else 150
+
+                # fixed text in the middle
+                x = "(main_w/2-text_w/2)"
+                y = "(main_h/2-text_h/2)"
+                
+                filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=fill:enable='between(t,0,%s)'" %(duration))
+                filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: fontcolor=white:y=%s:x=%s:borderw=1%s:enable='between(t,0,%s)'" % (slide.overlay_text["title"], font_size, y, x, font , duration))
+                
+                if isinstance(slide, ImageSlide):
+                    slide.slide_duration_min = slide.slide_duration_min + duration
             # Time
             offset = self.getOffset(i)
             filters.append("setpts=PTS-STARTPTS+%s/TB" %(offset))
