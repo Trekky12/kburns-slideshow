@@ -387,11 +387,17 @@ class SlideManager:
         
         temp_filter_script = "temp-kburns-video-script.txt"
         with open('%s' %(temp_filter_script), 'w') as file:
-            file.write(";".join(filter_chains))
+            file.write(";\n".join(filter_chains))
+            
+        # Get Frames
+        frames = round(sum([slide.duration*self.config["fps"] for slide in self.getSlides()]))
+        print("Number of Frames: %s" %(frames))
     
         # Run ffmpeg
         cmd = [ self.config["ffmpeg"], 
             "-hide_banner", 
+            #"-v quiet",
+            "-stats",
             "-y" if self.config["overwrite"] else "",
             # slides
             " ".join(["-i \"%s\" " %(slide.file) for slide in self.getSlides()]),

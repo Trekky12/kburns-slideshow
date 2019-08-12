@@ -178,7 +178,7 @@ class ImageSlide(Slide):
         object["fade_duration"] = self.fade_duration
         object["zoom_rate"] = self.zoom_rate
         object["zoom_direction"] = "%s-%s-%s" %(self.direction_x, self.direction_y, self.direction_z)
-        object["scale_mode"] = self.scale_mode
+        object["scale_mode"] = self.scale
         
         return object
         
