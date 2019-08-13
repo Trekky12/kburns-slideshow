@@ -163,9 +163,18 @@ class SlideManager:
                 duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 1
                 font = ":font='%s'" %(slide.overlay_text["font"]) if "font" in slide.overlay_text else ""
                 font_size = slide.overlay_text["font_size"] if "font_size" in slide.overlay_text else 150
-
+                transition_x = slide.overlay_text["transition_x"] if "transition_x" in slide.overlay_text else "center"
+                
                 # fixed text in the middle
-                x = "(main_w/2-text_w/2)"
+                if transition_x == "center":
+                    x = "(main_w/2-text_w/2)"
+                # scroll from left to right till the middle of the image in half of the duration time
+                elif transition_x == "left-in":
+                    x = "'if(lte(x,(main_w/2-text_w/2)),t*(main_w/2-text_w/2)/(%s/2),(main_w/2-text_w/2))'" %(duration)
+                # same but from right to left
+                elif transition_x == "right-in":
+                    x = "'if(gte(x,(main_w/2-text_w/2)),main_w-t*(main_w/2-text_w/2)/(%s/2),(main_w/2-text_w/2))'" %(duration)
+
                 y = "(main_h/2-text_h/2)"
                 
                 filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=fill:enable='between(t,0,%s)'" %(duration))
