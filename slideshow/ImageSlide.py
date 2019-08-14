@@ -38,8 +38,6 @@ class ImageSlide(Slide):
         
         self.width = width
         self.height = height
-        
-        self.output_ratio = self.output_width / self.output_height
 
         if scale_mode == "auto":
             self.scale = "pad" if abs(ratio - self.output_ratio) > 0.5 else "crop_center"

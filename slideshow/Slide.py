@@ -11,6 +11,7 @@ class Slide:
         self.fade_duration = fade_duration
         self.title = title
         self.overlay_text = overlay_text
+        self.output_ratio = self.output_width / self.output_height
         
     def getFilter(self):
         return
