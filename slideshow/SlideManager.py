@@ -123,9 +123,7 @@ class SlideManager:
         logger.debug("get Video Filter Chains")
         
         # Base black image
-        filter_chains = [
-          "color=c=black:r=%s:size=%sx%s:d=%s[black]" %(self.config["fps"], self.config["output_width"], self.config["output_height"], self.getTotalDuration())
-        ]
+        filter_chains = []
         
         for i, slide in enumerate(self.getSlides()):
         
@@ -151,13 +149,7 @@ class SlideManager:
                 self.tempfiles.append(tempvideo)
                 filters = []
             
-            # Fade filter   
-            if slide.fade_duration > 0:
-                filters.append("fade=t=in:st=0:d=%s:alpha=%s" %(slide.fade_duration, 0 if i == 0 else 1))
-                filters.append("fade=t=out:st=%s:d=%s:alpha=%s" %(slide.duration -slide.fade_duration, slide.fade_duration, 0 if i == len(self.getSlides()) - 1 else 1))
-            else:
-                filters.append("tpad=stop_duration=%s:color=black" %(slide.duration))
-
+            
             # Overlay Text (e.g. Intro)
             if slide.overlay_text is not None and "title" in slide.overlay_text:
                 duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 1
@@ -183,26 +175,25 @@ class SlideManager:
                 if isinstance(slide, ImageSlide):
                     slide.slide_duration_min = slide.slide_duration_min + duration
             # Time
-            offset = self.getOffset(i)
-            filters.append("setpts=PTS-STARTPTS+%s/TB" %(offset))
-
+            filters.append("setpts=PTS-STARTPTS")
+            
+            # while scaling the SAR is changed as well, so we need to reset it here:
+            # see https://trac.ffmpeg.org/ticket/1079#comment:2
+            # see https://ffmpeg.org/ffmpeg-filters.html#scale-1 
+            # The scale filter forces the output display aspect ratio to be the same 
+            # of the input, by changing the output sample aspect ratio. 
+            filters.append("setsar=1")
+            
             # All together now
             filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "[v%s]" %(i)) 
-
-
-        for i, slide in enumerate(self.getSlides()):
-            isLastSlide = i == len(self.getSlides()) - 1
-            input_1 = "ov%s" %(i-1) if i > 0 else "black"
-            input_2 = "v%s" %(i)
-            output = "out" if isLastSlide else "ov%s" %(i)
-            overlay_filter = "%s" %(slide.getOverlay(isLastSlide))
+        
+        
+        subtitles = ""
+        # Burn subtitles to last element
+        if burnSubtitles and self.hasSubtitles():
+            subtitles = ",subtitles=%s" %(srtFilename)
             
-            subtitles = ""
-            # Burn subtitles to last element
-            if burnSubtitles and self.hasSubtitles() and isLastSlide:
-                subtitles = ",subtitles=%s" %(srtFilename)
-                
-            filter_chains.append("[%s][%s]%s%s[%s]" %(input_1, input_2, overlay_filter, subtitles, output))
+        filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(["[v%s]" %(i) for i, slide in enumerate(self.getSlides())]), len(self.getSlides()), subtitles))
             
         return filter_chains
         
