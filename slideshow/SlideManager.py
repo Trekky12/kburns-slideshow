@@ -118,6 +118,12 @@ class SlideManager:
     def getOffset(self, idx):
         return sum([slide.duration - slide.fade_duration for slide in self.getSlides()[:idx]])
         
+    def getSlideFadeDuration(self, idx):
+        slide = self.getSlides()[idx]
+        if slide.fade_duration*2 <= slide.duration:
+            return slide.fade_duration
+        return 0
+        
     def getVideoFilterChains(self, burnSubtitles = False, srtFilename = ""):
     
         logger.debug("get Video Filter Chains")
@@ -174,6 +180,7 @@ class SlideManager:
                 
                 if isinstance(slide, ImageSlide):
                     slide.slide_duration_min = slide.slide_duration_min + duration
+            
             # Time
             filters.append("setpts=PTS-STARTPTS")
             
@@ -184,16 +191,32 @@ class SlideManager:
             # of the input, by changing the output sample aspect ratio. 
             filters.append("setsar=1")
             
-            # All together now
-            filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "[v%s]" %(i)) 
-        
-        
+            # split video in start, main, end sections
+            splits = 3
+            filters.append("split=%s" %(splits))
+            filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout%s]" %(i, s+1) for s in range(splits)])) 
+            
+            # get fade in duration from previous slides fade duration
+            fade_in_end = self.getSlideFadeDuration(i-1) if i > 0 else 0
+            fade_out_start = slide.duration - self.getSlideFadeDuration(i)
+            
+            filter_chains.append("[v%sout1]trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
+            filter_chains.append("[v%sout2]trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
+            filter_chains.append("[v%sout3]trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
+
         subtitles = ""
         # Burn subtitles to last element
         if burnSubtitles and self.hasSubtitles():
             subtitles = ",subtitles=%s" %(srtFilename)
             
-        filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(["[v%s]" %(i) for i, slide in enumerate(self.getSlides())]), len(self.getSlides()), subtitles))
+        # Concat videos
+        videos = []
+        for i, slide in enumerate(self.getSlides()):
+            videos.append("[v%sstart]" %(i))
+            videos.append("[v%smain]" %(i))
+            videos.append("[v%send]" %(i))
+
+        filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(videos), len(videos), subtitles))
             
         return filter_chains
         
