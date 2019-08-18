@@ -212,9 +212,29 @@ class SlideManager:
         # Concat videos
         videos = []
         for i, slide in enumerate(self.getSlides()):
-            videos.append("[v%sstart]" %(i))
-            videos.append("[v%smain]" %(i))
-            videos.append("[v%send]" %(i))
+            # first slide has no transition and starts immediately
+            if i == 0:
+                videos.append("[v%sstart]" %(i))
+                videos.append("[v%smain]" %(i))
+            else:
+                fade_duration = self.getSlideFadeDuration(i-1)
+                
+                # blend between previous slide and this slide
+                if fade_duration > 0:
+                    filter_chains.append("[v%send][v%sstart]blend=all_expr='A*(1-T/%s)+B*(T/%s)':shortest=1[v%strans]" %(i-1, i, fade_duration, fade_duration, i))
+                    videos.append("[v%strans]" %(i))
+                
+                # fade duration is too long for slides duration
+                else:
+                    videos.append("[v%send]" %(i-1))
+                    videos.append("[v%sstart]" %(i))
+                
+                # append video between transitions
+                videos.append("[v%smain]" %(i))
+            
+            # on the last slide the end needs to be added
+            if i == len(self.getSlides()) - 1:
+                videos.append("[v%send]" %(i))
 
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(videos), len(videos), subtitles))
             
