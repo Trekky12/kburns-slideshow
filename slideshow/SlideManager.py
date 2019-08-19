@@ -5,6 +5,8 @@ import sys
 import logging
 import datetime
 import re
+import importlib
+
 from .Slide import Slide
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
@@ -70,12 +72,16 @@ class SlideManager:
                 if isinstance(file, dict) and "overlay" in file:
                     overlay_text = file["overlay"]
                     
+                transition = self.config["transition"]
+                if isinstance(file, dict) and "transition" in file:
+                    transition = file["transition"]
+                    
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text)
+                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text)
+                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
             
             if slide is not None:
                 self.slides.append(slide)
@@ -123,6 +129,10 @@ class SlideManager:
         if slide.fade_duration*2 <= slide.duration:
             return slide.fade_duration
         return 0
+        
+    def getSlideTransition(self, idx):
+        slide = self.getSlides()[idx]
+        return slide.transition
         
     def getVideoFilterChains(self, burnSubtitles = False, srtFilename = ""):
     
@@ -227,9 +237,18 @@ class SlideManager:
                 
                 # blend between previous slide and this slide
                 if fade_duration > 0:
-                    filter_chains.append("[v%send][v%sstart]blend=all_expr='A*(1-T/%s)+B*(T/%s)':shortest=1[v%strans]" %(i-1, i, fade_duration, fade_duration, i))
-                    videos.append("[v%strans]" %(i))
-                
+                    
+                    # Load effect
+                    try:
+                        effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i-1)))
+                        transition = effect.get(fade_duration)
+
+                        filter_chains.append("[v%send][v%sstart]%s[v%strans]" %(i-1, i, transition, i))
+                        videos.append("[v%strans]" %(i))
+                    except ModuleNotFoundError:
+                        videos.append("[v%send]" %(i-1))
+                        videos.append("[v%sstart]" %(i))
+                        
                 # fade duration is too long for slides duration
                 else:
                     videos.append("[v%send]" %(i-1))
@@ -498,6 +517,7 @@ class SlideManager:
                 "output_height": self.config["output_height"],
                 "slide_duration": self.config["slide_duration"],
                 "fade_duration": self.config["fade_duration"],
+                "transition": self.config["transition"],
                 "fps": self.config["fps"],
                 "zoom_rate": self.config["zoom_rate"],
                 "zoom_direction": self.config["zoom_direction"],

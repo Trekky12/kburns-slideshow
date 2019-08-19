@@ -12,6 +12,7 @@
     "slide_duration": 4,
     "slide_duration_min": 1,
     "fade_duration": 1,
+    "transition": "random",
     "fps": 60,
     "zoom_rate": 0.1,
     "zoom_direction": "random",

@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import logging
+import pkgutil
 
 logger = logging.getLogger("kburns-slideshow")
 
@@ -20,6 +21,10 @@ class CLI:
         self.parser.add_argument("-sd", "--slide-duration", metavar='DURATION', type=float, help="Slide duration (seconds) (default: %s)" %(self.config["slide_duration"]))
         self.parser.add_argument("-sdm", "--slide-duration-min", metavar='DURATION', type=float, help="Slide duration minimum (seconds) (default: %s)" %(self.config["slide_duration_min"]))
         self.parser.add_argument("-fd", "--fade-duration", metavar='DURATION', type=float, help="Fade duration (seconds) (default: %s)" %(self.config["fade_duration"]))
+        
+        transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules(["slideshow/effects"])]
+        self.parser.add_argument("-ft", "--fade-transition", metavar='TRANSITION', choices=transition_choices, help="Fade transition (default: %s)" %(self.config["transition"]))
+        
         self.parser.add_argument("-fps", "--fps", metavar='FPS', type=int, help="Output framerate (frames per second) (default: %s)" %(self.config["fps"]))
 
         zoom_direction_possibilities = [["top", "center", "bottom"], ["left", "center", "right"], ["in", "out"]]
@@ -98,6 +103,10 @@ class CLI:
         if args.fade_duration is not None: 
             self.config["fade_duration"] = args.fade_duration
             logger.debug("Set fade duration to %s", args.fade_duration)
+            
+        if args.fade_transition is not None:
+            self.config["transition"] = args.fade_transition
+            logger.debug("Set transition to %s", args.fade_transition)
             
         if args.fps is not None: 
             self.config["fps"] = args.fps    

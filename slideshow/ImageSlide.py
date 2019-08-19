@@ -4,8 +4,8 @@ import random
 
 class ImageSlide(Slide):
     
-    def __init__(self, file, position, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None):
-        super().__init__(file, position, output_width, output_height, duration, fade_duration, title, overlay_text)
+    def __init__(self, file, position, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None, transition = "random"):
+        super().__init__(file, position, output_width, output_height, duration, fade_duration, title, overlay_text, transition)
         
         im = Image.open(self.file)
         
