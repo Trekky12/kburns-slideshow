@@ -1,0 +1,52 @@
+{
+    "config": {
+        "output_width": 1920,
+        "output_height": 1080,
+        "slide_duration": 3,
+        "slide_duration_min": 1,
+        "fade_duration": 1.0,
+        "fps": 60,
+        "zoom_rate": 0.1,
+        "zoom_direction": "random",
+        "scale_mode": "auto",
+        "loopable": false,
+        "overwrite": false,
+        "generate_temp": false,
+        "delete_temp": false
+    },
+    "slides": [
+
+        {
+            "file": "data\\1.jpg",
+            "slide_duration": 5,
+            "overlay":{
+                "title": "Title 1",
+                "font": "Bauhaus 93",
+                "font_size": 200,
+                "duration": 2,
+                "transition_x": "left-in"
+            }
+        },
+
+        {
+            "file": "data\\2.jpg",
+            "title": "subtitle"
+        },
+        {
+            "file": "data\\2.mp4",
+            "overlay":{
+                "title": "Title 2",
+                "font": "Bauhaus 93",
+                "font_size": 200,
+                "duration": 2,
+                "transition_x": "center"
+            }
+        },
+        {
+            "file": "data\\3.jpg"
+        }
+    ],
+    "audio": [
+        "data/music.mp3"
+    ]
+}
