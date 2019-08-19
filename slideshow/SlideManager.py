@@ -200,9 +200,15 @@ class SlideManager:
             fade_in_end = self.getSlideFadeDuration(i-1) if i > 0 else 0
             fade_out_start = slide.duration - self.getSlideFadeDuration(i)
             
-            filter_chains.append("[v%sout1]trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
-            filter_chains.append("[v%sout2]trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
-            filter_chains.append("[v%sout3]trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
+            # prevent buffer overflow with fifo:
+            # https://trac.ffmpeg.org/ticket/4950#comment:1 
+            # https://superuser.com/a/1135202
+            # https://superuser.com/a/1148850
+            # https://stackoverflow.com/a/40746988
+            # https://stackoverflow.com/a/51978577
+            filter_chains.append("[v%sout1]fifo,trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
+            filter_chains.append("[v%sout2]fifo,trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
+            filter_chains.append("[v%sout3]fifo,trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
 
         subtitles = ""
         # Burn subtitles to last element
