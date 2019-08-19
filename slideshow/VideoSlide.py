@@ -24,6 +24,3 @@ class VideoSlide(Slide):
            width, height = [-1, self.output_height]
 
         return ["scale=w=%s:h=%s,fps=%s, pad=%s:%s:(ow-iw)/2:(oh-ih)/2" %(width, height, self.fps, self.output_width, self.output_height)]
-        
-    def getOverlay(self, isLast):
-        return "overlay=(W-w)/2:(H-h)/2%s" %(":format=yuv420" if isLast else "")

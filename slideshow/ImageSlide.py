@@ -166,17 +166,24 @@ class ImageSlide(Slide):
         # return the filters for rendering
         return slide_filters
         
-    def getOverlay(self, isLast):
-        return "overlay%s" %("=format=yuv420" if isLast else "")
+    def getObject(self, config):
+        object = super().getObject(config)
         
-    def getObject(self):
-        object = super().getObject()
-        object["slide_duration"] = self.duration
-        object["slide_duration_min"] = self.slide_duration_min
-        object["fade_duration"] = self.fade_duration
-        object["zoom_rate"] = self.zoom_rate
-        object["zoom_direction"] = "%s-%s-%s" %(self.direction_x, self.direction_y, self.direction_z)
-        object["scale_mode"] = self.scale
+        if self.duration != config["slide_duration"]:
+            object["slide_duration"] = self.duration
+        
+        if self.fade_duration != config["fade_duration"]:
+            object["fade_duration"] = self.fade_duration
+        
+        if self.zoom_rate != config["zoom_rate"]:
+            object["zoom_rate"] = self.zoom_rate
+            
+        zoom_direction = "%s-%s-%s" %(self.direction_x, self.direction_y, self.direction_z)
+        if zoom_direction != config["zoom_direction"]:
+            object["zoom_direction"] = zoom_direction
+        
+        if self.scale != config["scale_mode"]:
+            object["scale_mode"] = self.scale
         
         return object
         

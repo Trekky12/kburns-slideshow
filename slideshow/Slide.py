@@ -16,10 +16,7 @@ class Slide:
     def getFilter(self):
         return
         
-    def getOverlay(self, isLast):
-        return
-        
-    def getObject(self):
+    def getObject(self, config):
         object = {
             "file": self.file
         }

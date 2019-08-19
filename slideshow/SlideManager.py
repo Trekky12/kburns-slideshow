@@ -507,7 +507,7 @@ class SlideManager:
                 "generate_temp": self.config["generate_temp"],
                 "delete_temp": self.config["delete_temp"]
             }, 
-            "slides": [slide.getObject() for slide in self.slides],
+            "slides": [slide.getObject(self.config) for slide in self.slides],
             "audio":  [track.getObject() for track in self.getBackgroundTracks()]
         }
         with open('%s' %(filename), 'w') as file:
