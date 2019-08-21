@@ -1,2 +1,2 @@
-def get(fade_duration):
-    return "blend=all_expr='A*(1-T/%s)+B*(T/%s)':shortest=1" %(fade_duration, fade_duration)
+def get(end, start, transition, i, fade_duration, config):
+    return "%(end)s %(start)s blend=all_expr='A*(1-T/%(fade_duration)s)+B*(T/%(fade_duration)s)':shortest=1 %(transition)s" %{"end": end, "start": start, "fade_duration": fade_duration, "transition": transition}

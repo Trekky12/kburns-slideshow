@@ -241,10 +241,15 @@ class SlideManager:
                     # Load effect
                     try:
                         effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i-1)))
-                        transition = effect.get(fade_duration)
-
-                        filter_chains.append("[v%send][v%sstart]%s[v%strans]" %(i-1, i, transition, i))
-                        videos.append("[v%strans]" %(i))
+                        
+                        end         = "[v%send]" %(i-1)
+                        start       = "[v%sstart]" %(i)
+                        transition  = "[v%strans]" %(i)
+                        filter      = effect.get(end, start, transition, i, fade_duration, self.config)
+                        
+                        filter_chains.append(filter)
+                        videos.append(transition)
+                        
                     except ModuleNotFoundError:
                         videos.append("[v%send]" %(i-1))
                         videos.append("[v%sstart]" %(i))
