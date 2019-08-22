@@ -1,5 +1,6 @@
 import pkgutil
 import random
+import os
 
 class Slide:
 
@@ -40,4 +41,4 @@ class Slide:
         return object
         
     def getEffects(self):
-        return [package_name for importer, package_name, _ in pkgutil.iter_modules(["slideshow/effects"])]
+        return [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(__file__))+"/effects"])]
