@@ -13,6 +13,8 @@
     "slide_duration_min": 1,
     "fade_duration": 1,
     "transition": "random",
+    "transition_bars_count": 10,
+    "transition_cell_size": 100,
     "fps": 60,
     "zoom_rate": 0.1,
     "zoom_direction": "random",

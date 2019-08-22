@@ -523,6 +523,8 @@ class SlideManager:
                 "slide_duration": self.config["slide_duration"],
                 "fade_duration": self.config["fade_duration"],
                 "transition": self.config["transition"],
+                "transition_bars_count": self.config["transition_bars_count"],
+                "transition_cell_size": self.config["transition_cell_size"],
                 "fps": self.config["fps"],
                 "zoom_rate": self.config["zoom_rate"],
                 "zoom_direction": self.config["zoom_direction"],
