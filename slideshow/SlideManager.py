@@ -122,12 +122,23 @@ class SlideManager:
         return sum([slide.duration for slide in self.getBackgroundTracks()])
             
     def getOffset(self, idx):
-        return sum([slide.duration - slide.fade_duration for slide in self.getSlides()[:idx]])
+        return sum([slide.duration - self.getSlideFadeOutDuration(i-1) for i, slide in enumerate(self.getSlides()[:idx])])
         
-    def getSlideFadeDuration(self, idx):
+    def getSlideFadeOutDuration(self, idx):
+        # if idx is too small
+        # last slide has no fade-out
+        if idx < 0 or idx == len(self.getSlides())-1:
+            return 0
+        
+        # first slide has only one fade-in
+        multiplier = 2
+        if idx == 0:
+            multiplier = 1
+            
         slide = self.getSlides()[idx]
-        if slide.fade_duration*2 <= slide.duration:
+        if slide.fade_duration*multiplier <= slide.duration:
             return slide.fade_duration
+        
         return 0
         
     def getSlideTransition(self, idx):
@@ -213,8 +224,8 @@ class SlideManager:
             filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout%s]" %(i, s+1) for s in range(splits)])) 
             
             # get fade in duration from previous slides fade duration
-            fade_in_end = self.getSlideFadeDuration(i-1) if i > 0 else 0
-            fade_out_start = slide.duration - self.getSlideFadeDuration(i)
+            fade_in_end = self.getSlideFadeOutDuration(i-1) if i > 0 else 0
+            fade_out_start = slide.duration - self.getSlideFadeOutDuration(i)
             
             # prevent buffer overflow with fifo:
             # https://trac.ffmpeg.org/ticket/4950#comment:1 
@@ -239,7 +250,7 @@ class SlideManager:
                 videos.append("[v%sstart]" %(i))
                 videos.append("[v%smain]" %(i))
             else:
-                fade_duration = self.getSlideFadeDuration(i-1)
+                fade_duration = self.getSlideFadeOutDuration(i-1)
                 
                 # blend between previous slide and this slide
                 if fade_duration > 0:
