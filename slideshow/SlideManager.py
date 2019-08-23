@@ -159,7 +159,10 @@ class SlideManager:
 
                 # re-use existing temp file
                 if not os.path.exists(tempvideo):
+                    logger.debug("Create temporary video %s for file %s", tempvideo, slide.file)
                     subprocess.call(" ".join(cmd))
+                else:
+                    logger.debug("Using existing temporary video %s for file %s", tempvideo, slide.file)
 
                 slide.file = tempvideo
                 self.tempfiles.append(tempvideo)
@@ -440,6 +443,8 @@ class SlideManager:
         # check if it is okay to have a shorter background track
         video_duration = self.getTotalDuration()
         audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
+        logger.info("Video length: %s", video_duration)
+        logger.info("Background track length: %s", audio_duration)
         if len(self.background_tracks)> 0 and audio_duration < video_duration:
             print("Background track is shorter than video length!")
             logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
@@ -468,6 +473,7 @@ class SlideManager:
         # Get Frames
         frames = round(sum([slide.duration*self.config["fps"] for slide in self.getSlides()]))
         print("Number of Frames: %s" %(frames))
+        logger.info("Number of Frames: %s",frames)
     
         # Run ffmpeg
         cmd = [ self.config["ffmpeg"], 
@@ -504,6 +510,7 @@ class SlideManager:
         ]  
 
         logger.info("FFMPEG started")
+        logger.debug(" ".join(cmd))
         subprocess.call(" ".join(cmd))
         logger.info("FFMPEG finished")
         
