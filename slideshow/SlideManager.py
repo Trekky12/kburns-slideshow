@@ -201,6 +201,9 @@ class SlideManager:
             # of the input, by changing the output sample aspect ratio. 
             filters.append("setsar=1")
             
+            # add transparency for possible fade-in/fade-out
+            filters.append("format=rgba")
+            
             # split video in start, main, end sections
             splits = 3
             filters.append("split=%s" %(splits))
