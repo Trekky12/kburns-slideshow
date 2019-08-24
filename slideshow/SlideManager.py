@@ -219,24 +219,36 @@ class SlideManager:
             filters.append("format=rgba")
             
             # split video in start, main, end sections
-            splits = 3
-            filters.append("split=%s" %(splits))
-            filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout%s]" %(i, s+1) for s in range(splits)])) 
             
             # get fade in duration from previous slides fade duration
             fade_in_end = self.getSlideFadeOutDuration(i-1) if i > 0 else 0
             fade_out_start = slide.duration - self.getSlideFadeOutDuration(i)
             
+            splits = ["main"]
+            if fade_in_end > 0:
+                splits.append("start")
+            if fade_out_start < slide.duration:
+                splits.append("end")
+                
+            slide.splits = splits
+            
+            filters.append("split=%s" %(len(splits)))
+            filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout-%s]" %(i, s) for s in splits])) 
+
             # prevent buffer overflow with fifo:
             # https://trac.ffmpeg.org/ticket/4950#comment:1 
             # https://superuser.com/a/1135202
             # https://superuser.com/a/1148850
             # https://stackoverflow.com/a/40746988
             # https://stackoverflow.com/a/51978577
-            filter_chains.append("[v%sout1]fifo,trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
-            filter_chains.append("[v%sout2]fifo,trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
-            filter_chains.append("[v%sout3]fifo,trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
-
+            if "start" in splits:
+                filter_chains.append("[v%sout-start]fifo,trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
+            if "main" in splits:
+                filter_chains.append("[v%sout-main]fifo,trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
+            if "end" in splits:
+                filter_chains.append("[v%sout-end]fifo,trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
+                
+                
         subtitles = ""
         # Burn subtitles to last element
         if burnSubtitles and self.hasSubtitles():
@@ -245,44 +257,28 @@ class SlideManager:
         # Concat videos
         videos = []
         for i, slide in enumerate(self.getSlides()):
-            # first slide has no transition and starts immediately
-            if i == 0:
-                videos.append("[v%sstart]" %(i))
-                videos.append("[v%smain]" %(i))
-            else:
-                fade_duration = self.getSlideFadeOutDuration(i-1)
-                
-                # blend between previous slide and this slide
-                if fade_duration > 0:
+            if "start" in slide.splits:
+                end         = "[v%send]" %(i-1)
+                start       = "[v%sstart]" %(i)
+                transition  = "[v%strans]" % (i)
                     
-                    # Load effect
-                    try:
-                        effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i-1)))
-                        
-                        end         = "[v%send]" %(i-1)
-                        start       = "[v%sstart]" %(i)
-                        transition  = "[v%strans]" %(i)
-                        filter      = effect.get(end, start, transition, i, fade_duration, self.config)
-                        
-                        filter_chains.append(filter)
-                        videos.append(transition)
-                        
-                    except ModuleNotFoundError:
-                        videos.append("[v%send]" %(i-1))
-                        videos.append("[v%sstart]" %(i))
-                        
-                # fade duration is too long for slides duration
+                filter = self.getTransition(i, end, start, transition)
+                
+                if filter is not None:
+                    filter_chains.append(filter)
+                    videos.append(transition)
                 else:
                     videos.append("[v%send]" %(i-1))
                     videos.append("[v%sstart]" %(i))
-                
-                # append video between transitions
+
+            # append video between transitions
+            if "main" in slide.splits:
                 videos.append("[v%smain]" %(i))
             
-            # on the last slide the end needs to be added
-            if i == len(self.getSlides()) - 1:
-                videos.append("[v%send]" %(i))
-
+            # on the last slide the end needs to be added (if available)
+            #if "end" in slide.splits and i == len(self.getSlides())-1:
+            #    videos.append("[v%send]" %(i))
+        
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(videos), len(videos), subtitles))
             
         return filter_chains
@@ -448,6 +444,23 @@ class SlideManager:
         slide_timestamps = [ sum([slide.duration for slide in self.getSlides()[:i+1] if not slide.has_audio]) for i, s in enumerate(self.getSlides()) if not s.has_audio ]
         logger.debug("Onsets of slides: %s", slide_timestamps)
         
+        
+    def getTransition(self, i, end, start, transition):
+        fade_duration = self.getSlideFadeOutDuration(i-1)
+        # blend between previous slide and this slide
+        if fade_duration > 0:
+            # Load effect
+            try:
+                effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i-1)))
+                filter = effect.get(end, start, transition, i, fade_duration, self.config)
+                return filter
+            except ModuleNotFoundError:
+                return None
+        
+        # fade duration is too long for slides duration
+        else:
+            return None
+            
     def createVideo(self, output_file):
         logger.info("Create video %s", output_file)
         
