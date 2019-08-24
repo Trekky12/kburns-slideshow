@@ -300,17 +300,19 @@ class SlideManager:
 
         # audio from video slides
         audio_tracks = []
-        for slide in [slide for slide in self.getVideos() if slide.has_audio]:
-            audio_tracks.append("[a%s]" %(slide.position))
-            
-            filters = []
-            # Fade music in filter
-            if slide.fade_duration > 0:
-                filters.append("afade=t=in:st=0:d=%s" %(slide.fade_duration))
-                filters.append("afade=t=out:st=%s:d=%s" %(slide.duration - slide.fade_duration, slide.fade_duration ))
-            filters.append("adelay=%s|%s" %( int(self.getOffset(slide.position) *1000), int(self.getOffset(slide.position) *1000)))
-            
-            filter_chains.append("[%s:a] %s [a%s]" %(slide.position, ",".join(filters), slide.position))
+        for i, slide in enumerate(self.getSlides()):
+            if isinstance(slide, VideoSlide) and slide.has_audio:
+                position = i
+                audio_tracks.append("[a%s]" %(position))
+                
+                filters = []
+                # Fade music in filter
+                if slide.fade_duration > 0:
+                    filters.append("afade=t=in:st=0:d=%s" %(self.getSlideFadeOutDuration(i-1)))
+                    filters.append("afade=t=out:st=%s:d=%s" %(slide.duration - self.getSlideFadeOutDuration(i), self.getSlideFadeOutDuration(i) ))
+                filters.append("adelay=%s|%s" %( int((self.getOffset(i) - self.getSlideFadeOutDuration(i-1)) *1000), int((self.getOffset(i) - self.getSlideFadeOutDuration(i-1)) *1000)))
+                
+                filter_chains.append("[%s:a] %s [a%s]" %(position, ",".join(filters), slide.position))
         
         # background-tracks
         music_input_offset = len(self.getSlides())
@@ -320,21 +322,22 @@ class SlideManager:
             # extract background audio sections between videos
             background_sections = []
             # is it starting with a video or an image?
-            section_start_slide = None if self.getSlides()[0].video else self.getSlides()[0]
-            for slide in self.getSlides():
+            section_start_slide = None if self.getSlides()[0].video else 0
+            for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
                 if slide.video and slide.has_audio and section_start_slide is not None:
-                    background_sections.append({ "start": self.getOffset(section_start_slide.position), "fade_in": section_start_slide.fade_duration, "end": self.getOffset(slide.position), "fade_out": slide.fade_duration })
+                    background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getSlideFadeOutDuration(section_start_slide-1), "end": self.getOffset(i) - self.getSlideFadeOutDuration(i-1) , "fade_out": self.getSlideFadeOutDuration(i) })
                     section_start_slide = None
+                
                 # is it a image but the previous one was a video => start new section
-                if not slide.video and section_start_slide is None:
-                    section_start_slide = slide
+                if isinstance(slide, ImageSlide) and section_start_slide is None:
+                    section_start_slide = i
 
             # the last section is ending with an image => end of section is end generated video
             if section_start_slide is not None:
-                background_sections.append({ "start": self.getOffset(section_start_slide.position), "fade_in": section_start_slide.fade_duration, "end": self.getTotalDuration()-self.getSlides()[-1].fade_duration, "fade_out": self.getSlides()[-1].fade_duration })
-               
-            if len(background_sections) > 0:                
+                background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getSlideFadeOutDuration(section_start_slide-1), "end": self.getTotalDuration(), "fade_out": 0 })
+                
+            if len(background_sections) > 0:
                 # merge background tracks
                 filter_chains.append("%s concat=n=%s:v=0:a=1[background_audio]" %("".join(background_audio), len(self.background_tracks)))
             
