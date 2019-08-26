@@ -20,7 +20,9 @@ class SlideManager:
         self.slides = []
         self.background_tracks = []
         self.config = config
-        self.tempfiles = []
+        # delete these files eventually
+        self.tempFiles = []
+        self.tempFilePrefix = "temp-kburns-"
         
         logger.debug("Init SlideManager")
         for position, file in enumerate(input_files):
@@ -156,29 +158,15 @@ class SlideManager:
         
             filters = slide.getFilter()
             
+            # generate temporary video of zoom/pan effect
             if self.config["generate_temp"] and isinstance(slide, ImageSlide):
-                tempvideo = "temp-kburns-%s.mp4" %(i)
-                cmd = [
-                    self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
-                    "-i \"%s\" " % (slide.file),
-                    "-filter_complex", ",".join(slide.getFilter()),
-                    #"-crf", "0" ,
-                    "-preset", "ultrafast", 
-                    "-tune", "stillimage",
-                    "-c:v", "libx264", tempvideo
-                ]
+                # fix scaling
+                filters.append("setsar=1")
+                
+                slide.file = self.createTemporaryVideo(slide.file, filters, i)
 
-                # re-use existing temp file
-                if not os.path.exists(tempvideo):
-                    logger.debug("Create temporary video %s for file %s", tempvideo, slide.file)
-                    subprocess.call(" ".join(cmd))
-                else:
-                    logger.debug("Using existing temporary video %s for file %s", tempvideo, slide.file)
-
-                slide.file = tempvideo
-                self.tempfiles.append(tempvideo)
                 filters = []
-            
+
             
             # Overlay Text (e.g. Intro)
             if slide.overlay_text is not None and "title" in slide.overlay_text:
@@ -312,7 +300,7 @@ class SlideManager:
                     filters.append("afade=t=out:st=%s:d=%s" %(slide.duration - self.getSlideFadeOutDuration(i), self.getSlideFadeOutDuration(i) ))
                 filters.append("adelay=%s|%s" %( int((self.getOffset(i) - self.getSlideFadeOutDuration(i-1)) *1000), int((self.getOffset(i) - self.getSlideFadeOutDuration(i-1)) *1000)))
                 
-                filter_chains.append("[%s:a] %s [a%s]" %(position, ",".join(filters), slide.position))
+                filter_chains.append("[%s:a] %s [a%s]" %(position, ",".join(filters), position))
         
         # background-tracks
         music_input_offset = len(self.getSlides())
@@ -419,6 +407,29 @@ class SlideManager:
 
         logger.debug("Slide durations (after): %s", [slide.duration for slide in self.getSlides()])
         
+    def createTemporaryVideo(self, input, filters, suffix):
+        output = "%s%s.mp4" %(self.tempFilePrefix, suffix)
+        cmd = [
+            self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
+            "-i \"%s\" " % (input),
+            "-filter_complex \"%s\"" % (",".join(filters)),
+            #"-crf", "0" ,
+            "-preset", "ultrafast", 
+            "-tune", "stillimage",
+            "-c:v", "libx264", output
+        ]
+
+        # re-use existing temp file
+        if not os.path.exists(output):
+            logger.debug("Create temporary video %s for file %s", output, input)
+            subprocess.call(" ".join(cmd))
+        else:
+            logger.debug("Using existing temporary video %s for file %s", output, input)
+
+        self.tempFiles.append(output)
+        
+        return output
+        
     def getTransition(self, i, end, start, transition):
         fade_duration = self.getSlideFadeOutDuration(i-1)
         # blend between previous slide and this slide
@@ -514,7 +525,7 @@ class SlideManager:
         
         if self.config["delete_temp"]:
             logger.info("Delete temporary files")
-            for temp in self.tempfiles:
+            for temp in self.tempFiles:
                 os.remove(temp)
                 logger.debug("Delete %s", temp)
 
