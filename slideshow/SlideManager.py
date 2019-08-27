@@ -129,21 +129,40 @@ class SlideManager:
         return sum([slide.duration - self.getSlideFadeOutDuration(i-1) for i, slide in enumerate(self.getSlides()[:idx])])
         
     def getSlideFadeOutDuration(self, idx):
-        # if idx is too small
-        # last slide has no fade-out
-        if idx < 0 or idx == len(self.getSlides())-1:
+        # first slide has no previous slide
+        if idx < 0:
             return 0
         
-        # first slide has only one fade-in
-        multiplier = 2
-        if idx == 0:
-            multiplier = 1
-            
-        slide = self.getSlides()[idx]
-        if slide.fade_duration*multiplier <= slide.duration:
+        # last slide has no fade-out
+        if idx == len(self.getSlides())-1:
+            return 0
+        
+        # is the next slide long enough to have a fade-in and a fade-out?
+        if idx + 1 < len(self.getSlides()):
+            if not self.isSlideDurationGreaterThanFadeDuration(idx+1, 2):
+                return 0
+        
+        # is current slide long enough to have a fade-in and fade-out?
+        if self.isSlideDurationGreaterThanFadeDuration(idx, 2):
+            slide = self.getSlides()[idx]
             return slide.fade_duration
         
         return 0
+    
+    def isSlideDurationGreaterThanFadeDuration(self,idx, multiplier = 2):
+        # duration of current slide needs to be longer than 
+        # the duration of the fade-in + the duration of the fade-out
+        # first slide has only fade-in
+        # last slide has only fade-out
+        if idx == 0 or idx == len(self.getSlides())-1:
+            multiplier = 1
+            
+        slide = self.getSlides()[idx]
+        # is the duration of the slide long enough to have a fade-in and fade-out
+        if slide.duration > slide.fade_duration*multiplier:
+            return True
+        
+        return False
         
     def getSlideTransition(self, idx):
         slide = self.getSlides()[idx]
