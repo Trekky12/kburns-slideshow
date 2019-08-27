@@ -24,6 +24,8 @@ class SlideManager:
         self.tempFiles = []
         self.tempFilePrefix = "temp-kburns-"
         
+        self.tempInputFiles = []
+        
         logger.debug("Init SlideManager")
         for position, file in enumerate(input_files):
             
@@ -163,7 +165,7 @@ class SlideManager:
                 # fix scaling
                 filters.append("setsar=1")
                 
-                slide.file = self.createTemporaryVideo(slide.file, filters, i)
+                slide.file = self.createTemporaryVideo([slide.file], filters, i)
 
                 filters = []
 
@@ -220,21 +222,36 @@ class SlideManager:
                 
             slide.splits = splits
             
-            filters.append("split=%s" %(len(splits)))
-            filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout-%s]" %(i, s) for s in splits])) 
+            if self.config["generate_temp"]:
+                for step in splits:
+                    tempfilters = filters[:]
+                    
+                    if step == "start":
+                        tempfilters.append("trim=start=0:end=%s,setpts=PTS-STARTPTS" %(fade_in_end))
 
-            # prevent buffer overflow with fifo:
-            # https://trac.ffmpeg.org/ticket/4950#comment:1 
-            # https://superuser.com/a/1135202
-            # https://superuser.com/a/1148850
-            # https://stackoverflow.com/a/40746988
-            # https://stackoverflow.com/a/51978577
-            if "start" in splits:
-                filter_chains.append("[v%sout-start]fifo,trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
-            if "main" in splits:
-                filter_chains.append("[v%sout-main]fifo,trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
-            if "end" in splits:
-                filter_chains.append("[v%sout-end]fifo,trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
+                    if step == "main":
+                        tempfilters.append("trim=start=%s:end=%s,setpts=PTS-STARTPTS" %(fade_in_end, fade_out_start))
+
+                    if step == "end":
+                        tempfilters.append("trim=start=%s,setpts=PTS-STARTPTS" %(fade_out_start))
+                    
+                    self.createTemporaryVideo([slide.file], tempfilters, "%s_%s" %(i, step))
+            else:
+                filters.append("split=%s" %(len(splits)))
+                filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout-%s]" %(i, s) for s in splits])) 
+
+                # prevent buffer overflow with fifo:
+                # https://trac.ffmpeg.org/ticket/4950#comment:1 
+                # https://superuser.com/a/1135202
+                # https://superuser.com/a/1148850
+                # https://stackoverflow.com/a/40746988
+                # https://stackoverflow.com/a/51978577
+                if "start" in splits:
+                    filter_chains.append("[v%sout-start]fifo,trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
+                if "main" in splits:
+                    filter_chains.append("[v%sout-main]fifo,trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
+                if "end" in splits:
+                    filter_chains.append("[v%sout-end]fifo,trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
                 
                 
         subtitles = ""
@@ -246,26 +263,53 @@ class SlideManager:
         videos = []
         for i, slide in enumerate(self.getSlides()):
             if "start" in slide.splits:
-                end         = "[v%send]" %(i-1)
-                start       = "[v%sstart]" %(i)
-                transition  = "[v%strans]" % (i)
+                if self.config["generate_temp"]:
+                    end         = "[0:v]"
+                    start       = "[1:v]"
+                    transition  = ""
+                else:
+                    end         = "[v%send]" %(i-1)
+                    start       = "[v%sstart]" %(i)
+                    transition  = "[v%strans]" % (i)
                     
                 filter = self.getTransition(i, end, start, transition)
                 
                 if filter is not None:
-                    filter_chains.append(filter)
-                    videos.append(transition)
+                    if self.config["generate_temp"]:
+                        # temporary transition video
+                        tempvideo_end = "%s%s_%s.mp4" %(self.tempFilePrefix, i-1, "end")
+                        tempvideo_start = "%s%s_%s.mp4" %(self.tempFilePrefix, i, "start")
+                        
+                        filter = "%s, setsar=1" %(filter)
+                        
+                        output = self.createTemporaryVideo([tempvideo_end, tempvideo_start], filter, "%s_trans" %(i))
+                        
+                        self.tempInputFiles.append(output)
+                    else:
+                        filter_chains.append(filter)
+                        videos.append(transition)
                 else:
-                    videos.append("[v%send]" %(i-1))
-                    videos.append("[v%sstart]" %(i))
+                    if self.config["generate_temp"]:
+                        self.tempInputFiles.append("temp-kburns-%s_%s.mp4" %(i-1, "end"))
+                        self.tempInputFiles.append("temp-kburns-%s_%s.mp4" %(i, "start"))
+                    else:
+                        videos.append("[v%send]" %(i-1))
+                        videos.append("[v%sstart]" %(i))
 
             # append video between transitions
             if "main" in slide.splits:
-                videos.append("[v%smain]" %(i))
+                if self.config["generate_temp"]:
+                    self.tempInputFiles.append("temp-kburns-%s_%s.mp4" %(i, "main"))
+                else:
+                    videos.append("[v%smain]" %(i))
             
             # on the last slide the end needs to be added (if available)
             #if "end" in slide.splits and i == len(self.getSlides())-1:
             #    videos.append("[v%send]" %(i))
+        
+        # use input files instead of filter outputs
+        if self.config["generate_temp"]:
+            videos = ["[%s:v]" %(i) for i in range(len(self.tempInputFiles))]
         
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(videos), len(videos), subtitles))
             
@@ -284,6 +328,8 @@ class SlideManager:
     
         logger.debug("get Audio Filter Chains")
         
+        offset = len(self.tempInputFiles)
+        
         filter_chains = []
 
         # audio from video slides
@@ -300,10 +346,17 @@ class SlideManager:
                     filters.append("afade=t=out:st=%s:d=%s" %(slide.duration - self.getSlideFadeOutDuration(i), self.getSlideFadeOutDuration(i) ))
                 filters.append("adelay=%s|%s" %( int((self.getOffset(i) - self.getSlideFadeOutDuration(i-1)) *1000), int((self.getOffset(i) - self.getSlideFadeOutDuration(i-1)) *1000)))
                 
-                filter_chains.append("[%s:a] %s [a%s]" %(position, ",".join(filters), position))
+                input_number = i
+                # append video with sound to input list
+                if self.config["generate_temp"]:
+                    input_number = offset
+                    self.tempInputFiles.append(slide.file)
+                    offset = offset + 1
+                
+                filter_chains.append("[%s:a] %s [a%s]" %(input_number, ",".join(filters), i))
         
         # background-tracks
-        music_input_offset = len(self.getSlides())
+        music_input_offset = len(self.getSlides()) if not self.config["generate_temp"] else len(self.tempInputFiles)
         background_audio = ["[%s:a]" %(i+music_input_offset) for i, track in enumerate(self.background_tracks)]
         
         if len(background_audio) > 0:
@@ -407,24 +460,28 @@ class SlideManager:
 
         logger.debug("Slide durations (after): %s", [slide.duration for slide in self.getSlides()])
         
-    def createTemporaryVideo(self, input, filters, suffix):
+    def createTemporaryVideo(self, inputs, filters, suffix):
         output = "%s%s.mp4" %(self.tempFilePrefix, suffix)
+        
+        if isinstance(filters, list):
+            filters = "%s" %(",".join(filters))
+        
         cmd = [
             self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
-            "-i \"%s\" " % (input),
-            "-filter_complex \"%s\"" % (",".join(filters)),
+            " ".join(["-i \"%s\" " % (i) for i in inputs]),
+            "-filter_complex \"%s\"" %(filters),
             #"-crf", "0" ,
             "-preset", "ultrafast", 
             "-tune", "stillimage",
             "-c:v", "libx264", output
         ]
-
+        
         # re-use existing temp file
         if not os.path.exists(output):
-            logger.debug("Create temporary video %s for file %s", output, input)
+            logger.debug("Create temporary video %s for file %s", output, ",".join(inputs))
             subprocess.call(" ".join(cmd))
         else:
-            logger.debug("Using existing temporary video %s for file %s", output, input)
+            logger.debug("Using existing temporary video %s for file %s", output, ",".join(inputs))
 
         self.tempFiles.append(output)
         
@@ -473,17 +530,25 @@ class SlideManager:
             self.createSubtitles(srtFilename)
 
         # Filters
-        filter_chains = self.getVideoFilterChains(burnSubtitles, srtFilename) + self.getAudioFilterChains()   
+        video_filters = self.getVideoFilterChains(burnSubtitles, srtFilename)
+        
+        # Get Input Files
+        inputs = [slide.getFile() for slide in self.getSlides()]
+        if self.config["generate_temp"]:
+            inputs = self.tempInputFiles
+        
+        # Get Audio Filter
+        audio_filters = self.getAudioFilterChains()
         
         temp_filter_script = "temp-kburns-video-script.txt"
         with open('%s' %(temp_filter_script), 'w') as file:
-            file.write(";\n".join(filter_chains))
+            file.write(";\n".join(video_filters + audio_filters))
             
         # Get Frames
         frames = round(sum([slide.duration*self.config["fps"] for slide in self.getSlides()]))
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
-    
+
         # Run ffmpeg
         cmd = [ self.config["ffmpeg"], 
             "-hide_banner", 
@@ -491,7 +556,7 @@ class SlideManager:
             "-stats",
             "-y" if self.config["overwrite"] else "",
             # slides
-            " ".join(["-i \"%s\" " %(slide.file) for slide in self.getSlides()]),
+            " ".join(["-i \"%s\" " %(f) for f in inputs]),
             " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
             # subtitles (only mkv)
             "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
@@ -516,8 +581,8 @@ class SlideManager:
             # set subtitles enabled (only mkv)
             "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
             output_file
-        ]  
-
+        ]
+        
         logger.info("FFMPEG started")
         logger.debug(" ".join(cmd))
         subprocess.call(" ".join(cmd))
@@ -529,8 +594,10 @@ class SlideManager:
                 os.remove(temp)
                 logger.debug("Delete %s", temp)
 
-        os.remove(temp_filter_script)
-        os.remove(srtFilename)
+        if os.path.exists(temp_filter_script):
+            os.remove(temp_filter_script)
+        if os.path.exists(srtFilename):
+            os.remove(srtFilename)
                 
     def saveConfig(self, filename):
         logger.info("Save config to %s", filename)
