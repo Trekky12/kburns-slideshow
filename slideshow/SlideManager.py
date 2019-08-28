@@ -26,6 +26,7 @@ class SlideManager:
         
         self.tempInputFiles = []
         
+        self.reduceVariable = 10
         logger.debug("Init SlideManager")
         for position, file in enumerate(input_files):
             
@@ -328,6 +329,28 @@ class SlideManager:
         
         # use input files instead of filter outputs
         if self.config["generate_temp"]:
+            count = 0
+            while len(self.tempInputFiles) > self.reduceVariable:
+                files = self.tempInputFiles
+                self.tempInputFiles = []
+                temp = []
+                for k, video in enumerate(files):
+                    temp.append(video)
+                    if len(temp) >= self.reduceVariable:
+                        filter_names = ["[%s]" %(i) for i in range(len(temp))]
+                        filter = "%s concat=n=%s" %("".join(filter_names), len(filter_names))
+                        
+                        output = self.createTemporaryVideo(temp, filter, "%s_%s_combine" %(count, k))
+                        
+                        # add concated video
+                        self.tempInputFiles.append(output)
+                        
+                        temp = []
+                
+                # add remaining files
+                self.tempInputFiles.extend(temp)
+                count = count + 1
+            
             videos = ["[%s:v]" %(i) for i in range(len(self.tempInputFiles))]
         
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(videos), len(videos), subtitles))
@@ -488,8 +511,9 @@ class SlideManager:
         cmd = [
             self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
             " ".join(["-i \"%s\" " % (i) for i in inputs]),
-            "-filter_complex \"%s\"" %(filters),
+            "-filter_complex \"%s [out]\"" %(filters),
             #"-crf", "0" ,
+            "-map [out]",
             "-preset", "ultrafast", 
             "-tune", "stillimage",
             "-c:v", "libx264", output
