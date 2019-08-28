@@ -234,11 +234,13 @@ class SlideManager:
             fade_in_end = self.getSlideFadeOutDuration(i-1) if i > 0 else 0
             fade_out_start = slide.duration - self.getSlideFadeOutDuration(i)
             
-            splits = ["main"]
+            splits = []
             if fade_in_end > 0:
                 splits.append("start")
             if fade_out_start < slide.duration:
                 splits.append("end")
+            if fade_out_start > fade_in_end:
+                splits.append("main")
                 
             slide.splits = splits
             
