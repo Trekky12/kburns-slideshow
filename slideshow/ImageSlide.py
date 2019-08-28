@@ -4,8 +4,8 @@ import random
 
 class ImageSlide(Slide):
     
-    def __init__(self, file, position, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None, transition = "random"):
-        super().__init__(file, position, output_width, output_height, duration, fade_duration, title, overlay_text, transition)
+    def __init__(self, file, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None, transition = "random"):
+        super().__init__(file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
         
         im = Image.open(self.file)
         
@@ -54,7 +54,6 @@ class ImageSlide(Slide):
             self.direction_z = zoom_direction.split("-")[2]
             
         self.zoom_rate = zoom_rate
-        self.fps = fps
         self.slide_duration_min = slide_duration_min
         
     def getFilter(self):
@@ -172,13 +171,10 @@ class ImageSlide(Slide):
         if self.duration != config["slide_duration"]:
             object["slide_duration"] = self.duration
         
-        if self.fade_duration != config["fade_duration"]:
-            object["fade_duration"] = self.fade_duration
-        
         if self.zoom_rate != config["zoom_rate"]:
             object["zoom_rate"] = self.zoom_rate
             
-        zoom_direction = "%s-%s-%s" %(self.direction_x, self.direction_y, self.direction_z)
+        zoom_direction = "%s-%s-%s" %(self.direction_y, self.direction_x, self.direction_z)
         if zoom_direction != config["zoom_direction"]:
             object["zoom_direction"] = zoom_direction
         

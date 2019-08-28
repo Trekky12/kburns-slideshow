@@ -84,9 +84,9 @@ class SlideManager:
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, position, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition)
+                    slide = VideoSlide(filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                    slide = ImageSlide(filename, position, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
+                    slide = ImageSlide(filename, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
             
             if slide is not None:
                 self.slides.append(slide)
@@ -160,7 +160,7 @@ class SlideManager:
             
         slide = self.getSlides()[idx]
         # is the duration of the slide long enough to have a fade-in and fade-out
-        if slide.duration > slide.fade_duration*multiplier:
+        if slide.duration >= slide.fade_duration*multiplier:
             return True
         
         return False
@@ -380,8 +380,7 @@ class SlideManager:
         audio_tracks = []
         for i, slide in enumerate(self.getSlides()):
             if isinstance(slide, VideoSlide) and slide.has_audio:
-                position = i
-                audio_tracks.append("[a%s]" %(position))
+                audio_tracks.append("[a%s]" %(i))
                 
                 filters = []
                 # Fade music in filter
@@ -407,10 +406,10 @@ class SlideManager:
             # extract background audio sections between videos
             background_sections = []
             # is it starting with a video or an image?
-            section_start_slide = None if self.getSlides()[0].video else 0
+            section_start_slide = None if isinstance(self.getSlides()[0], VideoSlide) else 0
             for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
-                if slide.video and slide.has_audio and section_start_slide is not None:
+                if isinstance(slide, VideoSlide) and slide.has_audio and section_start_slide is not None:
                     background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getSlideFadeOutDuration(section_start_slide-1), "end": self.getOffset(i) - self.getSlideFadeOutDuration(i-1) , "fade_out": self.getSlideFadeOutDuration(i) })
                     section_start_slide = None
                 
@@ -578,7 +577,7 @@ class SlideManager:
         video_filters = self.getVideoFilterChains(burnSubtitles, srtFilename)
         
         # Get Input Files
-        inputs = [slide.getFile() for slide in self.getSlides()]
+        inputs = [slide.file for slide in self.getSlides()]
         if self.config["generate_temp"]:
             inputs = self.tempInputFiles
         

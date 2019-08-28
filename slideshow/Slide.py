@@ -4,23 +4,25 @@ import os
 
 class Slide:
 
-    def __init__(self, file, position, output_width, output_height, duration, fade_duration = 1, title = None, overlay_text = None, transition = "random"):
+    def __init__(self, file, output_width, output_height, duration, fade_duration = 1, fps = 60, title = None, overlay_text = None, transition = "random"):
         self.file = file
-        self.position = position
-        self.video = False
         self.has_audio = False
         self.output_width = output_width
         self.output_height = output_height
         self.duration = duration
+        # fade-out duration (= fade-in duration of next slide)
         self.fade_duration = fade_duration
         self.title = title
         self.overlay_text = overlay_text
         self.output_ratio = self.output_width / self.output_height
+        self.fps = fps
         
         if transition == "random":
             self.transition = random.choice(self.getEffects())
         else:
             self.transition = transition if transition in self.getEffects() else None
+        
+        self.splits = []
         
     def getFilter(self):
         return
@@ -29,6 +31,10 @@ class Slide:
         object = {
             "file": self.file
         }
+        
+        if self.fade_duration != config["fade_duration"]:
+            object["fade_duration"] = self.fade_duration
+            
         if self.title is not None:
             object["title"] = self.title
             
