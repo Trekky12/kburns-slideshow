@@ -286,8 +286,8 @@ class SlideManager:
         for i, slide in enumerate(self.getSlides()):
             if "start" in slide.splits:
                 if self.config["generate_temp"]:
-                    end         = "[0:v]"
-                    start       = "[1:v]"
+                    end         = "[v0]"
+                    start       = "[v1]"
                     transition  = ""
                 else:
                     end         = "[v%send]" %(i-1)
@@ -302,7 +302,7 @@ class SlideManager:
                         tempvideo_end = "%s%s_%s.mp4" %(self.tempFilePrefix, i-1, "end")
                         tempvideo_start = "%s%s_%s.mp4" %(self.tempFilePrefix, i, "start")
                         
-                        filter = "%s, setsar=1" %(filter)
+                        filter = "[0:v]format=rgba[v0];[1:v]format=rgba[v1];%s, setsar=1" %(filter)
                         
                         output = self.createTemporaryVideo([tempvideo_end, tempvideo_start], filter, "%s_trans" %(i))
                         
