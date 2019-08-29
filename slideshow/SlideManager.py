@@ -11,6 +11,7 @@ from .Slide import Slide
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
 from .AudioFile import AudioFile
+from .Queue import Queue
 
 logger = logging.getLogger("kburns-slideshow")
 
@@ -20,13 +21,14 @@ class SlideManager:
         self.slides = []
         self.background_tracks = []
         self.config = config
-        # delete these files eventually
-        self.tempFiles = []
+
         self.tempFilePrefix = "temp-kburns-"
+        self.queue = Queue(self.tempFilePrefix)
         
         self.tempInputFiles = []
         
         self.reduceVariable = 10
+        
         logger.debug("Init SlideManager")
         for position, file in enumerate(input_files):
             
@@ -192,7 +194,7 @@ class SlideManager:
                 # fix scaling
                 filters.append("setsar=1")
                 
-                slide.file = self.createTemporaryVideo([slide.file], filters, i)
+                slide.file = self.queue.addItem([slide.file], filters, i)
 
                 filters = []
 
@@ -264,7 +266,7 @@ class SlideManager:
                     if step == "end":
                         tempfilters.append("trim=start=%s,setpts=PTS-STARTPTS" %(fade_out_start))
                     
-                    self.createTemporaryVideo([slide.file], tempfilters, "%s_%s" %(i, step))
+                    self.queue.addItem([slide.file], tempfilters, "%s_%s" %(i, step))
             else:
                 filters.append("split=%s" %(len(splits)))
                 filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout-%s]" %(i, s) for s in splits])) 
@@ -311,7 +313,7 @@ class SlideManager:
                         
                         filter = "[0:v]format=rgba[v0];[1:v]format=rgba[v1];%s, setsar=1" %(filter)
                         
-                        output = self.createTemporaryVideo([tempvideo_end, tempvideo_start], filter, "%s_trans" %(i))
+                        output = self.queue.addItem([tempvideo_end, tempvideo_start], filter, "%s_trans" %(i))
                         
                         self.tempInputFiles.append(output)
                     else:
@@ -349,7 +351,7 @@ class SlideManager:
                         filter_names = ["[%s]" %(i) for i in range(len(temp))]
                         filter = "%s concat=n=%s" %("".join(filter_names), len(filter_names))
                         
-                        output = self.createTemporaryVideo(temp, filter, "%s_%s_combine" %(count, k))
+                        output = self.queue.addItem(temp, filter, "%s_%s_combine" %(count, k))
                         
                         # add concated video
                         self.tempInputFiles.append(output)
@@ -509,35 +511,8 @@ class SlideManager:
                         timestamp_idx = timestamp_idx + 1
 
         logger.debug("Slide durations (after): %s", [slide.duration for slide in self.getSlides()])
-        
-    def createTemporaryVideo(self, inputs, filters, suffix):
-        output = "%s%s.mp4" %(self.tempFilePrefix, suffix)
-        
-        if isinstance(filters, list):
-            filters = "%s" %(",".join(filters))
-        
-        cmd = [
-            self.config["ffmpeg"], "-y", "-hide_banner", "-v", "quiet",
-            " ".join(["-i \"%s\" " % (i) for i in inputs]),
-            "-filter_complex \"%s [out]\"" %(filters),
-            #"-crf", "0" ,
-            "-map [out]",
-            "-preset", "ultrafast", 
-            "-tune", "stillimage",
-            "-c:v", "libx264", output
-        ]
-        
-        # re-use existing temp file
-        if not os.path.exists(output):
-            logger.debug("Create temporary video %s for file %s", output, ",".join(inputs))
-            subprocess.call(" ".join(cmd))
-        else:
-            logger.debug("Using existing temporary video %s for file %s", output, ",".join(inputs))
 
-        self.tempFiles.append(output)
-        
-        return output
-        
+
     def getTransition(self, i, end, start, transition):
         fade_duration = self.getSlideFadeOutDuration(i-1)
         # blend between previous slide and this slide
@@ -600,6 +575,9 @@ class SlideManager:
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
 
+        # create temporary videos
+        self.queue.createTemporaryVideos(self.config["ffmpeg"])
+        
         # Run ffmpeg
         cmd = [ self.config["ffmpeg"], 
             "-hide_banner", 
@@ -641,9 +619,7 @@ class SlideManager:
         
         if self.config["delete_temp"]:
             logger.info("Delete temporary files")
-            for temp in self.tempFiles:
-                os.remove(temp)
-                logger.debug("Delete %s", temp)
+            self.queue.clean()
 
         if os.path.exists(temp_filter_script):
             os.remove(temp_filter_script)
