@@ -313,7 +313,8 @@ class SlideManager:
                         
                         filter = "[0:v]format=rgba[v0];[1:v]format=rgba[v1];%s, setsar=1" %(filter)
                         
-                        output = self.queue.addItem([tempvideo_end, tempvideo_start], filter, "%s_trans" %(i))
+                        trans_slide = self.getSlides()[i-1]
+                        output = self.queue.addItem([tempvideo_end, tempvideo_start], filter, "%s_trans_%s" %(i, trans_slide.transition))
                         
                         self.tempInputFiles.append(output)
                     else:
@@ -538,7 +539,7 @@ class SlideManager:
         logger.info("Video length: %s", video_duration)
         logger.info("Background track length: %s", audio_duration)
         if len(self.background_tracks)> 0 and audio_duration < video_duration:
-            print("Background track is shorter than video length!")
+            print("Background track (%s) is shorter than video length (%s)!" %(audio_duration, video_duration))
             logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
             
             if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
@@ -634,6 +635,7 @@ class SlideManager:
                 "output_width": self.config["output_width"],
                 "output_height": self.config["output_height"],
                 "slide_duration": self.config["slide_duration"],
+                "slide_duration_min": self.config["slide_duration_min"],
                 "fade_duration": self.config["fade_duration"],
                 "transition": self.config["transition"],
                 "transition_bars_count": self.config["transition_bars_count"],
