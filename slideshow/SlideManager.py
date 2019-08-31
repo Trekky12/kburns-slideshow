@@ -120,7 +120,9 @@ class SlideManager:
         return self.slides
         
     def getTotalDuration(self):
-        return sum([slide.duration - slide.fade_duration for slide in self.getSlides()])+self.getSlides()[-1].fade_duration
+        last_slide = self.getSlides()[-1]
+        last_slide_start = self.getOffset(-1)
+        return last_slide_start + last_slide.duration
     
     def getVideoAudioDuration(self):
         return sum([slide.duration for slide in self.getVideos() if slide.has_audio])
