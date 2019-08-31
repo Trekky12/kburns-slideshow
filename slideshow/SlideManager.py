@@ -131,7 +131,7 @@ class SlideManager:
         return sum([slide.duration for slide in self.getBackgroundTracks()])
             
     def getOffset(self, idx):
-        return sum([slide.duration - self.getSlideFadeOutDuration(i-1) for i, slide in enumerate(self.getSlides()[:idx])])
+        return sum([slide.duration - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
         
     def getMusicFadeOutDuration(self, idx):
         # first and last slide should fade the total music in/out
