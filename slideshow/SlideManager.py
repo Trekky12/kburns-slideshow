@@ -305,7 +305,7 @@ class SlideManager:
                     start       = "[v%sstart]" %(i)
                     transition  = "[v%strans]" % (i)
                     
-                filter = self.getTransition(i, end, start, transition)
+                filter = self.getTransition(i-1, end, start, transition)
                 
                 if filter is not None:
                     if self.config["generate_temp"]:
@@ -517,12 +517,12 @@ class SlideManager:
 
 
     def getTransition(self, i, end, start, transition):
-        fade_duration = self.getSlideFadeOutDuration(i-1)
+        fade_duration = self.getSlideFadeOutDuration(i)
         # blend between previous slide and this slide
         if fade_duration > 0:
             # Load effect
             try:
-                effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i-1)))
+                effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i)))
                 filter = effect.get(end, start, transition, i, fade_duration, self.config)
                 return filter
             except ModuleNotFoundError:
