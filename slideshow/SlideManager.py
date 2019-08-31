@@ -660,13 +660,24 @@ class SlideManager:
             subtitle_index = 1
             for i, slide in enumerate(self.slides):
                 if slide.title is not None:
+                    # start the subtitle when the fade-in is done
                     offset = self.getOffset(i)
-                    st = datetime.timedelta(seconds=offset)
-                    srt_start = '%02d:%02d:%02d,%03d' % (st.seconds//3600, (st.seconds//60)%60, st.seconds, st.microseconds / 1000)
-                    st = datetime.timedelta(seconds=offset + slide.duration)
-                    srt_end = '%02d:%02d:%02d,%03d' % (st.seconds//3600, (st.seconds//60)%60, st.seconds, st.microseconds / 1000)
+                    srt_start = self.getSubtitleFormat(offset + self.getSlideFadeOutDuration(i-1))
+                    
+                    # end the subtitle when the fade-out is done
+                    offset_next = self.getOffset(i+1)
+                    srt_end = self.getSubtitleFormat(offset_next + self.getSlideFadeOutDuration(i))
 
                     file.write("%s\n" %(subtitle_index))
                     file.write("%s --> %s\n" %(srt_start, srt_end))
                     file.write("%s\n\n" % (slide.title))
                     subtitle_index += 1
+                    
+    def getSubtitleFormat(self, seconds):
+        millis = seconds * 1000
+        milliseconds = millis%1000
+        seconds= int((millis/1000)%60)
+        minutes=int((millis/(1000*60))%60)
+        hours=(millis/(1000*60*60))%24
+        
+        return '%02d:%02d:%02d,%03d' % (hours, minutes, seconds, milliseconds)
