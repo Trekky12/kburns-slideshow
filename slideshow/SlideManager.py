@@ -422,7 +422,7 @@ class SlideManager:
             for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
                 if isinstance(slide, VideoSlide) and slide.has_audio and section_start_slide is not None:
-                    background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getOffset(i) , "fade_out": self.getMusicFadeOutDuration(i) })
+                    background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getOffset(i) - self.getMusicFadeOutDuration(i), "fade_out": self.getMusicFadeOutDuration(i) })
                     section_start_slide = None
                 
                 # is it a image but the previous one was a video => start new section
@@ -431,7 +431,7 @@ class SlideManager:
 
             # the last section is ending with an image => end of section is end generated video
             if section_start_slide is not None:
-                background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getTotalDuration(), "fade_out": self.getMusicFadeOutDuration(i) })
+                background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getTotalDuration() - self.getMusicFadeOutDuration(i), "fade_out": self.getMusicFadeOutDuration(i) })
                 
             if len(background_sections) > 0:
                 # merge background tracks
