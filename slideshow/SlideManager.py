@@ -122,22 +122,22 @@ class SlideManager:
     def getTotalDuration(self):
         last_slide = self.getSlides()[-1]
         last_slide_start = self.getOffset(-1)
-        return last_slide_start + last_slide.duration
+        return last_slide_start + last_slide.getDuration()
     
     def getVideoAudioDuration(self):
-        return sum([slide.duration for slide in self.getVideos() if slide.has_audio])
+        return sum([slide.getDuration() for slide in self.getVideos() if slide.has_audio])
     
     def getAudioDuration(self):
-        return sum([slide.duration for slide in self.getBackgroundTracks()])
+        return sum([audio.duration for audio in self.getBackgroundTracks()])
             
     def getOffset(self, idx):
-        return sum([slide.duration - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
+        return sum([slide.getDuration() - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
         
     def getMusicFadeOutDuration(self, idx):
         # first and last slide should fade the total music in/out
         if idx < 0 or idx == len(self.getSlides())-1:
             slide = self.getSlides()[idx]
-            return slide.duration
+            return slide.getDuration()
         return self.getSlideFadeOutDuration(idx)
     
     def getSlideFadeOutDuration(self, idx):
@@ -196,7 +196,7 @@ class SlideManager:
                 # fix scaling
                 filters.append("setsar=1")
                 
-                slide.file = self.queue.addItem([slide.file], filters, i)
+                slide.tempfile = self.queue.addItem([slide.file], filters, i)
 
                 filters = []
 
@@ -243,12 +243,12 @@ class SlideManager:
             
             # get fade in duration from previous slides fade duration
             fade_in_end = self.getSlideFadeOutDuration(i-1) if i > 0 else 0
-            fade_out_start = slide.duration - self.getSlideFadeOutDuration(i)
+            fade_out_start = slide.getDuration() - self.getSlideFadeOutDuration(i)
             
             splits = []
             if fade_in_end > 0:
                 splits.append("start")
-            if fade_out_start < slide.duration:
+            if fade_out_start < slide.getDuration():
                 splits.append("end")
             if fade_out_start > fade_in_end:
                 splits.append("main")
@@ -268,7 +268,8 @@ class SlideManager:
                     if step == "end":
                         tempfilters.append("trim=start=%s,setpts=PTS-STARTPTS" %(fade_out_start))
                     
-                    self.queue.addItem([slide.file], tempfilters, "%s_%s" %(i, step))
+                    file = slide.tempfile if isinstance(slide, ImageSlide) else slide.file
+                    self.queue.addItem([file], tempfilters, "%s_%s" %(i, step))
             else:
                 filters.append("split=%s" %(len(splits)))
                 filter_chains.append("[%s:v]" %(i) + ", ".join(filters) + "".join(["[v%sout-%s]" %(i, s) for s in splits])) 
@@ -398,7 +399,7 @@ class SlideManager:
                 # Fade music in filter
                 if slide.fade_duration > 0:
                     filters.append("afade=t=in:st=0:d=%s" %(self.getSlideFadeOutDuration(i-1)))
-                    filters.append("afade=t=out:st=%s:d=%s" %(slide.duration - self.getSlideFadeOutDuration(i), self.getSlideFadeOutDuration(i) ))
+                    filters.append("afade=t=out:st=%s:d=%s" %(slide.getDuration() - self.getSlideFadeOutDuration(i), self.getSlideFadeOutDuration(i) ))
                 filters.append("adelay=%s|%s" %( int((self.getOffset(i)) *1000), int((self.getOffset(i)) *1000)))
                 
                 input_number = i
@@ -481,7 +482,7 @@ class SlideManager:
         
         timestamps = self.getTimestampsFromAudio()
         
-        logger.debug("Slide durations (before): %s", [slide.duration for slide in self.getSlides()])
+        logger.debug("Slide durations (before): %s", [slide.getDuration() for slide in self.getSlides()])
         
         # change slide durations
         timestamp_idx = 0
@@ -513,7 +514,7 @@ class SlideManager:
                         slide.duration = duration + self.getSlideFadeOutDuration(i)/2
                         timestamp_idx = timestamp_idx + 1
 
-        logger.debug("Slide durations (after): %s", [slide.duration for slide in self.getSlides()])
+        logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
 
 
     def getTransition(self, i, end, start, transition):
@@ -574,7 +575,7 @@ class SlideManager:
             file.write(";\n".join(video_filters + audio_filters))
             
         # Get Frames
-        frames = round(sum([slide.duration*self.config["fps"] for slide in self.getSlides()]))
+        frames = round(sum([slide.getDuration()*self.config["fps"] for slide in self.getSlides()]))
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
 

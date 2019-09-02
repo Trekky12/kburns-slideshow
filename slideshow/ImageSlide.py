@@ -34,13 +34,13 @@ class ImageSlide(Slide):
             pass
         
         width, height = im.size
-        ratio = width / height
+        self.ratio = width / height
         
         self.width = width
         self.height = height
 
         if scale_mode == "auto":
-            self.scale = "pad" if abs(ratio - self.output_ratio) > 0.5 else "crop_center"
+            self.scale = "pad" if abs(self.ratio - self.output_ratio) > 0.5 else "crop_center"
         else:
             self.scale = scale_mode
             
@@ -59,14 +59,12 @@ class ImageSlide(Slide):
     def getFilter(self):
         slide_filters = ["format=pix_fmts=yuva420p"]
 
-        ratio = self.width/self.height
-        
         # Crop to make video divisible
         slide_filters.append("crop=w=2*floor(iw/2):h=2*floor(ih/2)")
         
         # Pad filter
         if self.scale == "pad" or self.scale == "pan":
-            width, height = [self.width, int(self.width/self.output_ratio)] if ratio > self.output_ratio else [int(self.height*self.output_ratio), self.height]
+            width, height = [self.width, int(self.width/self.output_ratio)] if self.ratio > self.output_ratio else [int(self.height*self.output_ratio), self.height]
             slide_filters.append("pad=w=%s:h=%s:x='(ow-iw)/2':y='(oh-ih)/2'" %(width, height))
             
         # Zoom/pan filter
@@ -77,10 +75,10 @@ class ImageSlide(Slide):
         y = 0
         z = 0
         if self.scale == "pan":
-            z_initial = ratio/self.output_ratio
-            z_step = z_step*ratio/self.output_ratio
-            z_rate = z_rate*ratio/self.output_ratio
-            if ratio > self.output_ratio:
+            z_initial = self.ratio/self.output_ratio
+            z_step = z_step*self.ratio/self.output_ratio
+            z_rate = z_rate*self.ratio/self.output_ratio
+            if self.ratio > self.output_ratio:
                 if (self.direction_x == "left" and self.direction_z != "out") or (self.direction_x == "right" and self.direction_z == "out"):
                     x = "(1-on/%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
                 elif (self.direction_x == "right" and self.direction_z != "out") or (self.direction_x == "left" and self.direction_z == "out"):
@@ -88,27 +86,27 @@ class ImageSlide(Slide):
                 else:
                     x = "(iw-ow)/2"
                     
-                y_offset = "(ih-iw/%s)/2" %(ratio)
+                y_offset = "(ih-iw/%s)/2" %(self.ratio)
 
                 if self.direction_y == "top":
                     y = y_offset
                 elif self.direction_y == "center":
-                    y = "%s+iw/%s/2-iw/%s/zoom/2" %(y_offset, ratio, self.output_ratio)
+                    y = "%s+iw/%s/2-iw/%s/zoom/2" %(y_offset, self.ratio, self.output_ratio)
                 elif self.direction_y == "bottom":
-                    y = "%s+iw/%s-iw/%s/zoom" %(y_offset, ratio, self.output_ratio)
+                    y = "%s+iw/%s-iw/%s/zoom" %(y_offset, self.ratio, self.output_ratio)
             
             else:
-                z_initial = self.output_ratio/ratio
-                z_step = z_step*self.output_ratio/ratio
-                z_rate = z_rate*self.output_ratio/ratio
-                x_offset = "(iw-%s*ih)/2" %(ratio)
+                z_initial = self.output_ratio/self.ratio
+                z_step = z_step*self.output_ratio/self.ratio
+                z_rate = z_rate*self.output_ratio/self.ratio
+                x_offset = "(iw-%s*ih)/2" %(self.ratio)
                 
                 if self.direction_x == "left":
                     x = x_offset
                 elif self.direction_x == "center":
-                    x = "%s+ih*%s/2-ih*%s/zoom/2" %(x_offset, ratio, self.output_ratio)
+                    x = "%s+ih*%s/2-ih*%s/zoom/2" %(x_offset, self.ratio, self.output_ratio)
                 elif self.direction_x == "right":
-                    x = "%s+ih*%s-ih*%s/zoom" %(x_offset, ratio, self.output_ratio)
+                    x = "%s+ih*%s-ih*%s/zoom" %(x_offset, self.ratio, self.output_ratio)
                 
                 if (self.direction_y == "top" and self.direction_z != "out") or (self.direction_y == "bottom" and self.direction_z == "out"):
                     y = "(1-on/(%s*%s))*(ih-ih/zoom)" %(self.fps, self.duration)
@@ -141,10 +139,10 @@ class ImageSlide(Slide):
         width = 0
         height = 0
         if self.scale == "crop_center":
-            if self.output_ratio > ratio:
-                width, height = [self.output_width, int(self.output_width/ratio)]
+            if self.output_ratio > self.ratio:
+                width, height = [self.output_width, int(self.output_width/self.ratio)]
             else:
-                width, height = [int(self.output_height*ratio), self.output_height]
+                width, height = [int(self.output_height*self.ratio), self.output_height]
         if self.scale == "pan" or self.scale == "pad":
             width, height = [self.output_width, self.output_height]
 
@@ -168,8 +166,8 @@ class ImageSlide(Slide):
     def getObject(self, config):
         object = super().getObject(config)
         
-        if self.duration != config["slide_duration"]:
-            object["slide_duration"] = self.duration
+        if self.slide_duration_min != config["slide_duration_min"]:
+            object["slide_duration_min"] = self.slide_duration_min
         
         if self.zoom_rate != config["zoom_rate"]:
             object["zoom_rate"] = self.zoom_rate

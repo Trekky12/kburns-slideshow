@@ -24,6 +24,9 @@ class Slide:
         
         self.splits = []
         
+    def getDuration(self):
+        return self.duration
+        
     def getFilter(self):
         return
         
@@ -32,6 +35,9 @@ class Slide:
             "file": self.file
         }
         
+        if self.duration != config["slide_duration"]:
+            object["slide_duration"] = self.duration
+            
         if self.fade_duration != config["fade_duration"]:
             object["fade_duration"] = self.fade_duration
             
