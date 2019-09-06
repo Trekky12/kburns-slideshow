@@ -191,6 +191,21 @@ class SlideManager:
         slide = self.getSlides()[idx]
         return slide.transition
         
+    def getTransition(self, i, end  = "", start = "", transition = ""):
+        fade_duration = self.getSlideFadeOutDuration(i, False)
+        # blend between previous slide and this slide
+        if fade_duration > 0:
+            # Load effect
+            try:
+                effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i)))
+                filter = effect.get(end, start, transition, i, fade_duration, self.config)
+                return filter
+            except ModuleNotFoundError:
+                return None
+        
+        # fade duration is too long for slides duration
+        return None
+        
     def getVideoFilterChains(self, burnSubtitles = False, srtFilename = ""):
     
         logger.debug("get Video Filter Chains")
@@ -526,21 +541,6 @@ class SlideManager:
                         timestamp_idx = timestamp_idx + 1
 
         logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
-            
-    def getTransition(self, i, end  = "", start = "", transition = ""):
-        fade_duration = self.getSlideFadeOutDuration(i, False)
-        # blend between previous slide and this slide
-        if fade_duration > 0:
-            # Load effect
-            try:
-                effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i)))
-                filter = effect.get(end, start, transition, i, fade_duration, self.config)
-                return filter
-            except ModuleNotFoundError:
-                return None
-        
-        # fade duration is too long for slides duration
-        return None
             
     def createVideo(self, output_file):
         logger.info("Create video %s", output_file)
