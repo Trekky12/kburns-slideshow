@@ -522,7 +522,7 @@ class SlideManager:
                         # timestamp matches fade end:    duration
                         # timestamp matches fade middle: duration + self.getSlideFadeOutDuration(i)/2
                         # timestamp matches fade begin:  duration + self.getSlideFadeOutDuration(i)
-                        slide.setFrames(duration + self.getSlideFadeOutDuration(i)/2/self.config["fps"])
+                        slide.setDuration(duration + self.getSlideFadeOutDuration(i)/2/self.config["fps"])
                         timestamp_idx = timestamp_idx + 1
 
         logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
