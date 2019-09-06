@@ -122,7 +122,8 @@ class SlideManager:
     def getTotalDuration(self):
         last_slide = self.getSlides()[-1]
         last_slide_start = self.getOffset(-1)
-        return last_slide_start + last_slide.getDuration()
+        
+        return (last_slide_start + last_slide.getFrames())/self.config["fps"]
     
     def getVideoAudioDuration(self):
         return sum([slide.getDuration() for slide in self.getVideos() if slide.has_audio])
@@ -130,17 +131,22 @@ class SlideManager:
     def getAudioDuration(self):
         return sum([audio.duration for audio in self.getBackgroundTracks()])
             
-    def getOffset(self, idx):
-        return sum([slide.getDuration() - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
+    # next slide starts on 
+    # previous slides start 
+    # + slides duration 
+    # - fade-out duration (begin of transition) 
+    def getOffset(self, idx, frames = True):
+        offset = sum([slide.getFrames() - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
+        return offset if frames else round(offset/self.config["fps"], 5)
         
     def getMusicFadeOutDuration(self, idx):
         # first and last slide should fade the total music in/out
         if idx < 0 or idx == len(self.getSlides())-1:
             slide = self.getSlides()[idx]
             return slide.getDuration()
-        return self.getSlideFadeOutDuration(idx)
+        return self.getSlideFadeOutDuration(idx, False)
     
-    def getSlideFadeOutDuration(self, idx):
+    def getSlideFadeOutDuration(self, idx, frames = True):
         # first slide has no previous slide
         if idx < 0:
             return 0
@@ -157,7 +163,7 @@ class SlideManager:
         # is current slide long enough to have a fade-in and fade-out?
         if self.isSlideDurationGreaterThanFadeDuration(idx, 2):
             slide = self.getSlides()[idx]
-            return slide.fade_duration
+            return slide.fade_duration*self.config["fps"] if frames else slide.fade_duration
         
         return 0
     
@@ -171,10 +177,15 @@ class SlideManager:
             
         slide = self.getSlides()[idx]
         # is the duration of the slide long enough to have a fade-in and fade-out
-        if slide.duration >= slide.fade_duration*multiplier:
+        if slide.getDuration() >= slide.fade_duration*multiplier:
             return True
         
         return False
+        
+    def getSlideFadeOutPosition(self, idx, frames = True):
+        slide = self.getSlides()[idx]
+        pos_frames = slide.getFrames() - self.getSlideFadeOutDuration(idx)
+        return pos_frames if frames else round(pos_frames/self.config["fps"], 3)
         
     def getSlideTransition(self, idx):
         slide = self.getSlides()[idx]
@@ -242,13 +253,13 @@ class SlideManager:
             # split video in start, main, end sections
             
             # get fade in duration from previous slides fade duration
-            fade_in_end = self.getSlideFadeOutDuration(i-1) if i > 0 else 0
-            fade_out_start = slide.getDuration() - self.getSlideFadeOutDuration(i)
+            fade_in_end = self.getSlideFadeOutDuration(i-1, True) if i > 0 else 0
+            fade_out_start = self.getSlideFadeOutPosition(i, True)
             
             splits = []
             if fade_in_end > 0:
                 splits.append("start")
-            if fade_out_start < slide.getDuration():
+            if fade_out_start < slide.getFrames():
                 splits.append("end")
             if fade_out_start > fade_in_end:
                 splits.append("main")
@@ -260,14 +271,14 @@ class SlideManager:
                     tempfilters = filters[:]
                     
                     if step == "start":
-                        tempfilters.append("trim=start=0:end=%s,setpts=PTS-STARTPTS" %(fade_in_end))
-
+                        tempfilters.append("trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS" %(0, fade_in_end))
+                        
                     if step == "main":
-                        tempfilters.append("trim=start=%s:end=%s,setpts=PTS-STARTPTS" %(fade_in_end, fade_out_start))
-
+                        tempfilters.append("trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS" %(fade_in_end, fade_out_start))
+                        
                     if step == "end":
-                        tempfilters.append("trim=start=%s,setpts=PTS-STARTPTS" %(fade_out_start))
-                    
+                        tempfilters.append("trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS" %(fade_out_start, slide.getFrames()))
+                        
                     file = slide.tempfile if isinstance(slide, ImageSlide) else slide.file
                     self.queue.addItem([file], tempfilters, "%s_%s" %(i, step))
             else:
@@ -281,11 +292,11 @@ class SlideManager:
                 # https://stackoverflow.com/a/40746988
                 # https://stackoverflow.com/a/51978577
                 if "start" in splits:
-                    filter_chains.append("[v%sout-start]fifo,trim=start=0:end=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, fade_in_end, i))
+                    filter_chains.append("[v%sout-start]fifo,trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS[v%sstart]" %(i, 0, fade_in_end, i))
                 if "main" in splits:
-                    filter_chains.append("[v%sout-main]fifo,trim=start=%s:end=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
+                    filter_chains.append("[v%sout-main]fifo,trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS[v%smain]" %(i, fade_in_end, fade_out_start, i))
                 if "end" in splits:
-                    filter_chains.append("[v%sout-end]fifo,trim=start=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, i))
+                    filter_chains.append("[v%sout-end]fifo,trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, slide.getFrames(), i))
                 
                 
         subtitles = ""
@@ -398,9 +409,9 @@ class SlideManager:
                 filters = []
                 # Fade music in filter
                 if slide.fade_duration > 0:
-                    filters.append("afade=t=in:st=0:d=%s" %(self.getSlideFadeOutDuration(i-1)))
-                    filters.append("afade=t=out:st=%s:d=%s" %(slide.getDuration() - self.getSlideFadeOutDuration(i), self.getSlideFadeOutDuration(i) ))
-                filters.append("adelay=%s|%s" %( int((self.getOffset(i)) *1000), int((self.getOffset(i)) *1000)))
+                    filters.append("afade=t=in:st=0:d=%s" %(self.getSlideFadeOutDuration(i-1, False)))
+                    filters.append("afade=t=out:st=%s:d=%s" %(self.getSlideFadeOutPosition(i, False), self.getSlideFadeOutDuration(i, False) ))
+                filters.append("adelay=%s|%s" %( int(self.getOffset(i, False)*1000), int(self.getOffset(i, False)*1000)))
                 
                 input_number = i
                 # append video with sound to input list
@@ -423,7 +434,7 @@ class SlideManager:
             for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
                 if isinstance(slide, VideoSlide) and slide.has_audio and section_start_slide is not None:
-                    background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getOffset(i) - self.getMusicFadeOutDuration(i), "fade_out": self.getMusicFadeOutDuration(i) })
+                    background_sections.append({ "start": self.getOffset(section_start_slide, False), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getOffset(i, False), "fade_out": self.getMusicFadeOutDuration(i) })
                     section_start_slide = None
                 
                 # is it a image but the previous one was a video => start new section
@@ -432,7 +443,7 @@ class SlideManager:
 
             # the last section is ending with an image => end of section is end generated video
             if section_start_slide is not None:
-                background_sections.append({ "start": self.getOffset(section_start_slide), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getTotalDuration() - self.getMusicFadeOutDuration(i), "fade_out": self.getMusicFadeOutDuration(i) })
+                background_sections.append({ "start": self.getOffset(section_start_slide, False), "fade_in": self.getMusicFadeOutDuration(section_start_slide-1), "end": self.getTotalDuration() - self.getMusicFadeOutDuration(i), "fade_out": self.getMusicFadeOutDuration(i) })
                 
             if len(background_sections) > 0:
                 # merge background tracks
@@ -489,7 +500,7 @@ class SlideManager:
         for i, slide in enumerate(self.getSlides()):
             if not slide.has_audio and not isinstance(slide, VideoSlide) and timestamp_idx < len(timestamps):
                 
-                slide_start = self.getOffset(i)
+                slide_start = self.getOffset(i, False)
                 
                 # find the next timestamp after the slide starts 
                 # and skip timestamps until the minimum duration is reached
@@ -506,19 +517,18 @@ class SlideManager:
                     duration = timestamps[timestamp_idx] - slide_start
 
                     # the next timestamp is earlier than the initial slide duration and after the minimum? => set the new duration
-                    if duration < slide.duration:
+                    if duration < slide.getDuration():
                         # extend slide duration for a half fade so that the middle of the transition matches the timestamp
                         # timestamp matches fade end:    duration
                         # timestamp matches fade middle: duration + self.getSlideFadeOutDuration(i)/2
                         # timestamp matches fade begin:  duration + self.getSlideFadeOutDuration(i)
-                        slide.duration = duration + self.getSlideFadeOutDuration(i)/2
+                        slide.setFrames(duration + self.getSlideFadeOutDuration(i)/2/self.config["fps"])
                         timestamp_idx = timestamp_idx + 1
 
         logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
-
-
-    def getTransition(self, i, end, start, transition):
-        fade_duration = self.getSlideFadeOutDuration(i)
+            
+    def getTransition(self, i, end  = "", start = "", transition = ""):
+        fade_duration = self.getSlideFadeOutDuration(i, False)
         # blend between previous slide and this slide
         if fade_duration > 0:
             # Load effect
@@ -530,8 +540,7 @@ class SlideManager:
                 return None
         
         # fade duration is too long for slides duration
-        else:
-            return None
+        return None
             
     def createVideo(self, output_file):
         logger.info("Create video %s", output_file)
@@ -575,7 +584,7 @@ class SlideManager:
             file.write(";\n".join(video_filters + audio_filters))
             
         # Get Frames
-        frames = round(sum([slide.getDuration()*self.config["fps"] for slide in self.getSlides()]))
+        frames = round(sum([slide.getFrames() for slide in self.getSlides()]))
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
 
@@ -664,12 +673,12 @@ class SlideManager:
             for i, slide in enumerate(self.slides):
                 if slide.title is not None:
                     # start the subtitle when the fade-in is done
-                    offset = self.getOffset(i)
-                    srt_start = self.getSubtitleFormat(offset + self.getSlideFadeOutDuration(i-1))
+                    offset = self.getOffset(i, False) + self.getSlideFadeOutDuration(i-1, False)
+                    srt_start = self.getSubtitleFormat(offset)
                     
                     # end the subtitle when the fade-out is done
-                    offset_next = self.getOffset(i+1)
-                    srt_end = self.getSubtitleFormat(offset_next + self.getSlideFadeOutDuration(i))
+                    offset_next = self.getOffset(i+1, False) + self.getSlideFadeOutDuration(i, False)
+                    srt_end = self.getSubtitleFormat(offset_next)
 
                     file.write("%s\n" %(subtitle_index))
                     file.write("%s --> %s\n" %(srt_start, srt_end))

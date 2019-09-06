@@ -23,9 +23,22 @@ class Slide:
             self.transition = transition if transition in self.getEffects() else None
         
         self.splits = []
+        self.tempfile = None
         
-    def getDuration(self):
-        return self.duration
+        # fix the duration
+        # round down to last full frame
+        self.frames = 0
+        self.setDuration(duration)
+        
+    def getDuration(self): 
+        return round(self.frames/self.fps, 3)
+        
+    def setDuration(self, duration):
+        self.frames = int(duration * self.fps)
+        self.duration = self.frames/self.fps
+        
+    def getFrames(self):
+        return self.frames
         
     def getFilter(self):
         return
@@ -35,8 +48,8 @@ class Slide:
             "file": self.file
         }
         
-        if self.duration != config["slide_duration"]:
-            object["slide_duration"] = self.duration
+        if self.getDuration() != config["slide_duration"]:
+            object["slide_duration"] = self.getDuration()
             
         if self.fade_duration != config["fade_duration"]:
             object["fade_duration"] = self.fade_duration
