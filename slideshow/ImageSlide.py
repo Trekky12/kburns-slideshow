@@ -5,6 +5,11 @@ import random
 class ImageSlide(Slide):
     
     def __init__(self, file, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None, transition = "random"):
+        self.zoom_rate = zoom_rate
+        self.slide_duration_min = slide_duration_min
+        if slide_duration_min > duration:
+            duration = slide_duration_min
+        
         super().__init__(file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
         
         im = Image.open(self.file)
@@ -52,9 +57,6 @@ class ImageSlide(Slide):
             self.direction_x = zoom_direction.split("-")[1]
             self.direction_y = zoom_direction.split("-")[0]
             self.direction_z = zoom_direction.split("-")[2]
-            
-        self.zoom_rate = zoom_rate
-        self.slide_duration_min = slide_duration_min
         
     def getFilter(self):
         slide_filters = ["format=pix_fmts=yuva420p"]
