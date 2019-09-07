@@ -16,7 +16,10 @@ from .Queue import Queue
 logger = logging.getLogger("kburns-slideshow")
 
 class SlideManager:
-
+    
+    ###################################
+    #           Preprocessing         #
+    ###################################
     def __init__(self, config, input_files, audio_files):
         self.slides = []
         self.background_tracks = []
@@ -118,19 +121,10 @@ class SlideManager:
         if self.config["loopable"]:
             return self.slides + [self.slides[0]]
         return self.slides
-        
-    def getTotalDuration(self):
-        last_slide = self.getSlides()[-1]
-        last_slide_start = self.getOffset(-1)
-        
-        return (last_slide_start + last_slide.getFrames())/self.config["fps"]
-    
-    def getVideoAudioDuration(self):
-        return sum([slide.getDuration() for slide in self.getVideos() if slide.has_audio])
-    
-    def getAudioDuration(self):
-        return sum([audio.duration for audio in self.getBackgroundTracks()])
             
+    ###################################
+    #      Duration Calculations      #
+    ###################################
     # next slide starts on 
     # previous slides start 
     # + slides duration 
@@ -138,13 +132,6 @@ class SlideManager:
     def getOffset(self, idx, frames = True):
         offset = sum([slide.getFrames() - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
         return offset if frames else round(offset/self.config["fps"], 5)
-        
-    def getMusicFadeOutDuration(self, idx):
-        # first and last slide should fade the total music in/out
-        if idx < 0 or idx == len(self.getSlides())-1:
-            slide = self.getSlides()[idx]
-            return slide.getDuration()
-        return self.getSlideFadeOutDuration(idx, False)
     
     def getSlideFadeOutDuration(self, idx, frames = True):
         # first slide has no previous slide
@@ -187,6 +174,9 @@ class SlideManager:
         pos_frames = slide.getFrames() - self.getSlideFadeOutDuration(idx)
         return pos_frames if frames else round(pos_frames/self.config["fps"], 3)
         
+    ###################################
+    #          Transitions            #
+    ###################################
     def getSlideTransition(self, idx):
         slide = self.getSlides()[idx]
         return slide.transition
@@ -206,6 +196,9 @@ class SlideManager:
         # fade duration is too long for slides duration
         return None
         
+    ###################################
+    #           Video                 #
+    ###################################
     def getVideoFilterChains(self, burnSubtitles = False, srtFilename = ""):
     
         logger.debug("get Video Filter Chains")
@@ -313,11 +306,6 @@ class SlideManager:
                 if "end" in splits:
                     filter_chains.append("[v%sout-end]fifo,trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS[v%send]" %(i, fade_out_start, slide.getFrames(), i))
                 
-                
-        subtitles = ""
-        # Burn subtitles to last element
-        if burnSubtitles and self.hasSubtitles():
-            subtitles = ",subtitles=%s" %(srtFilename)
             
         # Concat videos
         videos = []
@@ -394,18 +382,36 @@ class SlideManager:
             
             videos = ["[%s:v]" %(i) for i in range(len(self.tempInputFiles))]
         
+        subtitles = ""
+        # Burn subtitles to last element
+        if burnSubtitles and self.hasSubtitles():
+            subtitles = ",subtitles=%s" %(srtFilename)
+            
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" %("".join(videos), len(videos), subtitles))
             
         return filter_chains
         
+    ###################################
+    #           Audio                 #
+    ###################################
     def getBackgroundTracks(self):
         return self.background_tracks
         
     def hasAudio(self):
         return len(self.background_tracks)> 0 or len([video for video in self.getVideos() if video.has_audio]) > 0
         
-    def hasSubtitles(self):
-        return len([slide for slide in self.getSlides() if slide.title is not None]) > 0        
+    def getMusicFadeOutDuration(self, idx):
+        # first and last slide should fade the total music in/out
+        if idx < 0 or idx == len(self.getSlides())-1:
+            slide = self.getSlides()[idx]
+            return slide.getDuration()
+        return self.getSlideFadeOutDuration(idx, False)
+        
+    def getVideoAudioDuration(self):
+        return sum([slide.getDuration() for slide in self.getVideos() if slide.has_audio])
+    
+    def getAudioDuration(self):
+        return sum([audio.duration for audio in self.getBackgroundTracks()])
         
     def getAudioFilterChains(self):
     
@@ -541,7 +547,16 @@ class SlideManager:
                         timestamp_idx = timestamp_idx + 1
 
         logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
-            
+           
+    ###################################
+    #         Create Video            #
+    ###################################
+    def getTotalDuration(self):
+        last_slide = self.getSlides()[-1]
+        last_slide_start = self.getOffset(-1)
+        
+        return (last_slide_start + last_slide.getFrames())/self.config["fps"]
+        
     def createVideo(self, output_file):
         logger.info("Create video %s", output_file)
         
@@ -603,11 +618,9 @@ class SlideManager:
             # subtitles (only mkv)
             "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
             # filters
-            #"-filter_complex \"%s\"" % (";".join(filter_chains)),
             "-filter_complex_script \"%s\"" % (temp_filter_script),
             # define duration
-            # if video should be loopable, skip the start fade-in (-ss) and the end fade-out (video is stopped after the fade-in of the last image which is the same as the first-image)
-            "-ss %s -t %s" %(self.getSlides()[0].fade_duration, self.getOffset(-1)) if self.config["loopable"] else "-t %s" %(self.getTotalDuration()),
+            "-t %s" %(self.getTotalDuration()),
             # define output
             "-map", "[out]:v",
             "-c:v", "libx264", 
@@ -633,12 +646,15 @@ class SlideManager:
         if self.config["delete_temp"]:
             logger.info("Delete temporary files")
             self.queue.clean()
-
-        if os.path.exists(temp_filter_script):
-            os.remove(temp_filter_script)
-        if os.path.exists(srtFilename):
-            os.remove(srtFilename)
+            
+            if os.path.exists(temp_filter_script):
+                os.remove(temp_filter_script)
+            if os.path.exists(srtFilename):
+                os.remove(srtFilename)
                 
+    ###################################
+    #           Config                #
+    ###################################
     def saveConfig(self, filename):
         logger.info("Save config to %s", filename)
         
@@ -667,6 +683,12 @@ class SlideManager:
         with open('%s' %(filename), 'w') as file:
             json.dump(content, file, indent=4)
             
+    ###################################
+    #           Subtitles             #
+    ###################################
+    def hasSubtitles(self):
+        return len([slide for slide in self.getSlides() if slide.title is not None]) > 0
+        
     def createSubtitles(self, filename):
         with open('%s' %(filename), 'w') as file:
             subtitle_index = 1
