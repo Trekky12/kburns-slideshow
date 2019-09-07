@@ -39,7 +39,7 @@ class Slide:
         # it is a possible frame for a duration with less than 2 decimal places
         possibleFrames = [i for i in range(self.fps) if float(i/self.fps*100).is_integer()]
         
-        total_frames = duration * self.fps
+        total_frames = round(duration * self.fps)
         total_frames_seconds = int(duration) * self.fps
         
         remaining_frames = total_frames - total_frames_seconds
