@@ -135,7 +135,7 @@ class ImageSlide(Slide):
         if self.direction_z == "in":
             z = "if(eq(on,1),%s,zoom+%s)" %(z_initial, z_step)
         elif self.direction_z == "out":
-          "if(eq(on,1),%s,zoom-%s)" %(z_initial+z_rate, z_step)
+            z = "if(eq(on,1),%s,zoom-%s)" %(z_initial+z_rate, z_step)
 
           
         width = 0
