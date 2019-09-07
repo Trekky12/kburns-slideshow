@@ -34,7 +34,24 @@ class Slide:
         return round(self.frames/self.fps, 3)
         
     def setDuration(self, duration):
-        self.frames = int(duration * self.fps)
+        # for each frame (in one second) calculate the expected duration (i/fps)
+        # if this value has more than 2 decimal places (*100 has no decimal places (is_integer))
+        # it is a possible frame for a duration with less than 2 decimal places
+        possibleFrames = [i for i in range(self.fps) if float(i/self.fps*100).is_integer()]
+        
+        total_frames = duration * self.fps
+        total_frames_seconds = int(duration) * self.fps
+        
+        remaining_frames = total_frames - total_frames_seconds
+        
+        frameCount = 0
+        for i in possibleFrames:
+            if i <= remaining_frames:
+                frameCount = i
+            else:
+                break
+        
+        self.frames = total_frames_seconds + frameCount
         self.duration = self.frames/self.fps
         
     def getFrames(self):
