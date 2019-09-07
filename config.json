@@ -22,5 +22,6 @@
     "loopable": false,
     "overwrite": false,
     "generate_temp": false,
-    "delete_temp": false
+    "delete_temp": false,
+    "sync_to_audio": false
 }

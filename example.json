@@ -5,6 +5,9 @@
         "slide_duration": 3,
         "slide_duration_min": 1,
         "fade_duration": 1.0,
+        "transition": "random",
+        "transition_bars_count": 10,
+        "transition_cell_size": 100,
         "fps": 60,
         "zoom_rate": 0.1,
         "zoom_direction": "random",
@@ -12,7 +15,9 @@
         "loopable": false,
         "overwrite": false,
         "generate_temp": false,
-        "delete_temp": false
+        "delete_temp": false,
+        "sync_to_audio": false,
+        "is_synced_to_audio": false
     },
     "slides": [
 

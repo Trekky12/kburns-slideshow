@@ -26,6 +26,8 @@ if __name__ == "__main__":
 
     sm = SlideManager(config, input_files, audio_files)
 
-    sm.adjustDurationsFromAudio()
+    if config["sync_to_audio"]:
+        logger.info("Sync slides durations to audio")
+        sm.adjustDurationsFromAudio()
 
     sm.createVideo(output_file)

@@ -40,11 +40,14 @@ class CLI:
         self.parser.add_argument("-d", "--delete-temp", action='store_true', help="Generate temporary files")
 
         self.parser.add_argument("-a", "--audio", metavar='FILE', help="One or more background audio tracks", nargs='*')
+        self.parser.add_argument("-sy", "--sync-to-audio", action='store_true', help="Sync slides duration to audio")
         
         self.parser.add_argument("-i", "--input-files", metavar='FILE', help="One or more input files", nargs='+')
         self.parser.add_argument("-f", "--file-list", metavar='LIST',)
         
         self.parser.add_argument("-s", "--save", metavar='FILE', help="save settings")
+        
+        self.parser.add_argument("-test", action='store_true', help="Only test the input and do not generate the videos")
         
         self.parser.add_argument("output_file")
         
@@ -144,6 +147,14 @@ class CLI:
             audio_files.extend(args.audio)
             logger.debug("Load audio files from command line: %s", args.audio)
         
+        if args.sync_to_audio is True:
+            self.config["sync_to_audio"] = True
+            logger.debug("Set sync to audio")
+        
+        self.config["test"] = args.test
+        if args.test is True:
+            logger.debug("Set Testmode")
+            
         self.config["save"] = args.save
         
         logger.debug("Save config: %s", args.save)

@@ -32,6 +32,7 @@ class SlideManager:
         
         self.reduceVariable = 10
         
+        self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         logger.debug("Init SlideManager")
         for position, file in enumerate(input_files):
             
@@ -546,6 +547,7 @@ class SlideManager:
                         slide.setDuration(duration + self.getSlideFadeOutDuration(i)/2/self.config["fps"])
                         timestamp_idx = timestamp_idx + 1
 
+        self.config["is_synced_to_audio"] = True
         logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
            
     ###################################
@@ -603,54 +605,55 @@ class SlideManager:
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
 
-        # create temporary videos
-        self.queue.createTemporaryVideos(self.config["ffmpeg"])
-        
-        # Run ffmpeg
-        cmd = [ self.config["ffmpeg"], 
-            "-hide_banner", 
-            #"-v quiet",
-            "-stats",
-            "-y" if self.config["overwrite"] else "",
-            # slides
-            " ".join(["-i \"%s\" " %(f) for f in inputs]),
-            " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
-            # subtitles (only mkv)
-            "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
-            # filters
-            "-filter_complex_script \"%s\"" % (temp_filter_script),
-            # define duration
-            "-t %s" %(self.getTotalDuration()),
-            # define output
-            "-map", "[out]:v",
-            "-c:v", "libx264", 
-            #"-crf", "0" ,
-            "-preset", "ultrafast", 
-            "-tune", "stillimage",
-            "-map [aout]:a" if self.hasAudio() else "",
-            # audio compression and bitrate
-            "-c:a aac" if self.hasAudio() else "",
-            "-b:a 160k" if self.hasAudio() else "",
-            # map subtitles (only mkv)
-            "-map %s:s" %(srtInput) if self.hasSubtitles() and not burnSubtitles else "",
-            # set subtitles enabled (only mkv)
-            "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
-            output_file
-        ]
-        
-        logger.info("FFMPEG started")
-        logger.debug(" ".join(cmd))
-        subprocess.call(" ".join(cmd))
-        logger.info("FFMPEG finished")
-        
-        if self.config["delete_temp"]:
-            logger.info("Delete temporary files")
-            self.queue.clean()
+        if not self.config["test"]:
+            # create temporary videos
+            self.queue.createTemporaryVideos(self.config["ffmpeg"])
             
-            if os.path.exists(temp_filter_script):
-                os.remove(temp_filter_script)
-            if os.path.exists(srtFilename):
-                os.remove(srtFilename)
+            # Run ffmpeg
+            cmd = [ self.config["ffmpeg"], 
+                "-hide_banner", 
+                #"-v quiet",
+                "-stats",
+                "-y" if self.config["overwrite"] else "",
+                # slides
+                " ".join(["-i \"%s\" " %(f) for f in inputs]),
+                " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
+                # subtitles (only mkv)
+                "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
+                # filters
+                "-filter_complex_script \"%s\"" % (temp_filter_script),
+                # define duration
+                "-t %s" %(self.getTotalDuration()),
+                # define output
+                "-map", "[out]:v",
+                "-c:v", "libx264", 
+                #"-crf", "0" ,
+                "-preset", "ultrafast", 
+                "-tune", "stillimage",
+                "-map [aout]:a" if self.hasAudio() else "",
+                # audio compression and bitrate
+                "-c:a aac" if self.hasAudio() else "",
+                "-b:a 160k" if self.hasAudio() else "",
+                # map subtitles (only mkv)
+                "-map %s:s" %(srtInput) if self.hasSubtitles() and not burnSubtitles else "",
+                # set subtitles enabled (only mkv)
+                "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
+                output_file
+            ]
+            
+            logger.info("FFMPEG started")
+            logger.debug(" ".join(cmd))
+            subprocess.call(" ".join(cmd))
+            logger.info("FFMPEG finished")
+            
+            if self.config["delete_temp"]:
+                logger.info("Delete temporary files")
+                self.queue.clean()
+                
+                if os.path.exists(temp_filter_script):
+                    os.remove(temp_filter_script)
+                if os.path.exists(srtFilename):
+                    os.remove(srtFilename)
                 
     ###################################
     #           Config                #
@@ -675,7 +678,10 @@ class SlideManager:
                 "loopable": self.config["loopable"],
                 "overwrite": self.config["overwrite"],
                 "generate_temp": self.config["generate_temp"],
-                "delete_temp": self.config["delete_temp"]
+                "delete_temp": self.config["delete_temp"],
+                # the slides duration is already synced to the audio
+                "sync_to_audio": False if self.config["is_synced_to_audio"] else self.config["sync_to_audio"],
+                "is_synced_to_audio": self.config["is_synced_to_audio"]
             }, 
             "slides": [slide.getObject(self.config) for slide in self.slides],
             "audio":  [track.getObject() for track in self.getBackgroundTracks()]
