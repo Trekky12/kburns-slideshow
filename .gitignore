@@ -1,5 +1,6 @@
 __pycache__
 data/
 
-slideshow/effects/*
-!slideshow/effects/fade.py
+slideshow/transitions/*
+!slideshow/transitions/fade.py
+!slideshow/transitions/__init__.py

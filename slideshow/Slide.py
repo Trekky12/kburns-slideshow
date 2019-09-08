@@ -18,9 +18,9 @@ class Slide:
         self.fps = fps
         
         if transition == "random":
-            self.transition = random.choice(self.getEffects())
+            self.transition = random.choice(self.getTransitions())
         else:
-            self.transition = transition if transition in self.getEffects() else None
+            self.transition = transition if transition in self.getTransitions() else None
         
         self.splits = []
         self.tempfile = None
@@ -82,5 +82,5 @@ class Slide:
             
         return object
         
-    def getEffects(self):
-        return [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(__file__))+"/effects"])]
+    def getTransitions(self):
+        return [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(__file__))+"/transitions"])]

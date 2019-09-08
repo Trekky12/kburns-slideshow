@@ -22,7 +22,7 @@ class CLI:
         self.parser.add_argument("-sdm", "--slide-duration-min", metavar='DURATION', type=float, help="Slide duration minimum (seconds) (default: %s)" %(self.config["slide_duration_min"]))
         self.parser.add_argument("-fd", "--fade-duration", metavar='DURATION', type=float, help="Fade duration (seconds) (default: %s)" %(self.config["fade_duration"]))
         
-        transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(__file__))+"/effects"])]
+        transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(__file__))+"/transitions"])]
         self.parser.add_argument("-ft", "--fade-transition", metavar='TRANSITION', choices=transition_choices, help="Fade transition (default: %s)" %(self.config["transition"]))
         
         self.parser.add_argument("-fps", "--fps", metavar='FPS', type=int, help="Output framerate (frames per second) (default: %s)" %(self.config["fps"]))

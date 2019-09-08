@@ -183,14 +183,14 @@ class SlideManager:
         slide = self.getSlides()[idx]
         return slide.transition
         
-    def getTransition(self, i, end  = "", start = "", transition = ""):
+    def getTransition(self, i, end  = "", start = "", trans = ""):
         fade_duration = self.getSlideFadeOutDuration(i, False)
         # blend between previous slide and this slide
         if fade_duration > 0:
-            # Load effect
+            # Load transition
             try:
-                effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i)))
-                filter, duration = effect.get(end, start, transition, i, fade_duration, self.config)
+                transition = importlib.import_module('slideshow.transitions.%s' %(self.getSlideTransition(i)))
+                filter, duration = transition.get(end, start, trans, i, fade_duration, self.config)
                 return filter, duration
             except ModuleNotFoundError:
                 return None, 0
