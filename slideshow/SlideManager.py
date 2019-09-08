@@ -556,9 +556,9 @@ class SlideManager:
                     if duration < slide.getDuration():
                         # extend slide duration for a half fade so that the middle of the transition matches the timestamp
                         # timestamp matches fade end:    duration
-                        # timestamp matches fade middle: duration + self.getSlideFadeOutDuration(i)/2
-                        # timestamp matches fade begin:  duration + self.getSlideFadeOutDuration(i)
-                        slide.setDuration(duration + self.getSlideFadeOutDuration(i)/2/self.config["fps"])
+                        # timestamp matches fade middle: duration + self.getTransitionFrames(i)/2/self.config["fps"]
+                        # timestamp matches fade begin:  duration + self.getTransitionFrames(i)/self.config["fps"]
+                        slide.setDuration(duration + self.getTransitionFrames(i)/2/self.config["fps"])
                         timestamp_idx = timestamp_idx + 1
 
         self.config["is_synced_to_audio"] = True
