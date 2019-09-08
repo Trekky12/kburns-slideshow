@@ -130,8 +130,9 @@ class SlideManager:
     # previous slides start 
     # + slides duration 
     # - fade-out duration (begin of transition) 
+    # + transition offset of previous transition (the duration which the transition is longer than the fade-duration)
     def getOffset(self, idx, frames = True):
-        offset = sum([slide.getFrames() - self.getSlideFadeOutDuration(i) for i, slide in enumerate(self.getSlides()[:idx])])
+        offset = sum([slide.getFrames() - self.getSlideFadeOutDuration(i) + self.getTransitionOffset(i) for i, slide in enumerate(self.getSlides()[:idx])])
         return offset if frames else round(offset/self.config["fps"], 5)
     
     def getSlideFadeOutDuration(self, idx, frames = True):
@@ -210,6 +211,16 @@ class SlideManager:
             return frames
             
         return 0
+        
+    # the duration which the transition is different from the fade-duration
+    def getTransitionOffset(self, idx):
+        transition_frames = self.getTransitionFrames(idx)
+        fade_out_frames = self.getSlideFadeOutDuration(idx)
+
+        if transition_frames >= fade_out_frames:
+            return transition_frames - fade_out_frames
+        
+        return -1*transition_frames
         
     ###################################
     #           Video                 #
