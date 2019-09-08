@@ -189,13 +189,27 @@ class SlideManager:
             # Load effect
             try:
                 effect = importlib.import_module('slideshow.effects.%s' %(self.getSlideTransition(i)))
-                filter = effect.get(end, start, transition, i, fade_duration, self.config)
-                return filter
+                filter, duration = effect.get(end, start, transition, i, fade_duration, self.config)
+                return filter, duration
             except ModuleNotFoundError:
-                return None
+                return None, 0
         
         # fade duration is too long for slides duration
-        return None
+        return None, 0
+        
+    # the transition duration
+    def getTransitionFrames(self, idx):
+        if idx < 0 or idx > len(self.getSlides())-1:
+            return 0
+        
+        fade_out_frames = self.getSlideFadeOutDuration(idx)
+        
+        if fade_out_frames > 0:
+            _ , frames = self.getTransition(idx)
+            
+            return frames
+            
+        return 0
         
     ###################################
     #           Video                 #
@@ -321,7 +335,7 @@ class SlideManager:
                     start       = "[v%sstart]" %(i)
                     transition  = "[v%strans]" % (i)
                     
-                filter = self.getTransition(i-1, end, start, transition)
+                filter, _ = self.getTransition(i-1, end, start, transition)
                 
                 if filter is not None:
                     if self.config["generate_temp"]:
