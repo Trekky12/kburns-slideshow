@@ -1,0 +1,35 @@
+{
+    "config": {
+        "output_width": 400,
+        "output_height": 250,
+        "slide_duration": 3,
+        "slide_duration_min": 1,
+        "fade_duration": 1.0,
+        "transition": "random",
+        "transition_bars_count": 10,
+        "transition_cell_size": 50,
+        "fps": 30,
+        "zoom_rate": 0.1,
+        "zoom_direction": "random",
+        "scale_mode": "auto",
+        "loopable": false,
+        "overwrite": false,
+        "generate_temp": false,
+        "delete_temp": false,
+        "sync_to_audio": false,
+        "is_synced_to_audio": false
+    },
+    "slides": [
+
+        {
+            "file": "media\\andrey-andreyev-dh8ONmfQyQQ-unsplash.jpg",
+            "transition": "wipe_out_vertical_t2b",
+            "title": "wipe_out_vertical_t2b"
+        },
+
+        {
+            "file": "media\\jeremy-bishop-h7bQ8VEZtws-unsplash.jpg"
+        }
+    ],
+    "audio": []
+}
