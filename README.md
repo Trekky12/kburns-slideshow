@@ -126,6 +126,16 @@ The following parameters can be set for overlays:
 | duration | the duration for the overlay | 1 |
 | transition_x | the text animation which can be "center" (text is positioned on the center), "left-in" (text scrolls from left to the middle) or "right-in" (text scrolls from right to the middle) | "center" |
 
+#### Video parameters
+You can disable the audio streams of video inputs by setting `force_no_audio` to `true` on the video input slide:
+```
+...
+        {
+            "file": "1.mp4",
+            "force_no_audio": true
+        },
+...
+```
 
 ### Transitions
 It is easy possible to create custom transitions. Just place a python file in the following format in the folder [slideshow/transitions](https://github.com/Trekky12/kburns-slideshow/tree/master/slideshow/transitions):
