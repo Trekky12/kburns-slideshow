@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from .Slide import Slide
 from PIL import Image, ExifTags
 import random
