@@ -50,8 +50,12 @@ class ImageSlide(Slide):
             self.scale = "pad" if abs(self.ratio - self.output_ratio) > 0.5 else "crop_center"
         else:
             self.scale = scale_mode
-            
-        if zoom_direction == "random":
+             
+        if zoom_direction == "none":
+            self.direction_x = "center"
+            self.direction_y = "center"
+            self.direction_z = "none"
+        elif zoom_direction == "random":
             self.direction_x = random.choice(["left", "right"])
             self.direction_y = random.choice(["top", "bottom"])
             self.direction_z = random.choice(["in", "out"])
@@ -62,7 +66,7 @@ class ImageSlide(Slide):
         
     def getFilter(self):
         slide_filters = ["format=pix_fmts=yuva420p"]
-
+        
         # Crop to make video divisible
         slide_filters.append("crop=w=2*floor(iw/2):h=2*floor(ih/2)")
         
@@ -138,6 +142,8 @@ class ImageSlide(Slide):
             z = "if(eq(on,1),%s,zoom+%s)" %(z_initial, z_step)
         elif self.direction_z == "out":
             z = "if(eq(on,1),%s,zoom-%s)" %(z_initial+z_rate, z_step)
+        elif self.direction_z == "none":
+            z = "%s" %(z_initial+z_rate)
 
           
         width = 0

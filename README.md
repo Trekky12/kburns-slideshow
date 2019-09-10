@@ -87,6 +87,9 @@ When using a JSON input file it is possible to change some values for specific s
         },
 ...
 ```
+
+To disable the zoom/pan effect the `zoom_direction` has to be `none`. When the whole image should be visible the `scale_mode` `pad` is needed.
+
 #### Subtitle
 It is possible to define a subtitle for a slide by setting the `title` parameter in the input file list:
 ```

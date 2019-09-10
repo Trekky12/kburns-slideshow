@@ -30,7 +30,7 @@ class CLI:
         self.parser.add_argument("-fps", "--fps", metavar='FPS', type=int, help="Output framerate (frames per second) (default: %s)" %(self.config["fps"]))
 
         zoom_direction_possibilities = [["top", "center", "bottom"], ["left", "center", "right"], ["in", "out"]]
-        zoom_direction_choices = ["random"] + list(map(lambda x: "-".join(x), itertools.product(*zoom_direction_possibilities)))
+        zoom_direction_choices = ["random", "none"] + list(map(lambda x: "-".join(x), itertools.product(*zoom_direction_possibilities)))
         self.parser.add_argument("-zd", "--zoom-direction", metavar='DIRECTION', choices=zoom_direction_choices, help="Zoom direction (default: %s)" %(self.config["zoom_direction"]))
 
         self.parser.add_argument("-zr", "--zoom-rate", metavar='RATE', type=float, help="Zoom rate (default:  %s)" %(self.config["zoom_rate"]))
