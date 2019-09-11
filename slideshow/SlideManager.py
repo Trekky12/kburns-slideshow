@@ -709,6 +709,8 @@ class SlideManager:
             "config": {
                 "output_width": self.config["output_width"],
                 "output_height": self.config["output_height"],
+                "output_codec": self.config["output_codec"],
+                "output_parameters": self.config["output_parameters"],
                 "slide_duration": self.config["slide_duration"],
                 "slide_duration_min": self.config["slide_duration_min"],
                 "fade_duration": self.config["fade_duration"],
