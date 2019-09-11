@@ -140,6 +140,17 @@ You can disable the audio streams of video inputs by setting `force_no_audio` to
 ...
 ```
 
+If you want only a part of a video you can define the start or end timestamp.
+To use a section between second 2 and second 10 the following config is possible:
+```
+...
+        {
+            "file": "1.mp4",
+            "start": 2,
+            "end": 10
+        },
+...
+```
 ### Transitions
 It is easy possible to create custom transitions. Just place a python file in the following format in the folder [slideshow/transitions](https://github.com/Trekky12/kburns-slideshow/tree/master/slideshow/transitions):
 

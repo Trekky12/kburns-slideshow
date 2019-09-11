@@ -93,10 +93,17 @@ class SlideManager:
                 if isinstance(file, dict) and "force_no_audio" in file:
                     force_no_audio = file["force_no_audio"]
                     
+                video_start = None
+                if isinstance(file, dict) and "start" in file:
+                    video_start = file["start"]
+                video_end = None
+                if isinstance(file, dict) and "end" in file:
+                    video_end = file["end"]
+                    
                 extension = filename.split(".")[-1]
                 
                 if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition, force_no_audio)
+                    slide = VideoSlide(filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition, force_no_audio, video_start, video_end)
                 if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                     slide = ImageSlide(filename, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
             
@@ -460,6 +467,11 @@ class SlideManager:
                 audio_tracks.append("[a%s]" %(i))
                 
                 filters = []
+                
+                audio_filter = slide.getAudioFilter()
+                if audio_filter:
+                    filters.append(audio_filter)
+                    
                 # Fade music in filter
                 if slide.fade_duration > 0:
                     filters.append("afade=t=in:st=0:d=%s" %(self.getSlideFadeOutDuration(i-1, False)))
