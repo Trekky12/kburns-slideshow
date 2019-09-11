@@ -669,10 +669,11 @@ class SlideManager:
                 "-t %s" %(self.getTotalDuration()),
                 # define output
                 "-map", "[out]:v",
-                "-c:v", "libx264", 
+                "-c:v %s" %(self.config["output_codec"]) if self.config["output_codec"] else "", 
                 #"-crf", "0" ,
-                "-preset", "ultrafast", 
-                "-tune", "stillimage",
+                #"-preset", "ultrafast", 
+                #"-tune", "stillimage",
+                self.config["output_parameters"],
                 "-map [aout]:a" if self.hasAudio() else "",
                 # audio compression and bitrate
                 "-c:a aac" if self.hasAudio() else "",

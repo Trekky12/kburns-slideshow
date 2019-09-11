@@ -1,7 +1,7 @@
 {
     "ffmpeg": "ffmpeg.exe",
     "ffprobe": "ffprobe.exe",
-    "aubio": "aubiotrack.exe",
+    "aubio": "aubioonset.exe",
 
     "IMAGE_EXTENSIONS": ["jpg", "jpeg", "png"],
     "VIDEO_EXTENSIONS": ["mp4", "mpg", "avi"],
@@ -9,6 +9,8 @@
 
     "output_width": 1280,
     "output_height": 800,
+    "output_codec": "libx264",
+    "output_parameters": "-preset ultrafast -tune stillimage",
     "slide_duration": 4,
     "slide_duration_min": 1,
     "fade_duration": 1,
