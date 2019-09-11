@@ -25,5 +25,7 @@
     "overwrite": false,
     "generate_temp": false,
     "delete_temp": false,
-    "sync_to_audio": false
+    "sync_to_audio": false,
+    "save": false,
+    "test": false
 }
