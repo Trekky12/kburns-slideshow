@@ -36,95 +36,103 @@ class SlideManager:
         
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         logger.debug("Init SlideManager")
-        for position, file in enumerate(input_files):
+        for file in input_files:
+            if not type(file) is dict and os.path.isdir(file):
+                for folderfile in os.listdir(file):
+                    self.addSlide(os.path.join(file, folderfile))
+            else:
+                self.addSlide(file)
             
-            logger.debug("Slide: %d, File: %s", position, file)
-            
-            slide = None
-            
-            filename = file
-            if isinstance(file, dict) and "file" in file:
-                filename = file["file"]
-             
-            if isinstance(filename, str):
-            
-                output_width = self.config["output_width"]
-                output_height = self.config["output_height"]
-                fps = self.config["fps"]
-                    
-                # use parameters of saved file
-                slide_duration = self.config["slide_duration"]
-                if isinstance(file, dict) and "slide_duration" in file:
-                    slide_duration = file["slide_duration"]
-                    
-                slide_duration_min = self.config["slide_duration_min"]
-                if isinstance(file, dict) and "slide_duration_min" in file:
-                    slide_duration_min = file["slide_duration_min"]
-                    
-                fade_duration = self.config["fade_duration"]
-                if isinstance(file, dict) and "fade_duration" in file:
-                    fade_duration = file["fade_duration"]
-                    
-                zoom_direction = self.config["zoom_direction"]
-                if isinstance(file, dict) and "zoom_direction" in file:
-                    zoom_direction = file["zoom_direction"]
-                    
-                zoom_rate = self.config["zoom_rate"]
-                if isinstance(file, dict) and "zoom_rate" in file:
-                    zoom_rate = file["zoom_rate"]
-                    
-                scale_mode = self.config["scale_mode"]
-                if isinstance(file, dict) and "scale_mode" in file:
-                    scale_mode = file["scale_mode"]
-                
-                title = None
-                if isinstance(file, dict) and "title" in file:
-                    title = file["title"]
-                    
-                overlay_text = None
-                if isinstance(file, dict) and "overlay" in file:
-                    overlay_text = file["overlay"]
-                    
-                transition = self.config["transition"]
-                if isinstance(file, dict) and "transition" in file:
-                    transition = file["transition"]
-                    
-                force_no_audio = False
-                if isinstance(file, dict) and "force_no_audio" in file:
-                    force_no_audio = file["force_no_audio"]
-                    
-                video_start = None
-                if isinstance(file, dict) and "start" in file:
-                    video_start = file["start"]
-                video_end = None
-                if isinstance(file, dict) and "end" in file:
-                    video_end = file["end"]
-                    
-                extension = filename.split(".")[-1]
-                
-                if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                    slide = VideoSlide(filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition, force_no_audio, video_start, video_end)
-                if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                    slide = ImageSlide(filename, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
-            
-            if slide is not None:
-                self.slides.append(slide)
-                logger.debug("added valid video/image file")
-        
         for file in audio_files:
-            
-            logger.debug("Audiofile: %s", file)
-            
-            filename = file
-            if isinstance(file, dict) and "file" in file:
-                filename = file["file"]
+            self.addAudio(file)
+    
+    def addSlide(self, file):
+        logger.debug("Slide: %s", file)
         
+        slide = None
+        
+        filename = file
+        
+        if isinstance(file, dict) and "file" in file:
+            filename = file["file"]
+         
+        if isinstance(filename, str):
+        
+            output_width = self.config["output_width"]
+            output_height = self.config["output_height"]
+            fps = self.config["fps"]
+                
+            # use parameters of saved file
+            slide_duration = self.config["slide_duration"]
+            if isinstance(file, dict) and "slide_duration" in file:
+                slide_duration = file["slide_duration"]
+                
+            slide_duration_min = self.config["slide_duration_min"]
+            if isinstance(file, dict) and "slide_duration_min" in file:
+                slide_duration_min = file["slide_duration_min"]
+                
+            fade_duration = self.config["fade_duration"]
+            if isinstance(file, dict) and "fade_duration" in file:
+                fade_duration = file["fade_duration"]
+                
+            zoom_direction = self.config["zoom_direction"]
+            if isinstance(file, dict) and "zoom_direction" in file:
+                zoom_direction = file["zoom_direction"]
+                
+            zoom_rate = self.config["zoom_rate"]
+            if isinstance(file, dict) and "zoom_rate" in file:
+                zoom_rate = file["zoom_rate"]
+                
+            scale_mode = self.config["scale_mode"]
+            if isinstance(file, dict) and "scale_mode" in file:
+                scale_mode = file["scale_mode"]
+            
+            title = None
+            if isinstance(file, dict) and "title" in file:
+                title = file["title"]
+                
+            overlay_text = None
+            if isinstance(file, dict) and "overlay" in file:
+                overlay_text = file["overlay"]
+                
+            transition = self.config["transition"]
+            if isinstance(file, dict) and "transition" in file:
+                transition = file["transition"]
+                
+            force_no_audio = False
+            if isinstance(file, dict) and "force_no_audio" in file:
+                force_no_audio = file["force_no_audio"]
+                
+            video_start = None
+            if isinstance(file, dict) and "start" in file:
+                video_start = file["start"]
+            video_end = None
+            if isinstance(file, dict) and "end" in file:
+                video_end = file["end"]
+                
             extension = filename.split(".")[-1]
-            if extension.lower() in [e.lower() for e in self.config["AUDIO_EXTENSIONS"]]:
-                audio = AudioFile(filename, self.config["ffprobe"] )
-                self.background_tracks.append(audio)
-                logger.debug("added valid audio file")
-
+            
+            if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
+                slide = VideoSlide(filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition, force_no_audio, video_start, video_end)
+            if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
+                slide = ImageSlide(filename, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
+        
+        if slide is not None:
+            self.slides.append(slide)
+            logger.debug("added valid video/image file")
+                
+    def addAudio(self, file):
+        logger.debug("Audiofile: %s", file)
+        
+        filename = file
+        if isinstance(file, dict) and "file" in file:
+            filename = file["file"]
+    
+        extension = filename.split(".")[-1]
+        if extension.lower() in [e.lower() for e in self.config["AUDIO_EXTENSIONS"]]:
+            audio = AudioFile(filename, self.config["ffprobe"] )
+            self.background_tracks.append(audio)
+            logger.debug("added valid audio file")
     def getVideos(self):
         return [slide for slide in self.getSlides() if isinstance(slide, VideoSlide)]
     
