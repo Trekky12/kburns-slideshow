@@ -8,9 +8,14 @@ logger = logging.getLogger("kburns-slideshow")
 
 class Queue:
 
-    def __init__(self, tempFilePrefix):
+    def __init__(self, tempFileFolder, tempFilePrefix):
+        self.tempFileFolder = tempFileFolder
         self.tempFilePrefix = tempFilePrefix
         self.queue = []
+        
+        if not os.path.exists(self.tempFileFolder):
+            os.mkdir(self.tempFileFolder)
+            logger.debug("Temporary directory %s created", self.tempFileFolder)
         
         # delete these files eventually
         self.tempFiles = []
@@ -19,13 +24,16 @@ class Queue:
         item = {"inputs": inputs, "filters": filters, "suffix": suffix}
         self.queue.append(item)
         
-        return self.getFileName(item)
+        return self.getOutputName(item)
         
     def getQueue(self):
         return self.queue
         
     def getFileName(self, item):
         return "%s%s.mp4" %(self.tempFilePrefix, item["suffix"])
+        
+    def getOutputName(self, item):
+        return os.path.join(self.tempFileFolder, self.getFileName(item))
         
     def createTemporaryVideos(self, ffmpeg):
         for item in self.queue:
@@ -47,21 +55,21 @@ class Queue:
             "-preset", "ultrafast", 
             "-tune", "stillimage",
             "-c:v", "libx264", 
-            self.getFileName(item)
+            self.getOutputName(item)
         ]
         
-        #print(" ".join(cmd))
-        
         # re-use existing temp file
-        if not os.path.exists(self.getFileName(item)):
-            logger.debug("Create temporary video %s for file %s", self.getFileName(item), ",".join(item["inputs"]))
+        if not os.path.exists(self.getOutputName(item)):
+            logger.debug("Create temporary video %s for file %s", self.getOutputName(item), ",".join(item["inputs"]))
             subprocess.call(" ".join(cmd))
         else:
-            logger.debug("Using existing temporary video %s for file %s", self.getFileName(item), ",".join(item["inputs"]))
+            logger.debug("Using existing temporary video %s for file %s", self.getOutputName(item), ",".join(item["inputs"]))
 
         self.tempFiles.append(self.getFileName(item))
         
     def clean(self):
         for temp in self.tempFiles:
-            os.remove(temp)
-            logger.debug("Delete %s", temp)
+            file = os.path.join(self.tempFileFolder, temp)
+            os.remove(file)
+            logger.debug("Delete %s", file)
+        os.rmdir(self.tempFileFolder)

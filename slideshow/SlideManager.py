@@ -27,8 +27,10 @@ class SlideManager:
         self.background_tracks = []
         self.config = config
 
+        self.tempFileFolder = "temp"
         self.tempFilePrefix = "temp-kburns-"
-        self.queue = Queue(self.tempFilePrefix)
+        self.tempFileFullPrefix = os.path.join(self.tempFileFolder, self.tempFilePrefix)
+        self.queue = Queue(self.tempFileFolder, self.tempFilePrefix)
         
         self.tempInputFiles = []
         
@@ -372,8 +374,8 @@ class SlideManager:
                 if filter is not None:
                     if self.config["generate_temp"]:
                         # temporary transition video
-                        tempvideo_end = "%s%s_%s.mp4" %(self.tempFilePrefix, i-1, "end")
-                        tempvideo_start = "%s%s_%s.mp4" %(self.tempFilePrefix, i, "start")
+                        tempvideo_end = "%s%s_%s.mp4" %(self.tempFileFullPrefix, i-1, "end")
+                        tempvideo_start = "%s%s_%s.mp4" %(self.tempFileFullPrefix, i, "start")
                         
                         filter = "[0:v]format=rgba[v0];[1:v]format=rgba[v1];%s, setsar=1" %(filter)
                         
@@ -386,8 +388,8 @@ class SlideManager:
                         videos.append(transition)
                 else:
                     if self.config["generate_temp"]:
-                        self.tempInputFiles.append("temp-kburns-%s_%s.mp4" %(i-1, "end"))
-                        self.tempInputFiles.append("temp-kburns-%s_%s.mp4" %(i, "start"))
+                        self.tempInputFiles.append("%s%s_%s.mp4" %(self.tempFileFullPrefix, i-1, "end"))
+                        self.tempInputFiles.append("%s%s_%s.mp4" %(self.tempFileFullPrefix, i, "start"))
                     else:
                         videos.append("[v%send]" %(i-1))
                         videos.append("[v%sstart]" %(i))
@@ -395,7 +397,7 @@ class SlideManager:
             # append video between transitions
             if "main" in slide.splits:
                 if self.config["generate_temp"]:
-                    self.tempInputFiles.append("temp-kburns-%s_%s.mp4" %(i, "main"))
+                    self.tempInputFiles.append("%s%s_%s.mp4" %(self.tempFileFullPrefix, i, "main"))
                 else:
                     videos.append("[v%smain]" %(i))
             
