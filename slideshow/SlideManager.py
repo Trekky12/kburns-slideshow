@@ -697,7 +697,7 @@ class SlideManager:
             
             logger.info("FFMPEG started")
             logger.debug(" ".join(cmd))
-            subprocess.call(" ".join(cmd))
+            subprocess.call(" ".join(cmd), shell=True)
             logger.info("FFMPEG finished")
             
             if self.config["delete_temp"]:
