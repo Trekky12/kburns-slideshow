@@ -27,8 +27,8 @@ class SlideManager:
         self.background_tracks = []
         self.config = config
 
-        self.tempFileFolder = "temp"
-        self.tempFilePrefix = "temp-kburns-"
+        self.tempFileFolder = config["temp_file_folder"] if "temp_file_folder" in config else "temp"
+        self.tempFilePrefix = config["temp_file_prefix"] if "temp_file_prefix" in config else "temp-kburns-"
         self.tempFileFullPrefix = os.path.join(self.tempFileFolder, self.tempFilePrefix)
         self.queue = Queue(self.tempFileFolder, self.tempFilePrefix)
         
@@ -735,6 +735,8 @@ class SlideManager:
                 "overwrite": self.config["overwrite"],
                 "generate_temp": self.config["generate_temp"],
                 "delete_temp": self.config["delete_temp"],
+                "temp_file_folder": self.tempFileFolder,
+                "temp_file_prefix": self.tempFilePrefix,
                 # the slides duration is already synced to the audio
                 "sync_to_audio": False if self.config["is_synced_to_audio"] else self.config["sync_to_audio"],
                 "is_synced_to_audio": self.config["is_synced_to_audio"]

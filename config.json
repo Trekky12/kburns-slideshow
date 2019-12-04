@@ -25,6 +25,8 @@
     "overwrite": false,
     "generate_temp": false,
     "delete_temp": false,
+    "temp_file_folder": "temp",
+    "temp_file_prefix": "temp-kburns-",
     "sync_to_audio": false,
     "save": false,
     "test": false
