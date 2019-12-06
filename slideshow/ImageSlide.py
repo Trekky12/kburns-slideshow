@@ -6,13 +6,13 @@ import random
 
 class ImageSlide(Slide):
     
-    def __init__(self, file, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None, transition = "random"):
+    def __init__(self, ffmpeg_version, file, output_width, output_height, duration, slide_duration_min, fade_duration = 1, zoom_direction = "random", scale_mode = "auto", zoom_rate = 0.1, fps = 60, title = None, overlay_text = None, transition = "random"):
         self.zoom_rate = zoom_rate
         self.slide_duration_min = slide_duration_min
         if slide_duration_min > duration:
             duration = slide_duration_min
         
-        super().__init__(file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
+        super().__init__(ffmpeg_version, file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
         
         im = Image.open(self.file)
         
@@ -137,11 +137,13 @@ class ImageSlide(Slide):
             elif self.direction_y == "bottom":
                 y = "ih-ih/zoom"
         
-        
+        # with FFmpeg 4 the zoompan filter variables 'on' starts at 0 (previously started at 1)
+        # https://trac.ffmpeg.org/ticket/7242
+        start_frame = 1 if self.ffmpeg_version < 4 else 0
         if self.direction_z == "in":
-            z = "if(eq(on,1),%s,zoom+%s)" %(z_initial, z_step)
+            z = "if(eq(on,%s),%s,zoom+%s)" %(start_frame, z_initial, z_step)
         elif self.direction_z == "out":
-            z = "if(eq(on,1),%s,zoom-%s)" %(z_initial+z_rate, z_step)
+            z = "if(eq(on,%s),%s,zoom-%s)" %(start_frame, z_initial+z_rate, z_step)
         elif self.direction_z == "none":
             z = "%s" %(z_initial)
 

@@ -6,7 +6,8 @@ import os
 
 class Slide:
 
-    def __init__(self, file, output_width, output_height, duration, fade_duration = 1, fps = 60, title = None, overlay_text = None, transition = "random"):
+    def __init__(self, ffmpeg_version, file, output_width, output_height, duration, fade_duration = 1, fps = 60, title = None, overlay_text = None, transition = "random"):
+        self.ffmpeg_version = ffmpeg_version
         self.file = file
         self.has_audio = False
         self.output_width = output_width

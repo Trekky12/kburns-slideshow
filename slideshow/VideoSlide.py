@@ -5,7 +5,7 @@ import subprocess
 
 class VideoSlide(Slide):
 
-    def __init__(self, file, ffprobe, output_width, output_height, fade_duration = 1, title = None, fps = 60, overlay_text = None, transition = "random", force_no_audio = False, video_start = None, video_end = None):
+    def __init__(self, ffmpeg_version, file, ffprobe, output_width, output_height, fade_duration = 1, title = None, fps = 60, overlay_text = None, transition = "random", force_no_audio = False, video_start = None, video_end = None):
         
         duration = subprocess.check_output("%s -show_entries format=duration -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
         width = subprocess.check_output("%s -select_streams v -show_entries stream=width -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
@@ -30,7 +30,7 @@ class VideoSlide(Slide):
             end = self.end if self.end is not None else duration
             duration = end - start
         
-        super().__init__(file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
+        super().__init__(ffmpeg_version, file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
         
         audio = subprocess.check_output("%s -select_streams a -show_entries stream=codec_type -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
         has_audio = "audio" in str(audio)

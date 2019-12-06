@@ -36,6 +36,11 @@ class SlideManager:
         
         self.reduceVariable = 10
         
+        # is FFmpeg Version 3 or 4?
+        ffmpeg_version_extract = subprocess.check_output("%s -version" %(config["ffmpeg"])).decode()
+        m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
+        self.ffmpeg_version = int(m.group(2)) if m else 3
+        
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         logger.debug("Init SlideManager")
         for file in input_files:
@@ -115,9 +120,9 @@ class SlideManager:
             extension = filename.split(".")[-1]
             
             if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
-                slide = VideoSlide(filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition, force_no_audio, video_start, video_end)
+                slide = VideoSlide(self.ffmpeg_version, filename, self.config["ffprobe"], output_width, output_height, fade_duration, title, fps, overlay_text, transition, force_no_audio, video_start, video_end)
             if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
-                slide = ImageSlide(filename, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
+                slide = ImageSlide(self.ffmpeg_version, filename, output_width, output_height, slide_duration, slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps, title, overlay_text, transition)
         
         if slide is not None:
             self.slides.append(slide)
