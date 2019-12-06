@@ -278,6 +278,7 @@ class SlideManager:
             if slide.overlay_text is not None and "title" in slide.overlay_text:
                 duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 1
                 font = ":font='%s'" %(slide.overlay_text["font"]) if "font" in slide.overlay_text else ""
+                font_file = ":fontfile='%s'" %(slide.overlay_text["font_file"]) if "font_file" in slide.overlay_text else ""
                 font_size = slide.overlay_text["font_size"] if "font_size" in slide.overlay_text else 150
                 transition_x = slide.overlay_text["transition_x"] if "transition_x" in slide.overlay_text else "center"
                 
@@ -297,7 +298,7 @@ class SlideManager:
                 # see https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/b3cb9bd43fa33a8aaf7a63e43f8418975b3bf0de
                 fill_mode = "max" if self.ffmpeg_version < 4 else "fill"
                 filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=%s:enable='between(t,0,%s)'" %(duration))
-                filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: fontcolor=white:y=%s:x=%s:borderw=1%s:enable='between(t,0,%s)'" % (slide.overlay_text["title"], font_size, y, x, font , duration))
+                filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: fontcolor=white:y=%s:x=%s:borderw=1%s%s:enable='between(t,0,%s)'" % (slide.overlay_text["title"], font_size, y, x, font, font_file, duration))
                 
                 if isinstance(slide, ImageSlide):
                     slide.slide_duration_min = slide.slide_duration_min + duration

@@ -6,8 +6,8 @@ kburns-slideshow allows the creation of video slideshows from images with kburns
 ## Prerequisites
 
 kburns-slideshow is a python application and needs Python 3 installed.
-The videos are generated with [FFmpeg](https://ffmpeg.org/) which is needed in Version 3. 
-FFprobe is used to extract the duration, width and height of input videos.
+The videos are generated with [FFmpeg](https://ffmpeg.org/) which is needed in Version 3 or 4. 
+FFprobe (comes with FFmpeg) is used to extract the duration, width and height of input videos.
 
 To sync the slide changes to the background music the music onsets are extracted with [aubio](https://aubio.org/).
 
@@ -125,9 +125,16 @@ The following parameters can be set for overlays:
 | - | - | - |
 | title | the text | |
 | font | the font | the default FFmpeg font |
+| font_file | the path to the font file, e.g. "C:\/Windows\/Fonts\/BAUHS93.TTF" | |
 | font_size | the font size | 150 |
 | duration | the duration for the overlay | 1 |
 | transition_x | the text animation which can be "center" (text is positioned on the center), "left-in" (text scrolls from left to the middle) or "right-in" (text scrolls from right to the middle) | "center" |
+
+On Windows FFmpeg 3 is build with `--enable-libfontconfig` but unfortunately the default font directory is not recognized.
+You either need to create a custom `fonts.conf`, which is described [here](https://ffmpeg.zeranoe.com/forum/viewtopic.php?f=7&t=2554#p8531) 
+or you can use the path to the font with the parameter `font_file`.
+
+With FFmpeg 4 the default font directory is recognized and the parameter `font` can be used. The font file is then automatically found with the help of fontconfig.
 
 #### Video parameters
 You can disable the audio streams of video inputs by setting `force_no_audio` to `true` on the video input slide:
