@@ -20,9 +20,11 @@ The executables for FFmpeg, FFprobe and aubioonset, which are used, can be set i
 pip install -r requirements.txt
 ```
 * download aubio 
-** when there should be a support for various audio files 
-*** download [aubio 0.4.6 with ffmpeg](https://aubio.org/download) for windows ([win64](https://aubio.org/bin/0.4.6/aubio-0.4.6-win64-ffmpeg.zip)/[win32](https://aubio.org/bin/0.4.6/aubio-0.4.6-win32-ffmpeg.zip)) and the corresponding FFmpeg 3.3.3 shared build([win64](https://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.3.3-win64-shared.zip)/[win32](https://ffmpeg.zeranoe.com/builds/win32/dev/ffmpeg-3.3.3-win32-shared.zip)). 
-*** extract aubio and extract the ffmpeg shared dlls from the `bin` folder of ffmpeg to the `bin` folder of aubio
+  * when there should be only support for `wav` files
+    * download and extract [aubio 0.4.6](https://aubio.org/download) for windows ([win64](https://aubio.org/bin/0.4.6/aubio-0.4.6-win64.zip)/[win32](https://aubio.org/bin/0.4.6/aubio-0.4.6-win32.zip)) 
+  * when there should be a support for various audio files
+    * download [aubio 0.4.6 with ffmpeg](https://aubio.org/download) for windows ([win64](https://aubio.org/bin/0.4.6/aubio-0.4.6-win64-ffmpeg.zip)/[win32](https://aubio.org/bin/0.4.6/aubio-0.4.6-win32-ffmpeg.zip)) and the corresponding FFmpeg 3.3.3 shared build([win64](https://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.3.3-win64-shared.zip)/[win32](https://ffmpeg.zeranoe.com/builds/win32/dev/ffmpeg-3.3.3-win32-shared.zip))
+    * extract aubio and extract the ffmpeg shared dlls from the `bin` folder of ffmpeg to the `bin` folder of aubio
 * download and extract [FFmpeg 4.2.1](https://ffmpeg.zeranoe.com/builds/)
 * adjusts the paths to FFmpeg 4.2.1 (`bin/ffmpeg.exe`, `bin/ffprobe.exe`) and aubio (`bin/aubioonset.exe`) in `config.json`
 
