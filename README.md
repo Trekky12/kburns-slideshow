@@ -28,6 +28,23 @@ pip install -r requirements.txt
 * download and extract [FFmpeg 4.2.1](https://ffmpeg.zeranoe.com/builds/)
 * adjusts the paths to FFmpeg 4.2.1 (`bin/ffmpeg.exe`, `bin/ffprobe.exe`) and aubio (`bin/aubioonset.exe`) in `config.json`
 
+### Linux
+* install Python3
+```
+sudo apt-get install python3 python3-pip python3-dev python3-setuptools
+```
+
+* install Python modules
+```
+pip3 install -r requirements.txt
+```
+
+* install ffmpeg and aubio
+```
+sudo apt-get install ffmpeg aubio-tools libaubio-dev libaubio-doc
+```
+* remove the `.exe` file extension from the paths to `ffmpeg`, `ffprobe` and `aubioonset` in `config.json`
+
 ### MacOS
 
 * install Python3
