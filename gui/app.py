@@ -9,6 +9,7 @@ from tkinter import messagebox
 from tkinter import ttk
 
 from .ScrollFrame import ScrollFrame
+from .SettingsFrame import SettingsFrame
 
 import os
 import json
@@ -25,7 +26,6 @@ import subprocess
 # https://stackoverflow.com/a/44633014
 import sys
 sys.path.append("..")
-
 from slideshow.SlideManager import SlideManager
 from slideshow.SlideManager import Slide, ImageSlide, VideoSlide
 
@@ -77,6 +77,10 @@ class App(tk.Tk):
         filemenu.add_command(label="Exit", command=self.quit)
         menubar.add_cascade(label="File", menu=filemenu)
         
+        generalmenu = tk.Menu(menubar, tearoff=0)
+        generalmenu.add_command(label="Settings", command=self.generalSettingsWindow)
+        menubar.add_cascade(label="Settings", menu=generalmenu)
+        
         self.config(menu=menubar)
         
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -127,6 +131,24 @@ class App(tk.Tk):
                     logger.debug("Delete %s", file)
             # Close 
             self.destroy()
+            
+    def onCloseTopLevel(self, toplevel):
+        # get new config
+        self.slideshow_config.update(toplevel.getConfig())
+        # close
+        toplevel.destroy()
+        # ask for reload
+        if messagebox.askyesno("Restart", "To apply general slide settings to the current slideshow, the current slideshow needs to be reloaded. \n\nDo you want to reload the slides?"):
+            self.createSlideshow()
+        
+    def generalSettingsWindow(self):
+        filewin = SettingsFrame(self)
+
+        choices = {"zoom_direction": self.zoom_direction_choices, "transition": self.transition_choices, "scale_mode": self.scale_mode_choices}
+        filewin.create(self.slideshow_config, choices)
+        
+        filewin.protocol("WM_DELETE_WINDOW", (lambda: self.onCloseTopLevel(filewin)))
+
         
     # see https://stackoverflow.com/a/39059073
     # see https://stackoverflow.com/a/51406895
