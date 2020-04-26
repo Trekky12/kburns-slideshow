@@ -46,11 +46,17 @@ class ImageSlide(Slide):
         self.width = width
         self.height = height
 
+        self.setScaleMode(scale_mode)
+             
+        self.setZoomDirection(zoom_direction)
+        
+    def setScaleMode(self, scale_mode):
         if scale_mode == "auto":
             self.scale = "pad" if abs(self.ratio - self.output_ratio) > 0.5 else "crop_center"
         else:
             self.scale = scale_mode
-             
+        
+    def setZoomDirection(self, zoom_direction):
         if zoom_direction == "none":
             self.direction_x = "center"
             self.direction_y = "center"
@@ -175,6 +181,9 @@ class ImageSlide(Slide):
         # return the filters for rendering
         return slide_filters
         
+    def getZoomDirection(self):
+        return "%s-%s-%s" %(self.direction_y, self.direction_x, self.direction_z)
+        
     def getObject(self, config):
         object = super().getObject(config)
         
@@ -184,7 +193,7 @@ class ImageSlide(Slide):
         if self.zoom_rate != config["zoom_rate"]:
             object["zoom_rate"] = self.zoom_rate
             
-        zoom_direction = "%s-%s-%s" %(self.direction_y, self.direction_x, self.direction_z)
+        zoom_direction = self.getZoomDirection()
         if zoom_direction != config["zoom_direction"]:
             object["zoom_direction"] = zoom_direction
         

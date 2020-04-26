@@ -6,39 +6,49 @@ import subprocess
 class VideoSlide(Slide):
 
     def __init__(self, ffmpeg_version, file, ffprobe, output_width, output_height, fade_duration = 1, title = None, fps = 60, overlay_text = None, transition = "random", force_no_audio = False, video_start = None, video_end = None):
-        
-        duration = subprocess.check_output("%s -show_entries format=duration -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
-        width = subprocess.check_output("%s -select_streams v -show_entries stream=width -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
-        height = subprocess.check_output("%s -select_streams v -show_entries stream=height -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
-        
+        duration = subprocess.check_output("%s -show_entries format=duration -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()        
         duration = float(duration)
         
-        self.is_trimmed = False
-        self.start = None
-        self.end = None
+        super().__init__(ffmpeg_version, file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
         
-        if video_start is not None:
-            self.start = video_start
-        if video_end is not None:
-            self.end = video_end
-            
+        audio = subprocess.check_output("%s -select_streams a -show_entries stream=codec_type -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
+        self.video_has_audio = "audio" in str(audio)
+        self.has_audio = self.video_has_audio
+        
+        width = subprocess.check_output("%s -select_streams v -show_entries stream=width -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
+        self.width = int(width)
+        
+        height = subprocess.check_output("%s -select_streams v -show_entries stream=height -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
+        self.height = int(height)
+        
+        self.ratio = self.width/self.height
+        
+        self.setForceNoAudio(force_no_audio)
+        
+        self.is_trimmed = False
+        self.start = video_start if video_start is not None else None
+        self.end = video_end if video_end is not None and video_end < self.duration else None
+        self.calculateDurationAfterTrimming()
+    
+    def calculateDurationAfterTrimming(self):
         if self.start is not None or self.end is not None:
             self.is_trimmed = True
             
             # calculate new duration
             start = self.start if self.start is not None else 0
-            end = self.end if self.end is not None else duration
+            end = self.end if self.end is not None else self.duration
             duration = end - start
+            
+            self.setDuration(duration)
+        else:
+            self.is_trimmed = False
         
-        super().__init__(ffmpeg_version, file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
-        
-        audio = subprocess.check_output("%s -select_streams a -show_entries stream=codec_type -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
-        has_audio = "audio" in str(audio)
-        
-        self.has_audio = False if force_no_audio else has_audio
-        self.width = int(width)
-        self.height = int(height)
-        self.ratio = self.width/self.height
+    def setForceNoAudio(self, force_no_audio):
+        self.force_no_audio = force_no_audio
+        if force_no_audio:
+            self.has_audio = False
+        else:
+            self.has_audio = self.video_has_audio
         
     def getFilter(self):
         width, height = [self.output_width, -1]
@@ -75,6 +85,8 @@ class VideoSlide(Slide):
         
     def getObject(self, config):
         object = super().getObject(config)
+        
+        object["force_no_audio"] = self.force_no_audio
         
         if self.start is not None:
             object["start"] = self.start
