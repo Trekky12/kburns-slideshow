@@ -175,7 +175,11 @@ class App(tk.Tk):
 
             slide.setDuration(float(self.inputDuration.get()))
             slide.fade_duration = float(self.inputDurationTransition.get())
-            slide.transition = self.inputTransition.get()
+            
+            if self.inputTransition.get() != " - None - ":
+                slide.transition = self.inputTransition.get()
+            else:
+                slide.transition = None
             
             if isinstance(slide, ImageSlide):
                 slide.zoom_rate = float(self.inputZoomRate.get())
