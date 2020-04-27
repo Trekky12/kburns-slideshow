@@ -35,8 +35,10 @@ SUNKABLE_BUTTON = 'SunkableButton.TButton'
 class App(tk.Tk):
     def __init__(self, title="", *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        
+        self.general_title = title
 
-        self.title(title)
+        self.title(self.general_title)
         self.configure(background="Gray")
         
         # scale master frame to total Tk
@@ -65,18 +67,20 @@ class App(tk.Tk):
         
         # Buttons Frame
         frame4 = tk.Frame(master_frame, height=50)
-        button_save = tk.Button(frame4, text="Save Configuration", command=self.saveConfiguration)
+        button_save = tk.Button(frame4, text="Save Configuration", command=self.saveSlideshow)
         button_save.pack()
         frame4.grid(row=2, column=0, sticky=tk.NW)
         
         # Menu
         menubar = tk.Menu(self)
-        filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Open", command=self.openFile)
-        filemenu.add_command(label="Save", command=self.saveConfiguration)
-        filemenu.add_separator()
-        filemenu.add_command(label="Exit", command=self.quit)
-        menubar.add_cascade(label="File", menu=filemenu)
+        self.filemenu = tk.Menu(menubar, tearoff=0)
+        self.filemenu.add_command(label="New", command=self.newSlideshow)
+        self.filemenu.add_command(label="Open", command=self.openFile)
+        self.filemenu.add_command(label="Save", command=self.saveSlideshow, state="disabled")
+        self.filemenu.add_command(label="Save As..", command=self.saveAs, state="disabled")
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Exit", command=self.on_closing)
+        menubar.add_cascade(label="File", menu=self.filemenu)
         
         self.generalmenu = tk.Menu(menubar, tearoff=0)
         self.generalmenu.add_command(label="Slideshow Settings", command=self.slideshowSettingsWindow, state="disabled")
@@ -95,12 +99,6 @@ class App(tk.Tk):
         self.style.configure(SUNKABLE_BUTTON, padding=2) 
         self.style.map(SUNKABLE_BUTTON, background=[('pressed', 'red'), ('disabled', 'red')])
         
-        
-        self.config_path = os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+'/config.json'
-        self.slideshow_config = {}
-        with open(self.config_path) as config_file:
-            self.slideshow_config = json.load(config_file)   
-        
         self.thumbnails = []
         self.transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+"/slideshow/transitions"])]
         self.transition_choices.append(" - None - ")
@@ -108,13 +106,10 @@ class App(tk.Tk):
         self.zoom_direction_choices = ["random", "none"] + list(map(lambda x: "-".join(x), itertools.product(*zoom_direction_possibilities)))
         self.scale_mode_choices = ["auto", "pad", "pan", "crop_center"]
         
-        self.filename = None
-        self.input_files = []
-        self.audio_files = []
-        # Save selected slide index
-        self.slide_selected = None
-        
-        self.slide_changed = False
+        self.config_path = os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+'/config.json'
+        self.init() 
+        # create empty slideshow
+        # self.createSlideshow()
         
         # Save Slide Input Fields
         self.inputTransition = tk.StringVar()
@@ -130,15 +125,18 @@ class App(tk.Tk):
         self.inputDurationMin = tk.StringVar()
         self.inputDurationTransition = tk.StringVar()
         
+    def hasSlides(self):
+        return self.sm and len(self.sm.getSlides()) > 0
+        
     def on_closing(self):
-        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        if self.hasSlides() and messagebox.askyesno("Quit", "Do you want to quit?"):
             # Delete thumbnails
             for file in self.thumbnails:
                 if os.path.exists(file):
                     os.remove(file)
                     logger.debug("Delete %s", file)
-            # Close 
-            self.destroy()
+        # Close 
+        self.destroy()
             
     def onCloseSlideshowSettings(self, toplevel):
         # get new config
@@ -146,7 +144,7 @@ class App(tk.Tk):
         # close
         toplevel.destroy()
         # ask for reload
-        if messagebox.askyesno("Restart", "To apply general slide settings to the current slideshow, the current slideshow needs to be reloaded. \n\nDo you want to reload the slides?"):
+        if self.hasSlides() and messagebox.askyesno("Restart", "To apply general slide settings to the current slideshow, the current slideshow needs to be reloaded. \n\nDo you want to reload the slides?"):
             self.createSlideshow()
         
     def slideshowSettingsWindow(self):
@@ -345,18 +343,39 @@ class App(tk.Tk):
         
         self.frame3.addFrame(optionsFrame, tk.NW)
         
+    def loadConfig(self):
+        self.slideshow_config = {}
+        with open(self.config_path) as config_file:
+            self.slideshow_config = json.load(config_file)  
+    
+    def init(self):
+        self.filename = None
+        self.title(self.general_title)
+        self.input_files = []
+        self.audio_files = []
+        self.slide_selected = None
+        self.slide_changed = False
+        self.sm = None
+        self.loadConfig()
         
+    def newSlideshow(self):
+        if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
+            self.saveSlideshow()
+        self.init()     
+        self.createSlideshow()
         
     def openFile(self):
+        if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
+            self.saveSlideshow()
+            
+        self.init()
         ftypes = [
             ('Slideshow config', '*.json')
         ]
         self.filename = askopenfilename(filetypes=ftypes)
-        self.loadSlideshow(self.filename)
-    
-    def loadSlideshow(self, filename):
+        self.title("%s (%s)" %(self.general_title, self.filename))
         try:
-            with open(filename) as f:
+            with open(self.filename) as f:
                 file_content = json.load(f)    
 
                 if "config" in file_content:
@@ -375,7 +394,7 @@ class App(tk.Tk):
         except Exception as e:
             print("file must be a JSON file")
             print(e)
-            logger.error("file %s must be a JSON file", filename)
+            logger.error("file %s must be a JSON file", self.filename)
     
     def createSlideshow(self):
         self.frame2.clear()
@@ -384,6 +403,8 @@ class App(tk.Tk):
         self.sm = SlideManager(self.slideshow_config, self.input_files, self.audio_files)
         self.loadSlideshowImagesRow()
         self.generalmenu.entryconfig("Slideshow Settings", state="normal")
+        self.filemenu.entryconfig("Save", state="normal")
+        self.filemenu.entryconfig("Save As..", state="normal")
     
     def loadSlideshowImagesRow(self):
         canvas2 = self.frame2.getCanvas()
@@ -393,7 +414,6 @@ class App(tk.Tk):
         basewidth = 150
         
         self.buttons = []
-        
         i = 0
         for i, slide in enumerate(self.sm.getSlides()):
             img_path = slide.file
@@ -424,14 +444,21 @@ class App(tk.Tk):
         
         self.frame2.addFrame(images_frame)
         
-    def saveConfiguration(self):
+    def saveSlideshow(self):
         if self.sm:
-            ftypes = [
-                ('Slideshow config', '*.json')
-            ]
-            filename = asksaveasfilename(filetypes=ftypes, defaultextension=".json")
             self.saveSlide()
-            self.sm.saveConfig(filename)
+            if not self.filename:
+                self.saveAs()
+            self.sm.saveConfig(self.filename)
+            
+    def saveAs(self):
+        ftypes = [
+                ('Slideshow config', '*.json')
+        ]
+        self.filename = asksaveasfilename(filetypes=ftypes, defaultextension=".json")
+        if self.filename:
+            self.title("%s (%s)" %(self.general_title, self.filename))
+            self.saveSlideshow()
         
     def addSlide(self):
         filename = askopenfilename()
