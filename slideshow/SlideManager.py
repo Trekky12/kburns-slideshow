@@ -150,6 +150,9 @@ class SlideManager:
         if self.config["loopable"]:
             return self.slides + [self.slides[0]]
         return self.slides
+        
+    def removeSlide(self, index):
+        del self.slides[index]
             
     ###################################
     #      Duration Calculations      #

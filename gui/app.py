@@ -43,7 +43,7 @@ class App(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         
-        self.geometry("800x500") #Width x Height
+        self.geometry("800x520") #Width x Height
 
         master_frame = tk.Frame(self)
         master_frame.grid(sticky=tk.NSEW)
@@ -333,13 +333,15 @@ class App(tk.Tk):
         imageLabel = tk.Label(imageframe, image=self.buttons[button_id].image)
         imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
         
-        '''
-        buttonsFrame = tk.Frame(optionsFrame)
-        buttonsFrame.grid(row=1, columnspan=3, sticky=tk.NW, padx=4, pady=4)
         
-        buttonSaveSlide = tk.Button(buttonsFrame, text="Save", command=(lambda: self.saveSlide()))
-        buttonSaveSlide.pack()
-        '''
+        buttonsFrame = tk.Frame(optionsFrame)
+        buttonsFrame.grid(row=3, columnspan=3, sticky=tk.NW, padx=4, pady=4)
+        
+        #buttonSaveSlide = tk.Button(buttonsFrame, text="Save", command=(lambda: self.saveSlide()))
+        #buttonSaveSlide.pack()
+        buttonDeleteSlide = tk.Button(buttonsFrame, text="Delete", command=(lambda: self.deleteSlide()))
+        buttonDeleteSlide.pack()
+        
         
         self.frame3.addFrame(optionsFrame, tk.NW)
         
@@ -392,6 +394,7 @@ class App(tk.Tk):
         
         self.buttons = []
         
+        i = 0
         for i, slide in enumerate(self.sm.getSlides()):
             img_path = slide.file
             if isinstance(slide, VideoSlide):
@@ -433,4 +436,12 @@ class App(tk.Tk):
     def addSlide(self):
         filename = askopenfilename()
         self.sm.addSlide(filename)
+        self.frame2.clear()
+        self.frame3.clear()
+        self.loadSlideshowImagesRow()
+        
+    def deleteSlide(self):
+        self.sm.removeSlide(self.slide_selected)
+        self.frame2.clear()
+        self.frame3.clear()
         self.loadSlideshowImagesRow()
