@@ -14,9 +14,5 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 if __name__ == "__main__":
-    config = {}
-    with open(os.path.dirname(os.path.realpath(__file__))+'/config.json') as config_file:
-        config = json.load(config_file)   
-
-    app = App("kbvs", config)
+    app = App("kbvs")
     app.mainloop()

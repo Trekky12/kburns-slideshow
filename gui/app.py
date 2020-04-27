@@ -10,6 +10,7 @@ from tkinter import ttk
 
 from .ScrollFrame import ScrollFrame
 from .SettingsFrame import SettingsFrame
+from .ConfigFrame import ConfigFrame
 
 import os
 import json
@@ -32,7 +33,7 @@ from slideshow.SlideManager import Slide, ImageSlide, VideoSlide
 SUNKABLE_BUTTON = 'SunkableButton.TButton'
 
 class App(tk.Tk):
-    def __init__(self, title="Sample App", slideshow_config={}, *args, **kwargs):
+    def __init__(self, title="", *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.title(title)
@@ -77,9 +78,11 @@ class App(tk.Tk):
         filemenu.add_command(label="Exit", command=self.quit)
         menubar.add_cascade(label="File", menu=filemenu)
         
-        generalmenu = tk.Menu(menubar, tearoff=0)
-        generalmenu.add_command(label="Settings", command=self.generalSettingsWindow)
-        menubar.add_cascade(label="Settings", menu=generalmenu)
+        self.generalmenu = tk.Menu(menubar, tearoff=0)
+        self.generalmenu.add_command(label="Slideshow Settings", command=self.slideshowSettingsWindow, state="disabled")
+        self.generalmenu.add_separator()
+        self.generalmenu.add_command(label="General Settings", command=self.generalSettingsWindow)
+        menubar.add_cascade(label="Settings", menu=self.generalmenu)
         
         self.config(menu=menubar)
         
@@ -92,7 +95,12 @@ class App(tk.Tk):
         self.style.configure(SUNKABLE_BUTTON, padding=2) 
         self.style.map(SUNKABLE_BUTTON, background=[('pressed', 'red'), ('disabled', 'red')])
         
-        self.slideshow_config = slideshow_config
+        
+        self.config_path = os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+'/config.json'
+        self.slideshow_config = {}
+        with open(self.config_path) as config_file:
+            self.slideshow_config = json.load(config_file)   
+        
         self.thumbnails = []
         self.transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+"/slideshow/transitions"])]
         self.transition_choices.append(" - None - ")
@@ -132,7 +140,7 @@ class App(tk.Tk):
             # Close 
             self.destroy()
             
-    def onCloseTopLevel(self, toplevel):
+    def onCloseSlideshowSettings(self, toplevel):
         # get new config
         self.slideshow_config.update(toplevel.getConfig())
         # close
@@ -141,13 +149,21 @@ class App(tk.Tk):
         if messagebox.askyesno("Restart", "To apply general slide settings to the current slideshow, the current slideshow needs to be reloaded. \n\nDo you want to reload the slides?"):
             self.createSlideshow()
         
-    def generalSettingsWindow(self):
+    def slideshowSettingsWindow(self):
         filewin = SettingsFrame(self)
 
         choices = {"zoom_direction": self.zoom_direction_choices, "transition": self.transition_choices, "scale_mode": self.scale_mode_choices}
         filewin.create(self.slideshow_config, choices)
         
-        filewin.protocol("WM_DELETE_WINDOW", (lambda: self.onCloseTopLevel(filewin)))
+        filewin.protocol("WM_DELETE_WINDOW", (lambda: self.onCloseSlideshowSettings(filewin)))
+        
+    def generalSettingsWindow(self):
+        filewin = ConfigFrame(self)
+
+        choices = {"zoom_direction": self.zoom_direction_choices, "transition": self.transition_choices, "scale_mode": self.scale_mode_choices}
+        filewin.create(self.config_path, choices)
+        
+        #filewin.protocol("WM_DELETE_WINDOW", (lambda: self.onCloseTopLevel(filewin)))
 
         
     # see https://stackoverflow.com/a/39059073
@@ -362,8 +378,10 @@ class App(tk.Tk):
     def createSlideshow(self):
         self.frame2.clear()
         self.frame3.clear()
+        self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
         self.sm = SlideManager(self.slideshow_config, self.input_files, self.audio_files)
         self.loadSlideshowImagesRow()
+        self.generalmenu.entryconfig("Slideshow Settings", state="normal")
     
     def loadSlideshowImagesRow(self):
         canvas2 = self.frame2.getCanvas()
