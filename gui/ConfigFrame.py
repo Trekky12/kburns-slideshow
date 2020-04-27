@@ -91,7 +91,6 @@ class ConfigFrame(tk.Toplevel):
         parametersLabel = tk.Label(outputFrame, text="Parameters")
         parametersLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
         parametersEntry = tk.Entry(outputFrame, width=67, textvariable=self.inputOutputParameters)
-        parametersEntry.insert(0, self.config["output_parameters"])
         parametersEntry.grid(row=1, column=1, columnspan=3, sticky=tk.W, padx=4, pady=4)
         
         self.inputOutputCodec.set(self.config["output_codec"])
