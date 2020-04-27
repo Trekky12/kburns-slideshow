@@ -416,6 +416,9 @@ class App(tk.Tk):
             
             self.buttons.append(b)
         
+        addButton = ttk.Button(images_frame, text="Add slide", command=self.addSlide)
+        addButton.grid(row=0, column=i+1, sticky=tk.SW)
+        
         self.frame2.addFrame(images_frame)
         
     def saveConfiguration(self):
@@ -426,3 +429,8 @@ class App(tk.Tk):
             filename = asksaveasfilename(filetypes=ftypes, defaultextension=".json")
             self.saveSlide()
             self.sm.saveConfig(filename)
+        
+    def addSlide(self):
+        filename = askopenfilename()
+        self.sm.addSlide(filename)
+        self.loadSlideshowImagesRow()
