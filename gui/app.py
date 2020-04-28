@@ -541,7 +541,14 @@ class App(tk.Tk):
             self.saveSlideshow()
         
     def addSlide(self):
-        filename = askopenfilename()
+    
+        filetypes = self.slideshow_config["IMAGE_EXTENSIONS"] + self.slideshow_config["VIDEO_EXTENSIONS"]
+    
+        ftypes = [
+            ('Slide Files', " ".join(filetypes))
+        ]
+            
+        filename = askopenfilename(filetypes=ftypes)
         self.sm.addSlide(filename)
         self.frameSlides.clear()
         self.frameSlideSettings.clear()
@@ -554,7 +561,11 @@ class App(tk.Tk):
         self.loadSlideshowImagesRow()
         
     def addAudio(self):
-        filename = askopenfilename()
+        ftypes = [
+            ('Audio Files', " ".join(self.slideshow_config["AUDIO_EXTENSIONS"]))
+        ]
+    
+        filename = askopenfilename(filetypes=ftypes)
         self.sm.addAudio(filename)
         self.frameAudio.clear()
         self.frameSlideSettings.clear()
