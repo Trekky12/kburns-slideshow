@@ -7,7 +7,7 @@ logger = logging.getLogger("kburns-slideshow-gui")
 
 
 class ScrollFrame(tk.Frame):
-    def __init__(self, parent, height = 100, bg=None):
+    def __init__(self, parent, height = 100, create_vertical_scrollbar = True, bg = None):
         tk.Frame.__init__(self, parent)
           
         # auto size
@@ -18,9 +18,10 @@ class ScrollFrame(tk.Frame):
         self.canvas.grid(row=0, column=0, sticky=tk.NSEW)
         
         # create vertical scrollbar
-        vsbar = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.canvas.yview)
-        vsbar.grid(row=0, column=1, sticky=tk.NS)
-        self.canvas.configure(yscrollcommand=vsbar.set)
+        if create_vertical_scrollbar:
+            vsbar = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.canvas.yview)
+            vsbar.grid(row=0, column=1, sticky=tk.NS)
+            self.canvas.configure(yscrollcommand=vsbar.set)
 
         # create horizontal scrollbar
         hsbar = tk.Scrollbar(self, orient=tk.HORIZONTAL, command=self.canvas.xview)

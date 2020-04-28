@@ -153,6 +153,9 @@ class SlideManager:
         
     def removeSlide(self, index):
         del self.slides[index]
+        
+    def removeAudio(self, index):
+        del self.background_tracks[index]
             
     ###################################
     #      Duration Calculations      #

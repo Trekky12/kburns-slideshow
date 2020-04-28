@@ -45,31 +45,36 @@ class App(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         
-        self.geometry("800x520") #Width x Height
+        self.geometry("800x600") #Width x Height
 
         master_frame = tk.Frame(self)
         master_frame.grid(sticky=tk.NSEW)
         
         # scale subframes to width of master frame
         master_frame.columnconfigure(0, weight=1)
-        # top row not changable
+        # top row(s) not changable
         master_frame.rowconfigure(0, weight=0)
+        master_frame.rowconfigure(1, weight=0)
         # scale bottom row to height of master frame
-        master_frame.rowconfigure(1, weight=1)
+        master_frame.rowconfigure(2, weight=1)
 
         # Image Frame with fill parent (sticky=tk.NSEW)
-        self.frame2 = ScrollFrame(master_frame, 100)
-        self.frame2.grid(row=0, column=0, sticky=tk.NSEW)
+        self.frameSlides = ScrollFrame(master_frame, 100, False)
+        self.frameSlides.grid(row=0, column=0, sticky=tk.NSEW)
+        
+        # Image Frame with fill parent (sticky=tk.NSEW)
+        self.frameAudio = ScrollFrame(master_frame, 50, False)
+        self.frameAudio.grid(row=1, column=0, sticky=tk.NSEW)        
         
         # Bottom Frame with fill parent (sticky=tk.NSEW)
-        self.frame3 = ScrollFrame(master_frame, 100)
-        self.frame3.grid(row=1, column=0, sticky=tk.NSEW)
+        self.frameSlideSettings = ScrollFrame(master_frame, 100)
+        self.frameSlideSettings.grid(row=2, column=0, sticky=tk.NSEW)
         
         # Buttons Frame
-        frame4 = tk.Frame(master_frame, height=50)
-        button_save = tk.Button(frame4, text="Save Configuration", command=self.saveSlideshow)
+        frameActions = tk.Frame(master_frame, height=50)
+        frameActions.grid(row=3, column=0, sticky=tk.NW, padx=5, pady=5)
+        button_save = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
         button_save.pack()
-        frame4.grid(row=2, column=0, sticky=tk.NW)
         
         # Menu
         menubar = tk.Menu(self)
@@ -93,6 +98,7 @@ class App(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
         self.buttons = []
+        self.buttonsAudio = []
         # https://stackoverflow.com/a/23355222
         # https://kite.com/python/docs/ttk.Style
         self.style = ttk.Style()
@@ -209,13 +215,120 @@ class App(tk.Tk):
             return True
         except ValueError:
             return False
+        
+    def loadConfig(self):
+        self.slideshow_config = {}
+        with open(self.config_path) as config_file:
+            self.slideshow_config = json.load(config_file)  
     
-    def onButtonClicked(self, button_id):
+    def init(self):
+        self.filename = None
+        self.title(self.general_title)
+        self.input_files = []
+        self.audio_files = []
+        self.slide_selected = None
+        self.audio_selected = None
+        self.slide_changed = False
+        self.sm = None
+        self.loadConfig()
+        
+    def newSlideshow(self):
+        if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
+            self.saveSlideshow()
+        self.init()     
+        self.createSlideshow()
+        
+    def openFile(self):
+        if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
+            self.saveSlideshow()
+            
+        self.init()
+        ftypes = [
+            ('Slideshow config', '*.json')
+        ]
+        self.filename = askopenfilename(filetypes=ftypes)
+        self.title("%s (%s)" %(self.general_title, self.filename))
+        try:
+            with open(self.filename) as f:
+                file_content = json.load(f)    
+
+                if "config" in file_content:
+                    self.slideshow_config.update(file_content["config"])
+                    logger.debug("overwrite config")
+                
+                if "slides" in file_content:
+                    self.input_files = file_content["slides"]
+                    logger.debug("get slides")
+                
+                if "audio" in file_content:
+                    self.audio_files = file_content["audio"]
+                    logger.debug("get audio")
+            
+            self.createSlideshow()
+        except Exception as e:
+            print("file must be a JSON file")
+            print(e)
+            logger.error("file %s must be a JSON file", self.filename)
+    
+    def createSlideshow(self):
+        self.frameSlides.clear()
+        self.frameSlideSettings.clear()
+        self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
+        self.sm = SlideManager(self.slideshow_config, self.input_files, self.audio_files)
+        self.loadSlideshowImagesRow()
+        self.loadSlideshowAudioRow()
+        self.generalmenu.entryconfig("Slideshow Settings", state="normal")
+        self.filemenu.entryconfig("Save", state="normal")
+        self.filemenu.entryconfig("Save As..", state="normal")
+    
+    def loadSlideshowImagesRow(self):
+        canvas2 = self.frameSlides.getCanvas()
+        
+        images_frame = tk.Frame(canvas2, padx=5, pady=5)
+        
+        basewidth = 150
+        
+        self.buttons = []
+        i = 0
+        for i, slide in enumerate(self.sm.getSlides()):
+            img_path = slide.file
+            if isinstance(slide, VideoSlide):
+                video_input_path = slide.file
+                thumb_name = os.path.splitext(os.path.basename(video_input_path))[0]
+                img_path = 'temp\\thumbnail_%s.jpg' %(i)
+                subprocess.call([self.slideshow_config["ffmpeg"], '-i', slide.file, '-ss', '00:00:00.000', '-vframes', '1', '-hide_banner', '-v', 'quiet', '-y', img_path])
+                self.thumbnails.append(img_path)
+        
+            # https://stackoverflow.com/a/44978329
+            img = Image.open(img_path)
+            
+            img.thumbnail((basewidth, basewidth/2))
+
+            photo = ImageTk.PhotoImage(img)
+
+            # https://stackoverflow.com/a/45733411
+            # https://stackoverflow.com/questions/50787864/how-do-i-make-a-tkinter-button-in-an-list-of-buttons-return-its-index#comment88609106_50787933
+            b = ttk.Button(images_frame,image=photo, command=lambda c=i: self.onSlideClicked(c), style=SUNKABLE_BUTTON)
+            b.image = photo # keep a reference
+            b.grid(row=0, column=i, sticky=tk.NSEW)
+            
+            self.buttons.append(b)
+        
+        addButton = ttk.Button(images_frame, text="Add slide", command=self.addSlide)
+        addButton.grid(row=0, column=i+1, sticky=tk.SW)
+        
+        self.frameSlides.addFrame(images_frame)
+        
+    def onSlideClicked(self, button_id):
         for btn in self.buttons:
+            btn.state(['!pressed', '!disabled'])
+            
+        for btn in self.buttonsAudio:
             btn.state(['!pressed', '!disabled'])
         
         self.buttons[button_id].state(['pressed'])
     
+        # save previous slide
         self.saveSlide()
 
         self.slide_selected = button_id        
@@ -223,8 +336,8 @@ class App(tk.Tk):
         
         vcmd = (self.register(self.validateDigit))
 
-        self.frame3.clear()
-        canvas3 = self.frame3.getCanvas()
+        self.frameSlideSettings.clear()
+        canvas3 = self.frameSlideSettings.getCanvas()
         
         optionsFrame = tk.Frame(canvas3, padx=5, pady=5)
         #optionsFrame.grid(sticky=tk.NSEW)
@@ -345,108 +458,71 @@ class App(tk.Tk):
         buttonDeleteSlide.pack()
         
         
-        self.frame3.addFrame(optionsFrame, tk.NW)
+        self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
         
-    def loadConfig(self):
-        self.slideshow_config = {}
-        with open(self.config_path) as config_file:
-            self.slideshow_config = json.load(config_file)  
-    
-    def init(self):
-        self.filename = None
-        self.title(self.general_title)
-        self.input_files = []
-        self.audio_files = []
-        self.slide_selected = None
-        self.slide_changed = False
-        self.sm = None
-        self.loadConfig()
+    def loadSlideshowAudioRow(self):
+        canvas = self.frameAudio.getCanvas()
         
-    def newSlideshow(self):
-        if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
-            self.saveSlideshow()
-        self.init()     
-        self.createSlideshow()
+        frame = tk.Frame(canvas, padx=5, pady=5)
         
-    def openFile(self):
-        if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
-            self.saveSlideshow()
-            
-        self.init()
-        ftypes = [
-            ('Slideshow config', '*.json')
-        ]
-        self.filename = askopenfilename(filetypes=ftypes)
-        self.title("%s (%s)" %(self.general_title, self.filename))
-        try:
-            with open(self.filename) as f:
-                file_content = json.load(f)    
-
-                if "config" in file_content:
-                    self.slideshow_config.update(file_content["config"])
-                    logger.debug("overwrite config")
-                
-                if "slides" in file_content:
-                    self.input_files = file_content["slides"]
-                    logger.debug("get slides")
-                
-                if "audio" in file_content:
-                    self.audio_files = file_content["audio"]
-                    logger.debug("get audio")
-            
-            self.createSlideshow()
-        except Exception as e:
-            print("file must be a JSON file")
-            print(e)
-            logger.error("file %s must be a JSON file", self.filename)
-    
-    def createSlideshow(self):
-        self.frame2.clear()
-        self.frame3.clear()
-        self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
-        self.sm = SlideManager(self.slideshow_config, self.input_files, self.audio_files)
-        self.loadSlideshowImagesRow()
-        self.generalmenu.entryconfig("Slideshow Settings", state="normal")
-        self.filemenu.entryconfig("Save", state="normal")
-        self.filemenu.entryconfig("Save As..", state="normal")
-    
-    def loadSlideshowImagesRow(self):
-        canvas2 = self.frame2.getCanvas()
-        
-        images_frame = tk.Frame(canvas2, padx=5, pady=5)
-        
-        basewidth = 150
-        
-        self.buttons = []
+        self.buttonsAudio = []
         i = 0
-        for i, slide in enumerate(self.sm.getSlides()):
-            img_path = slide.file
-            if isinstance(slide, VideoSlide):
-                video_input_path = slide.file
-                thumb_name = os.path.splitext(os.path.basename(video_input_path))[0]
-                img_path = 'temp\\thumbnail_%s.jpg' %(i)
-                subprocess.call([self.slideshow_config["ffmpeg"], '-i', slide.file, '-ss', '00:00:00.000', '-vframes', '1', '-hide_banner', '-v', 'quiet', '-y', img_path])
-                self.thumbnails.append(img_path)
-        
-            # https://stackoverflow.com/a/44978329
-            img = Image.open(img_path)
-            
-            img.thumbnail((basewidth, basewidth/2))
-
-            photo = ImageTk.PhotoImage(img)
-
-            # https://stackoverflow.com/a/45733411
-            # https://stackoverflow.com/questions/50787864/how-do-i-make-a-tkinter-button-in-an-list-of-buttons-return-its-index#comment88609106_50787933
-            b = ttk.Button(images_frame,image=photo, command=lambda c=i: self.onButtonClicked(c), style=SUNKABLE_BUTTON)
-            b.image = photo # keep a reference
+        for i, audio in enumerate(self.sm.getBackgroundTracks()):
+            b = ttk.Button(frame, text=os.path.basename(audio.file), command=lambda c=i: self.onAudioClicked(c), style=SUNKABLE_BUTTON)
             b.grid(row=0, column=i, sticky=tk.NSEW)
             
-            self.buttons.append(b)
+            self.buttonsAudio.append(b)
         
-        addButton = ttk.Button(images_frame, text="Add slide", command=self.addSlide)
+        addButton = ttk.Button(frame, text="Add audio", command=self.addAudio)
         addButton.grid(row=0, column=i+1, sticky=tk.SW)
         
-        self.frame2.addFrame(images_frame)
+        self.frameAudio.addFrame(frame)
+        
+    def onAudioClicked(self, button_id):        
+        for btn in self.buttons:
+            btn.state(['!pressed', '!disabled'])
+    
+        for btn in self.buttonsAudio:
+            btn.state(['!pressed', '!disabled'])
+        
+        self.buttonsAudio[button_id].state(['pressed'])
+
+        self.audio_selected = button_id        
+        audio = self.sm.getBackgroundTracks()[button_id]
+
+        self.frameSlideSettings.clear()
+        canvas3 = self.frameSlideSettings.getCanvas()
+        
+        optionsFrame = tk.Frame(canvas3, padx=5, pady=5)
+        #optionsFrame.grid(sticky=tk.NSEW)
+        optionsFrame.columnconfigure(0, weight=0)
+        optionsFrame.columnconfigure(1, weight=1)
+
+        generalframe = tk.LabelFrame(optionsFrame, text="General")
+        generalframe.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=5) #columnspan=2, 
+        
+        fileLabel = tk.Label(generalframe, text="File")
+        fileLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
+        fileEntry = tk.Entry(generalframe, width=70)
+        fileEntry.insert(0, audio.file)
+        fileEntry.configure(state='readonly')
+        fileEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
+        
+        durationLabel = tk.Label(generalframe, text="Duration")
+        durationLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
+        durationEntry = tk.Entry(generalframe)
+        durationEntry.insert(0, audio.duration)
+        durationEntry.configure(state='readonly')
+        durationEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
+        
+        buttonsFrame = tk.Frame(optionsFrame)
+        buttonsFrame.grid(row=3, columnspan=3, sticky=tk.NW, padx=4, pady=4)
+
+        buttonDeleteSlide = tk.Button(buttonsFrame, text="Delete", command=(lambda: self.deleteAudio()))
+        buttonDeleteSlide.pack()        
+        
+        self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
+        
         
     def saveSlideshow(self):
         if self.sm:
@@ -467,12 +543,25 @@ class App(tk.Tk):
     def addSlide(self):
         filename = askopenfilename()
         self.sm.addSlide(filename)
-        self.frame2.clear()
-        self.frame3.clear()
+        self.frameSlides.clear()
+        self.frameSlideSettings.clear()
         self.loadSlideshowImagesRow()
         
     def deleteSlide(self):
         self.sm.removeSlide(self.slide_selected)
-        self.frame2.clear()
-        self.frame3.clear()
+        self.frameSlides.clear()
+        self.frameSlideSettings.clear()
         self.loadSlideshowImagesRow()
+        
+    def addAudio(self):
+        filename = askopenfilename()
+        self.sm.addAudio(filename)
+        self.frameAudio.clear()
+        self.frameSlideSettings.clear()
+        self.loadSlideshowAudioRow()
+        
+    def deleteAudio(self):
+        self.sm.removeAudio(self.audio_selected)
+        self.frameAudio.clear()
+        self.frameSlideSettings.clear()
+        self.loadSlideshowAudioRow()
