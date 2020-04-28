@@ -4,7 +4,7 @@
 
 import tkinter as tk
 from PIL import Image, ImageTk
-from tkinter.filedialog import askopenfilename, asksaveasfilename
+from tkinter.filedialog import askopenfilename, askopenfilenames, asksaveasfilename
 from tkinter import messagebox
 from tkinter import ttk
 
@@ -548,8 +548,9 @@ class App(tk.Tk):
             ('Slide Files', " ".join(filetypes))
         ]
             
-        filename = askopenfilename(filetypes=ftypes)
-        self.sm.addSlide(filename)
+        filenames = askopenfilenames(filetypes=ftypes)
+        for file in list(filenames):
+            self.sm.addSlide(file)
         self.frameSlides.clear()
         self.frameSlideSettings.clear()
         self.loadSlideshowImagesRow()
@@ -565,8 +566,9 @@ class App(tk.Tk):
             ('Audio Files', " ".join(self.slideshow_config["AUDIO_EXTENSIONS"]))
         ]
     
-        filename = askopenfilename(filetypes=ftypes)
-        self.sm.addAudio(filename)
+        filenames = askopenfilenames(filetypes=ftypes)
+        for file in list(filenames):
+            self.sm.addAudio(file)
         self.frameAudio.clear()
         self.frameSlideSettings.clear()
         self.loadSlideshowAudioRow()
