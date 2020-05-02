@@ -29,6 +29,7 @@ class ScrollFrame(tk.Frame):
         self.canvas.configure(xscrollcommand=hsbar.set)
         
     def addFrame(self, frame, anchor = tk.NW):
+        self.frame = frame
         # create canvas window for the frame
         self.canvas_frame = self.canvas.create_window((0,0), window=frame, anchor=anchor)
         
@@ -40,6 +41,9 @@ class ScrollFrame(tk.Frame):
         
     def getCanvas(self):
         return self.canvas
+        
+    def getFrame(self):
+        return self.frame
         
     def clear(self):
         self.canvas.delete('all')

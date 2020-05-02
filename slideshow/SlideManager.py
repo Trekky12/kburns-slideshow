@@ -156,6 +156,9 @@ class SlideManager:
         
     def removeAudio(self, index):
         del self.background_tracks[index]
+        
+    def moveAudio(self, old, new):
+        self.background_tracks.insert(new, self.background_tracks.pop(old))
             
     ###################################
     #      Duration Calculations      #

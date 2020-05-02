@@ -103,7 +103,7 @@ class App(tk.Tk):
         # https://kite.com/python/docs/ttk.Style
         self.style = ttk.Style()
         self.style.configure(SUNKABLE_BUTTON, padding=2) 
-        self.style.map(SUNKABLE_BUTTON, background=[('pressed', 'red'), ('disabled', 'red')])
+        self.style.map(SUNKABLE_BUTTON, background=[('pressed', 'red'), ('disabled', 'red'), ('focus', 'red')])
         
         self.thumbnails = []
         self.transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+"/slideshow/transitions"])]
@@ -272,6 +272,7 @@ class App(tk.Tk):
     
     def createSlideshow(self):
         self.frameSlides.clear()
+        self.frameAudio.clear()
         self.frameSlideSettings.clear()
         self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
         self.sm = SlideManager(self.slideshow_config, self.input_files, self.audio_files)
@@ -468,17 +469,63 @@ class App(tk.Tk):
         self.buttonsAudio = []
         i = 0
         for i, audio in enumerate(self.sm.getBackgroundTracks()):
-            b = ttk.Button(frame, text=os.path.basename(audio.file), command=lambda c=i: self.onAudioClicked(c), style=SUNKABLE_BUTTON)
+            #command=lambda c=i: self.onAudioClicked(c), 
+            b = ttk.Button(frame, text=os.path.basename(audio.file), style=SUNKABLE_BUTTON)
             b.grid(row=0, column=i, sticky=tk.NSEW)
+            b.text = os.path.basename(audio.file)
+            
+            # see https://www.geeksforgeeks.org/python-tkinter-grid_location-and-grid_size-method/
+            # see https://stackoverflow.com/a/37281388
+            # see https://stackoverflow.com/a/37732268
+            # see https://effbot.org/tkinterbook/tkinter-events-and-bindings.htm
+            b.bind("<Button-1>", self.buttonDragStart)
+            b.bind("<B1-Motion>", self.buttonDragMotion)
+            b.bind("<ButtonRelease-1>", self.buttonDragStop)
             
             self.buttonsAudio.append(b)
         
-        addButton = ttk.Button(frame, text="Add audio", command=self.addAudio)
-        addButton.grid(row=0, column=i+1, sticky=tk.SW)
+        self.addAudioButton = ttk.Button(frame, text="Add audio", command=self.addAudio)
+        self.addAudioButton.grid(row=0, column=i+1, sticky=tk.SW)
         
         self.frameAudio.addFrame(frame)
         
-    def onAudioClicked(self, button_id):        
+    def buttonDragStart(self, event):
+        widget = event.widget
+        widget._drag_start_x = event.x
+        widget._drag_start_y = event.y
+        widget._col = widget.grid_info()['column']
+
+    def buttonDragMotion(self, event):
+        widget = event.widget
+        x = widget.winfo_x() - widget._drag_start_x + event.x
+        y = widget.winfo_y() - widget._drag_start_y + event.y
+        widget.place(x=x, y=y)
+        widget.tkraise()
+            
+    def buttonDragStop(self, event):
+        widget = event.widget
+        x = widget.winfo_x() + event.x
+        y = widget.winfo_y() + event.y
+        (new_column, new_row) = self.frameAudio.getFrame().grid_location(x, y)
+
+        # move button to new position
+        # https://stackoverflow.com/a/3173159
+        if widget._col != new_column:
+            self.buttonsAudio.insert(new_column, self.buttonsAudio.pop(widget._col))
+            self.sm.moveAudio(widget._col, new_column)
+
+            # rearrange buttons in grid
+            for i, btn in enumerate(self.buttonsAudio):
+                btn.grid(column=i)
+        
+        # Trigger Button Click
+        # when using command the new button order is not respected
+        # the button_id of the command is not changable
+        button_id = widget.grid_info()['column']        
+        self.onAudioClicked(button_id)
+    
+    def onAudioClicked(self, button_id):     
+        
         for btn in self.buttons:
             btn.state(['!pressed', '!disabled'])
     
@@ -486,7 +533,7 @@ class App(tk.Tk):
             btn.state(['!pressed', '!disabled'])
         
         self.buttonsAudio[button_id].state(['pressed'])
-
+        
         self.audio_selected = button_id        
         audio = self.sm.getBackgroundTracks()[button_id]
 
@@ -522,7 +569,6 @@ class App(tk.Tk):
         buttonDeleteSlide.pack()        
         
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
-        
         
     def saveSlideshow(self):
         if self.sm:
