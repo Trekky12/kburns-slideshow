@@ -645,6 +645,7 @@ class App(tk.Tk):
     
     def syncToAudio(self):
         logger.info("Sync slides durations to audio")
+        self.saveSlide()
         self.sm.adjustDurationsFromAudio()
         self.frameSlides.clear()
         self.frameAudio.clear()
@@ -654,11 +655,12 @@ class App(tk.Tk):
         self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
         
     def createVideo(self):
+        self.saveSlide()
         filename = asksaveasfilename()
         self.sm.createVideo(filename)
         
     def addSlide(self):
-    
+        self.saveSlide()
         filetypes = self.slideshow_config["IMAGE_EXTENSIONS"] + self.slideshow_config["VIDEO_EXTENSIONS"]
     
         ftypes = [
@@ -679,6 +681,7 @@ class App(tk.Tk):
         self.loadSlideshowImagesRow()
         
     def addAudio(self):
+        self.saveSlide()
         ftypes = [
             ('Audio Files', " ".join(self.slideshow_config["AUDIO_EXTENSIONS"]))
         ]
