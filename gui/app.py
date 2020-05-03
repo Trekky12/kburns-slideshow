@@ -97,6 +97,9 @@ class App(tk.Tk):
         buttonSync = tk.Button(frameActions, text="Sync Video to Audio", command=self.syncToAudio)
         buttonSync.grid(row=0, column=3, rowspan = 2, sticky=tk.NW, padx=2)
         
+        buttonCreateVideo = tk.Button(frameActions, text="Create Video", command=self.createVideo)
+        buttonCreateVideo.grid(row=0, column=4, rowspan = 2, sticky=tk.NW, padx=2)
+        
         # Menu
         menubar = tk.Menu(self)
         self.filemenu = tk.Menu(menubar, tearoff=0)
@@ -649,6 +652,10 @@ class App(tk.Tk):
         self.loadSlideshowImagesRow()
         self.loadSlideshowAudioRow()
         self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
+        
+    def createVideo(self):
+        filename = asksaveasfilename()
+        self.sm.createVideo(filename)
         
     def addSlide(self):
     

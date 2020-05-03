@@ -635,25 +635,26 @@ class SlideManager:
         
         return (last_slide_start + last_slide.getFrames())/self.config["fps"]
         
-    def createVideo(self, output_file):
+    def createVideo(self, output_file, check = False, save = None, test = False):
         logger.info("Create video %s", output_file)
         
         # check if it is okay to have a shorter background track
-        video_duration = self.getTotalDuration()
-        audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
-        logger.info("Video length: %s", video_duration)
-        logger.info("Background track length: %s", audio_duration)
-        if len(self.background_tracks)> 0 and audio_duration < video_duration:
-            print("Background track (%s) is shorter than video length (%s)!" %(audio_duration, video_duration))
-            logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
-            
-            if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
-                sys.exit(1)
+        if check:
+            video_duration = self.getTotalDuration()
+            audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
+            logger.info("Video length: %s", video_duration)
+            logger.info("Background track length: %s", audio_duration)
+            if len(self.background_tracks)> 0 and audio_duration < video_duration:
+                print("Background track (%s) is shorter than video length (%s)!" %(audio_duration, video_duration))
+                logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
+                
+                if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
+                    sys.exit(1)
     
         # Save configuration
-        if self.config["save"] is not None: 
+        if save is not None: 
             self.saveConfig(self.config["save"])
-            
+        
         # Subtitles
         burnSubtitles = False if "mkv" in output_file.lower() else True
         srtInput = len(self.getSlides()) + len(self.getBackgroundTracks())
@@ -681,7 +682,7 @@ class SlideManager:
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
 
-        if not self.config["test"]:
+        if not test:
             # create temporary videos
             self.queue.createTemporaryVideos(self.config["ffmpeg"])
             
