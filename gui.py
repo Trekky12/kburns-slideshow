@@ -5,7 +5,7 @@ import json
 import logging
 
 # Logging
-logger = logging.getLogger("kburns-slideshow-gui")
+logger = logging.getLogger("kburns-slideshow")
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler( os.path.dirname(os.path.realpath(__file__)) + '/kburns-slideshow-gui.log')
 handler.setLevel(logging.DEBUG)

@@ -5,7 +5,7 @@ import json
 
 import logging
 
-logger = logging.getLogger("kburns-slideshow-gui")
+logger = logging.getLogger("kburns-slideshow")
 
 
 class ConfigFrame(tk.Toplevel):

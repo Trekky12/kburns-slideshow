@@ -20,7 +20,7 @@ import itertools
 
 import logging
 
-logger = logging.getLogger("kburns-slideshow-gui")
+logger = logging.getLogger("kburns-slideshow")
 
 import subprocess
 
@@ -91,8 +91,11 @@ class App(tk.Tk):
         labelAudioDuration = tk.Label(frameActions, textvariable=self.audioDurationValue)
         labelAudioDuration.grid(row=1, column=1, sticky=tk.NW)
         
-        button_save = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
-        button_save.grid(row=0, column=2, rowspan = 2, sticky=tk.NW)
+        buttonSave = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
+        buttonSave.grid(row=0, column=2, rowspan = 2, sticky=tk.NW, padx=2)
+        
+        buttonSync = tk.Button(frameActions, text="Sync Video to Audio", command=self.syncToAudio)
+        buttonSync.grid(row=0, column=3, rowspan = 2, sticky=tk.NW, padx=2)
         
         # Menu
         menubar = tk.Menu(self)
@@ -636,6 +639,16 @@ class App(tk.Tk):
         if self.filename:
             self.title("%s (%s)" %(self.general_title, self.filename))
             self.saveSlideshow()
+    
+    def syncToAudio(self):
+        logger.info("Sync slides durations to audio")
+        self.sm.adjustDurationsFromAudio()
+        self.frameSlides.clear()
+        self.frameAudio.clear()
+        self.frameSlideSettings.clear()
+        self.loadSlideshowImagesRow()
+        self.loadSlideshowAudioRow()
+        self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
         
     def addSlide(self):
     

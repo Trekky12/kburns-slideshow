@@ -3,7 +3,7 @@
 import tkinter as tk
 import logging
 
-logger = logging.getLogger("kburns-slideshow-gui")
+logger = logging.getLogger("kburns-slideshow")
 
 
 class ScrollFrame(tk.Frame):
