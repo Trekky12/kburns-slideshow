@@ -309,9 +309,14 @@ class App(tk.Tk):
 
             # https://stackoverflow.com/a/45733411
             # https://stackoverflow.com/questions/50787864/how-do-i-make-a-tkinter-button-in-an-list-of-buttons-return-its-index#comment88609106_50787933
-            b = ttk.Button(images_frame,image=photo, command=lambda c=i: self.onSlideClicked(c), style=SUNKABLE_BUTTON)
+            # command=lambda c=i: self.onSlideClicked(c), 
+            b = ttk.Button(images_frame,image=photo, style=SUNKABLE_BUTTON)
             b.image = photo # keep a reference
             b.grid(row=0, column=i, sticky=tk.NSEW)
+            
+            b.bind("<Button-1>", self.buttonDragStart)
+            b.bind("<B1-Motion>", self.buttonDragMotion)
+            b.bind("<ButtonRelease-1>", self.buttonDragStopSlide)
             
             self.buttons.append(b)
         
@@ -480,7 +485,7 @@ class App(tk.Tk):
             # see https://effbot.org/tkinterbook/tkinter-events-and-bindings.htm
             b.bind("<Button-1>", self.buttonDragStart)
             b.bind("<B1-Motion>", self.buttonDragMotion)
-            b.bind("<ButtonRelease-1>", self.buttonDragStop)
+            b.bind("<ButtonRelease-1>", self.buttonDragStopAudio)
             
             self.buttonsAudio.append(b)
         
@@ -502,7 +507,7 @@ class App(tk.Tk):
         widget.place(x=x, y=y)
         widget.tkraise()
             
-    def buttonDragStop(self, event):
+    def buttonDragStopAudio(self, event):
         widget = event.widget
         x = widget.winfo_x() + event.x
         y = widget.winfo_y() + event.y
@@ -523,6 +528,28 @@ class App(tk.Tk):
         # the button_id of the command is not changable
         button_id = widget.grid_info()['column']        
         self.onAudioClicked(button_id)
+        
+    def buttonDragStopSlide(self, event):
+        widget = event.widget
+        x = widget.winfo_x() + event.x
+        y = widget.winfo_y() + event.y
+        (new_column, new_row) = self.frameSlides.getFrame().grid_location(x, y)
+
+        # move button to new position
+        # https://stackoverflow.com/a/3173159
+        if widget._col != new_column:
+            self.buttons.insert(new_column, self.buttons.pop(widget._col))
+            self.sm.moveSlide(widget._col, new_column)
+
+            # rearrange buttons in grid
+            for i, btn in enumerate(self.buttons):
+                btn.grid(column=i)
+        
+        # Trigger Button Click
+        # when using command the new button order is not respected
+        # the button_id of the command is not changable
+        button_id = widget.grid_info()['column']        
+        self.onSlideClicked(button_id)
     
     def onAudioClicked(self, button_id):     
         

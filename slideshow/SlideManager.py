@@ -153,6 +153,9 @@ class SlideManager:
         
     def removeSlide(self, index):
         del self.slides[index]
+    
+    def moveSlide(self, old, new):
+        self.slides.insert(new, self.slides.pop(old))
         
     def removeAudio(self, index):
         del self.background_tracks[index]
