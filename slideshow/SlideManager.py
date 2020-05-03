@@ -628,6 +628,8 @@ class SlideManager:
     #         Create Video            #
     ###################################
     def getTotalDuration(self):
+        if len(self.getSlides()) <= 0:
+            return 0
         last_slide = self.getSlides()[-1]
         last_slide_start = self.getOffset(-1)
         

@@ -72,9 +72,27 @@ class App(tk.Tk):
         
         # Buttons Frame
         frameActions = tk.Frame(master_frame, height=50)
-        frameActions.grid(row=3, column=0, sticky=tk.NW, padx=5, pady=5)
+        frameActions.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=2)
+        frameActions.columnconfigure(1, weight=1)
+        
+        labelVideoDuration = tk.Label(frameActions, text="Video Duration:")
+        labelVideoDuration.grid(row=0, column=0, sticky=tk.NW)
+        
+        self.videoDurationValue = tk.StringVar()
+        self.videoDurationValue.set("00:00:00")
+        labelVideoDurationValue = tk.Label(frameActions, textvariable=self.videoDurationValue)
+        labelVideoDurationValue.grid(row=0, column=1, sticky=tk.NW)
+        
+        labelAudioDuration = tk.Label(frameActions, text="Audio Duration:")
+        labelAudioDuration.grid(row=1, column=0, sticky=tk.NW)
+        
+        self.audioDurationValue = tk.StringVar()
+        self.audioDurationValue.set("00:00:00")
+        labelAudioDuration = tk.Label(frameActions, textvariable=self.audioDurationValue)
+        labelAudioDuration.grid(row=1, column=1, sticky=tk.NW)
+        
         button_save = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
-        button_save.pack()
+        button_save.grid(row=0, column=2, rowspan = 2, sticky=tk.NW)
         
         # Menu
         menubar = tk.Menu(self)
@@ -281,6 +299,7 @@ class App(tk.Tk):
         self.generalmenu.entryconfig("Slideshow Settings", state="normal")
         self.filemenu.entryconfig("Save", state="normal")
         self.filemenu.entryconfig("Save As..", state="normal")
+        
     
     def loadSlideshowImagesRow(self):
         canvas2 = self.frameSlides.getCanvas()
@@ -324,6 +343,8 @@ class App(tk.Tk):
         addButton.grid(row=0, column=i+1, sticky=tk.SW)
         
         self.frameSlides.addFrame(images_frame)
+        duration = self.sm.getTotalDuration()
+        self.videoDurationValue.set(self.formatDuration(duration))
         
     def onSlideClicked(self, button_id):
         for btn in self.buttons:
@@ -493,6 +514,9 @@ class App(tk.Tk):
         self.addAudioButton.grid(row=0, column=i+1, sticky=tk.SW)
         
         self.frameAudio.addFrame(frame)
+        duration = self.sm.getAudioDuration() + self.sm.getVideoAudioDuration()
+        self.audioDurationValue.set(self.formatDuration(duration))
+        
         
     def buttonDragStart(self, event):
         widget = event.widget
@@ -651,3 +675,10 @@ class App(tk.Tk):
         self.frameAudio.clear()
         self.frameSlideSettings.clear()
         self.loadSlideshowAudioRow()
+        
+    def formatDuration(self, seconds):
+        s = int(seconds%60)
+        m = int((seconds/60)%60)
+        h = int(seconds/(60*60))%24
+        
+        return '%02d:%02d:%02d' % (h, m, s)
