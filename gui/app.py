@@ -359,7 +359,7 @@ class App(tk.Tk):
         for btn in self.buttonsAudio:
             btn.state(['!pressed', '!disabled'])
         
-        self.buttons[button_id].state(['pressed'])
+        self.buttons[button_id].state(['pressed', 'disabled'])
     
         # save previous slide
         self.saveSlide()
@@ -589,7 +589,7 @@ class App(tk.Tk):
         for btn in self.buttonsAudio:
             btn.state(['!pressed', '!disabled'])
         
-        self.buttonsAudio[button_id].state(['pressed'])
+        self.buttonsAudio[button_id].state(['pressed', 'disabled'])
         
         self.audio_selected = button_id        
         audio = self.sm.getBackgroundTracks()[button_id]
