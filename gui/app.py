@@ -711,7 +711,7 @@ class App(tk.Tk):
     def createVideo(self):
         self.saveSlide()
         filename = asksaveasfilename()
-        self.sm.createVideo(filename)
+        self.sm.createVideo(filename, overwrite = True)
         
     def addSlide(self):
         self.saveSlide()

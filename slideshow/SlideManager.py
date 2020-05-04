@@ -635,7 +635,7 @@ class SlideManager:
         
         return (last_slide_start + last_slide.getFrames())/self.config["fps"]
         
-    def createVideo(self, output_file, check = False, save = None, test = False):
+    def createVideo(self, output_file, check = False, save = None, test = False, overwrite = False):
         logger.info("Create video %s", output_file)
         
         # check if it is okay to have a shorter background track
@@ -691,7 +691,7 @@ class SlideManager:
                 "-hide_banner", 
                 #"-v quiet",
                 "-stats",
-                "-y" if self.config["overwrite"] else "",
+                "-y" if overwrite else "",
                 # slides
                 " ".join(["-i \"%s\" " %(f) for f in inputs]),
                 " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
