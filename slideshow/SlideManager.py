@@ -309,7 +309,7 @@ class SlideManager:
                 # on FFmpeg 4 the maximum thickness was changed from 'max' to 'fill'
                 # see https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/b3cb9bd43fa33a8aaf7a63e43f8418975b3bf0de
                 fill_mode = "max" if self.ffmpeg_version < 4 else "fill"
-                filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=%s:enable='between(t,0,%s)'" %(duration,duration))
+                filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=%s:enable='between(t,0,%s)'" %(fill_mode,duration))
                 filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: fontcolor=white:y=%s:x=%s:borderw=1%s%s:enable='between(t,0,%s)'" % (slide.overlay_text["title"], font_size, y, x, font, font_file, duration))
                 
                 if isinstance(slide, ImageSlide):
