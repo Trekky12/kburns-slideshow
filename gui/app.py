@@ -3,7 +3,7 @@
 
 
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 from tkinter.filedialog import askopenfilename, askopenfilenames, asksaveasfilename
 from tkinter import messagebox
 from tkinter import ttk
@@ -199,6 +199,13 @@ class App(tk.Tk):
     def checkEntryModification(self, event):
         self.slide_changed = True
         
+        img = self.imageLabel.img.copy()
+        
+        self.getTransitionPreview(img, self.inputZoomDirection.get(), self.inputZoomRate.get())
+        photo = ImageTk.PhotoImage(img)
+        self.imageLabel.configure(image=photo)
+        self.imageLabel.image = photo
+        
     def saveSlide(self):
         if self.slide_changed:
             slide = self.sm.getSlides()[self.slide_selected]
@@ -339,6 +346,9 @@ class App(tk.Tk):
             b.image = photo # keep a reference
             b.grid(row=0, column=i, sticky=tk.NSEW)
             
+            # save reference to image path
+            b.image_path = img_path
+            
             b.bind("<Button-1>", self.buttonDragStart)
             b.bind("<B1-Motion>", self.buttonDragMotion)
             b.bind("<ButtonRelease-1>", self.buttonDragStopSlide)
@@ -478,8 +488,21 @@ class App(tk.Tk):
         imageframe = tk.LabelFrame(optionsFrame, text="Image")
         imageframe.grid(row=0, column=1, rowspan = 3, sticky=tk.NW, padx=5, pady=5)
         
-        imageLabel = tk.Label(imageframe, image=self.buttons[button_id].image)
-        imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
+        # get image path from button and create "bigger" preview
+        img = Image.open(self.buttons[button_id].image_path)
+        img.thumbnail((300, 300/2))
+        originalImage = img.copy()
+        
+        if isinstance(slide, ImageSlide):
+            self.getTransitionPreview(img, slide.getZoomDirection(), slide.zoom_rate)
+        photo = ImageTk.PhotoImage(img)
+        
+        self.imageLabel = tk.Label(imageframe, image=photo)
+        self.imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
+        # keep a reference
+        self.imageLabel.image = photo
+        # reference to unmodified image
+        self.imageLabel.img = originalImage
         
         
         buttonsFrame = tk.Frame(optionsFrame)
@@ -492,6 +515,37 @@ class App(tk.Tk):
         
         
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
+    
+    def getTransitionPreview(self, img, zoom_direction, zoom_rate):
+        direction_x = zoom_direction.split("-")[1]
+        direction_y = zoom_direction.split("-")[0]
+    
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+        x1 = 0
+        y1 = 0
+        x2 = 0
+        y2 = 0
+        scale_factor = 1/(1+float(zoom_rate))
+        
+        if direction_x == "left":
+            x1 = 0
+        elif direction_x == "right":
+            x1 = width - width*scale_factor
+        elif direction_x == "center":
+            x1 = (width - width*scale_factor)/2
+            
+        if direction_y == "top":
+            y1 = 0
+        elif direction_y == "bottom":
+            y1 = height - height*scale_factor
+        elif direction_y == "center":
+            y1 = (height - height*scale_factor)/2
+            
+        x2 = x1 + width*scale_factor
+        y2 = y1 + height*scale_factor
+        
+        draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3) 
         
     def loadSlideshowAudioRow(self):
         canvas = self.frameAudio.getCanvas()
