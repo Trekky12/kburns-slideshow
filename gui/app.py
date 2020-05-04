@@ -169,13 +169,15 @@ class App(tk.Tk):
         self.destroy()
             
     def onCloseSlideshowSettings(self, toplevel):
+        input_files = [slide.getObject(self.slideshow_config) for slide in self.sm.getSlides()]
+        audio_files = [track.getObject() for track in self.sm.getBackgroundTracks()]
         # get new config
         self.slideshow_config.update(toplevel.getConfig())
         # close
         toplevel.destroy()
         # ask for reload
         if self.hasSlides() and messagebox.askyesno("Restart", "To apply general slide settings to the current slideshow, the current slideshow needs to be reloaded. \n\nDo you want to reload the slides?"):
-            self.createSlideshow()
+            self.createSlideshow(input_files, audio_files)
         
     def slideshowSettingsWindow(self):
         filewin = SettingsFrame(self)
@@ -288,25 +290,28 @@ class App(tk.Tk):
                     logger.debug("overwrite config")
                 
                 if "slides" in file_content:
-                    self.input_files = file_content["slides"]
+                    input_files = file_content["slides"]
                     logger.debug("get slides")
                 
                 if "audio" in file_content:
-                    self.audio_files = file_content["audio"]
+                    audio_files = file_content["audio"]
                     logger.debug("get audio")
             
-            self.createSlideshow()
+            self.createSlideshow(input_files, audio_files)
         except Exception as e:
             print("file must be a JSON file")
             print(e)
             logger.error("file %s must be a JSON file", self.filename)
     
-    def createSlideshow(self):
+    def createSlideshow(self, input_files = [], audio_files = []):
         self.frameSlides.clear()
         self.frameAudio.clear()
         self.frameSlideSettings.clear()
         self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
-        self.sm = SlideManager(self.slideshow_config, self.input_files, self.audio_files)
+        
+        
+        self.sm = SlideManager(self.slideshow_config, input_files, audio_files)
+        
         self.loadSlideshowImagesRow()
         self.loadSlideshowAudioRow()
         self.generalmenu.entryconfig("Slideshow Settings", state="normal")
@@ -517,35 +522,38 @@ class App(tk.Tk):
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
     
     def getTransitionPreview(self, img, zoom_direction, zoom_rate):
-        direction_x = zoom_direction.split("-")[1]
-        direction_y = zoom_direction.split("-")[0]
     
-        draw = ImageDraw.Draw(img)
-        width, height = img.size
-        x1 = 0
-        y1 = 0
-        x2 = 0
-        y2 = 0
-        scale_factor = 1/(1+float(zoom_rate))
+        zd = zoom_direction.split("-")
+        if len(zd) > 1: 
+            direction_x = zoom_direction.split("-")[1]
+            direction_y = zoom_direction.split("-")[0]
         
-        if direction_x == "left":
+            draw = ImageDraw.Draw(img)
+            width, height = img.size
             x1 = 0
-        elif direction_x == "right":
-            x1 = width - width*scale_factor
-        elif direction_x == "center":
-            x1 = (width - width*scale_factor)/2
-            
-        if direction_y == "top":
             y1 = 0
-        elif direction_y == "bottom":
-            y1 = height - height*scale_factor
-        elif direction_y == "center":
-            y1 = (height - height*scale_factor)/2
+            x2 = 0
+            y2 = 0
+            scale_factor = 1/(1+float(zoom_rate))
             
-        x2 = x1 + width*scale_factor
-        y2 = y1 + height*scale_factor
-        
-        draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3) 
+            if direction_x == "left":
+                x1 = 0
+            elif direction_x == "right":
+                x1 = width - width*scale_factor
+            elif direction_x == "center":
+                x1 = (width - width*scale_factor)/2
+                
+            if direction_y == "top":
+                y1 = 0
+            elif direction_y == "bottom":
+                y1 = height - height*scale_factor
+            elif direction_y == "center":
+                y1 = (height - height*scale_factor)/2
+                
+            x2 = x1 + width*scale_factor
+            y2 = y1 + height*scale_factor
+            
+            draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3) 
         
     def loadSlideshowAudioRow(self):
         canvas = self.frameAudio.getCanvas()
