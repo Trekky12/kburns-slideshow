@@ -494,8 +494,29 @@ class App(tk.Tk):
         imageframe.grid(row=0, column=1, rowspan = 3, sticky=tk.NW, padx=5, pady=5)
         
         # get image path from button and create "bigger" preview
-        img = Image.open(self.buttons[button_id].image_path)
-        img.thumbnail((300, 300/2))
+        output_ratio = float(self.slideshow_config["output_width"])/float(self.slideshow_config["output_height"])
+        thumb_width = 250
+        thumb_height = int(thumb_width/output_ratio)
+        
+        slideImage = Image.open(self.buttons[button_id].image_path)
+        slideImage_width, slideImage_height = slideImage.size
+        slideImage_ratio = slideImage_width/slideImage_height
+        
+        slidethumb_width, slidethumb_height = [thumb_width, thumb_height]
+        if isinstance(slide, ImageSlide):
+            if slide.scale == "pad" or slide.scale == "pan":
+                slidethumb_width, slidethumb_height = [thumb_width, int(thumb_width/output_ratio)] if slideImage_ratio > output_ratio else [int(thumb_height*slideImage_ratio), thumb_height]
+            elif slide.scale == "crop_center":
+                slidethumb_width, slidethumb_height = [thumb_width, int(thumb_width/slideImage_ratio)] if slideImage_ratio < output_ratio else [int(thumb_height*slideImage_ratio), thumb_height]
+
+        slideImage.thumbnail((slidethumb_width, slidethumb_height))
+            
+        
+        img = Image.new('RGB', (thumb_width, thumb_height), color = 'black')
+        thumb_x = int((thumb_width - slidethumb_width) / 2)
+        thumb_y = int((thumb_height - slidethumb_height) / 2)
+        img.paste(slideImage, (thumb_x, thumb_y))
+        
         originalImage = img.copy()
         
         if isinstance(slide, ImageSlide):
