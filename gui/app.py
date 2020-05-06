@@ -201,10 +201,13 @@ class App(tk.Tk):
     def checkEntryModification(self, event):
         self.slide_changed = True
         
-        img = self.imageLabel.img.copy()
+        slide = self.sm.getSlides()[self.slide_selected]
         
-        self.getTransitionPreview(img, self.inputZoomDirection.get(), self.inputZoomRate.get())
-        photo = ImageTk.PhotoImage(img)
+        zd = self.inputZoomDirection.get() if isinstance(slide, ImageSlide) else None
+        zr = self.inputZoomRate.get() if isinstance(slide, ImageSlide) else None
+        sc = self.inputScaleMode.get() if isinstance(slide, ImageSlide) else None
+        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd, zr, sc)
+        
         self.imageLabel.configure(image=photo)
         self.imageLabel.image = photo
         
@@ -494,42 +497,15 @@ class App(tk.Tk):
         imageframe.grid(row=0, column=1, rowspan = 3, sticky=tk.NW, padx=5, pady=5)
         
         # get image path from button and create "bigger" preview
-        output_ratio = float(self.slideshow_config["output_width"])/float(self.slideshow_config["output_height"])
-        thumb_width = 250
-        thumb_height = int(thumb_width/output_ratio)
-        
-        slideImage = Image.open(self.buttons[button_id].image_path)
-        slideImage_width, slideImage_height = slideImage.size
-        slideImage_ratio = slideImage_width/slideImage_height
-        
-        slidethumb_width, slidethumb_height = [thumb_width, thumb_height]
-        if isinstance(slide, ImageSlide):
-            if slide.scale == "pad" or slide.scale == "pan":
-                slidethumb_width, slidethumb_height = [thumb_width, int(thumb_width/output_ratio)] if slideImage_ratio > output_ratio else [int(thumb_height*slideImage_ratio), thumb_height]
-            elif slide.scale == "crop_center":
-                slidethumb_width, slidethumb_height = [thumb_width, int(thumb_width/slideImage_ratio)] if slideImage_ratio < output_ratio else [int(thumb_height*slideImage_ratio), thumb_height]
-
-        slideImage.thumbnail((slidethumb_width, slidethumb_height))
-            
-        
-        img = Image.new('RGB', (thumb_width, thumb_height), color = 'black')
-        thumb_x = int((thumb_width - slidethumb_width) / 2)
-        thumb_y = int((thumb_height - slidethumb_height) / 2)
-        img.paste(slideImage, (thumb_x, thumb_y))
-        
-        originalImage = img.copy()
-        
-        if isinstance(slide, ImageSlide):
-            self.getTransitionPreview(img, slide.getZoomDirection(), slide.zoom_rate)
-        photo = ImageTk.PhotoImage(img)
+        zd = slide.getZoomDirection() if isinstance(slide, ImageSlide) else None
+        zr = slide.zoom_rate if isinstance(slide, ImageSlide) else None
+        sc = slide.scale if isinstance(slide, ImageSlide) else None
+        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd, zr, sc)
         
         self.imageLabel = tk.Label(imageframe, image=photo)
         self.imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
         # keep a reference
-        self.imageLabel.image = photo
-        # reference to unmodified image
-        self.imageLabel.img = originalImage
-        
+        self.imageLabel.image = photo        
         
         buttonsFrame = tk.Frame(optionsFrame)
         buttonsFrame.grid(row=3, columnspan=3, sticky=tk.NW, padx=4, pady=4)
@@ -542,39 +518,106 @@ class App(tk.Tk):
         
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
     
-    def getTransitionPreview(self, img, zoom_direction, zoom_rate):
-    
-        zd = zoom_direction.split("-")
-        if len(zd) > 1: 
-            direction_x = zoom_direction.split("-")[1]
-            direction_y = zoom_direction.split("-")[0]
+    def getPreviewImage(self, img_path, zoom_direction = None, zoom_rate = None, scale = None):
+        output_ratio = float(self.slideshow_config["output_width"])/float(self.slideshow_config["output_height"])
+        thumb_width = 250
+        thumb_height = int(thumb_width/output_ratio)
         
-            draw = ImageDraw.Draw(img)
-            width, height = img.size
-            x1 = 0
-            y1 = 0
-            x2 = 0
-            y2 = 0
-            scale_factor = 1/(1+float(zoom_rate))
+        slideImage = Image.open(img_path)
+        slideImage_width, slideImage_height = slideImage.size
+        slideImage_ratio = slideImage_width/slideImage_height
+        
+        slidethumb_width, slidethumb_height = [thumb_width, thumb_height]
+        if scale == "crop_center":
+            slidethumb_width, slidethumb_height = [thumb_width, int(thumb_width/slideImage_ratio)] if slideImage_ratio < output_ratio else [int(thumb_height*slideImage_ratio), thumb_height]
+        elif scale == "pad" or scale == "pan":
+            slidethumb_width, slidethumb_height = [thumb_width, int(thumb_width/slideImage_ratio)] if slideImage_ratio > output_ratio else [int(thumb_height*slideImage_ratio), thumb_height]
             
-            if direction_x == "left":
+        slideImage.thumbnail((slidethumb_width, slidethumb_height))
+            
+        img = Image.new('RGB', (thumb_width, thumb_height), color = 'black')
+        thumb_x = int((thumb_width - slidethumb_width) / 2)
+        thumb_y = int((thumb_height - slidethumb_height) / 2)
+        img.paste(slideImage, (thumb_x, thumb_y))
+        
+        # transition preview
+        if zoom_direction is not None and zoom_rate is not None:
+            zd = zoom_direction.split("-")
+            if len(zd) > 1: 
+                direction_x = zoom_direction.split("-")[1]
+                direction_y = zoom_direction.split("-")[0]
+            
+                draw = ImageDraw.Draw(img)
+                width, height = img.size# [thumb_width, int(thumb_width/output_ratio)]
+                output_width = width
+                output_height = int(output_width/output_ratio)
                 x1 = 0
-            elif direction_x == "right":
-                x1 = width - width*scale_factor
-            elif direction_x == "center":
-                x1 = (width - width*scale_factor)/2
-                
-            if direction_y == "top":
                 y1 = 0
-            elif direction_y == "bottom":
-                y1 = height - height*scale_factor
-            elif direction_y == "center":
-                y1 = (height - height*scale_factor)/2
+                x2 = 0
+                y2 = 0
+                scale_factor = 1/(1+float(zoom_rate))
                 
-            x2 = x1 + width*scale_factor
-            y2 = y1 + height*scale_factor
-            
-            draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3) 
+                if direction_x == "left":
+                    x1 = 0
+                elif direction_x == "right":
+                    x1 = width - width*scale_factor
+                elif direction_x == "center":
+                    x1 = (width - output_width*scale_factor)/2
+                    
+                if direction_y == "top":
+                    y1 = 0
+                elif direction_y == "bottom":
+                    y1 = height - output_height*scale_factor
+                elif direction_y == "center":
+                    y1 = (height - output_height*scale_factor)/2
+                
+                x2 = x1 + output_width*scale_factor
+                y2 = y1 + output_height*scale_factor
+                
+                # adjust coordinates for panning  
+                if scale == "pan":
+                    if direction_y == "top":
+                        if direction_x == "left":
+                            x1 = x1 + thumb_x
+                        elif direction_x == "right":
+                            x2 = x2 - thumb_x
+                        elif direction_x == "center":
+                            x1 = x1 + thumb_x/2
+                            x2 = x2 - thumb_x/2
+                            y1 = y1 + thumb_y/2
+                            
+                    if direction_y == "bottom":
+                        if direction_x == "left":
+                            x1 = x1 + thumb_x
+                            y1 = height - int((x2 - x1)/output_ratio)
+                        elif direction_x == "right":
+                            x2 = x2 - thumb_x
+                            y1 = height - int((x2 - x1)/output_ratio)
+                        elif direction_x == "center":
+                            x1 = x1 + thumb_x/2
+                            x2 = x2 - thumb_x/2
+                            y1 = height - int((x2 - x1)/output_ratio) + thumb_y/2
+                            
+                    if direction_y == "center":
+                        if direction_x == "left":
+                            x1 = x1 + thumb_x
+                            y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
+                        elif direction_x == "right":
+                            x2 = x2 - thumb_x
+                            y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
+                        elif direction_x == "center":
+                            x1 = x1 + thumb_x/2
+                            x2 = x2 - thumb_x/2
+                            y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
+
+                    y2 = y1 + int((x2 - x1)/output_ratio)
+                draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3)
+        
+        # crop padding on pan
+        if scale == "pan":
+            img = img.crop((thumb_x, thumb_y, thumb_x + slidethumb_width, thumb_y + slidethumb_height)) 
+                
+        return ImageTk.PhotoImage(img)
         
     def loadSlideshowAudioRow(self):
         canvas = self.frameAudio.getCanvas()
