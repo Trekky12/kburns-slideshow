@@ -156,17 +156,20 @@ class App(tk.Tk):
         self.inputDurationTransition = tk.StringVar()
         
     def hasSlides(self):
-        return self.sm and len(self.sm.getSlides()) > 0
+        return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
         
     def on_closing(self):
-        if self.hasSlides() and messagebox.askyesno("Quit", "Do you want to quit?"):
-            # Delete thumbnails
-            for file in self.thumbnails:
-                if os.path.exists(file):
-                    os.remove(file)
-                    logger.debug("Delete %s", file)
-        # Close 
-        self.destroy()
+        if self.hasSlides():
+            if messagebox.askyesno("Quit", "Do you want to quit?"):
+                # Delete thumbnails
+                for file in self.thumbnails:
+                    if os.path.exists(file):
+                        os.remove(file)
+                        logger.debug("Delete %s", file)
+                # Close 
+                self.destroy()
+        else:
+            self.destroy()
             
     def onCloseSlideshowSettings(self, toplevel):
         input_files = [slide.getObject(self.slideshow_config) for slide in self.sm.getSlides()]
