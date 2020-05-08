@@ -611,7 +611,52 @@ class App(tk.Tk):
                             y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
 
                     y2 = y1 + int((x2 - x1)/output_ratio)
+                
+                
                 draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3)
+                
+                # direction
+                if scale == "pad" or scale == "crop_center":
+                    top_left = (0,0)
+                    top_right = (width, 0)
+                    bottom_left = (0, height)
+                    bottom_right = (width, height)
+                elif scale == "pan":
+                    top_left = (thumb_x,0)
+                    top_right = (width-thumb_x, 0)
+                    bottom_left = (thumb_x, height-thumb_y)
+                    bottom_right = (width-thumb_x, height-thumb_y)
+                    
+                if direction_y == "top":
+                    if direction_x == "left":
+                        draw.line([(x2, y2), bottom_right], fill ="red", width=3)
+                    elif direction_x == "right":
+                        draw.line([(x1, y2), bottom_left], fill ="red", width=3)
+                    elif direction_x == "center":
+                        draw.line([(x2, y2), bottom_right], fill ="red", width=3)
+                        draw.line([(x1, y2), bottom_left], fill ="red", width=3)
+                        
+                if direction_y == "bottom":
+                    if direction_x == "left":
+                        draw.line([(x2, y1), top_right], fill ="red", width=3)
+                    elif direction_x == "right":
+                        draw.line([(x1, y1), top_left], fill ="red", width=3)
+                    elif direction_x == "center":
+                        draw.line([(x1, y1), top_left], fill ="red", width=3)
+                        draw.line([(x2, y1), top_right], fill ="red", width=3)
+                        
+                if direction_y == "center":
+                    if direction_x == "left":
+                        draw.line([(x2, y2), bottom_right], fill ="red", width=3)
+                        draw.line([(x2, y1), top_right], fill ="red", width=3)
+                    elif direction_x == "right":
+                        draw.line([(x1, y2), bottom_left], fill ="red", width=3)
+                        draw.line([(x1, y1), top_left], fill ="red", width=3)
+                    elif direction_x == "center":
+                        draw.line([(x2, y2), bottom_right], fill ="red", width=3)
+                        draw.line([(x1, y2), bottom_left], fill ="red", width=3)
+                        draw.line([(x1, y1), top_left], fill ="red", width=3)
+                        draw.line([(x2, y1), top_right], fill ="red", width=3)
         
         # crop padding on pan
         if scale == "pan":
