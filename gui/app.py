@@ -45,7 +45,7 @@ class App(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         
-        self.geometry("800x600") #Width x Height
+        self.geometry("800x800") #Width x Height
 
         master_frame = tk.Frame(self)
         master_frame.grid(sticky=tk.NSEW)
@@ -155,6 +155,14 @@ class App(tk.Tk):
         self.inputDurationMin = tk.StringVar()
         self.inputDurationTransition = tk.StringVar()
         
+        self.inputSubtitle = tk.StringVar()
+        self.inputOverlayTitle = tk.StringVar()
+        self.inputOverlayFont = tk.StringVar()
+        self.inputOverlayFontFile = tk.StringVar()
+        self.inputOverlayFontSize = tk.StringVar()
+        self.inputOverlayDuration = tk.StringVar()
+        self.inputOverlayTransition = tk.StringVar()
+        
     def hasSlides(self):
         return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
         
@@ -242,6 +250,25 @@ class App(tk.Tk):
                 slide.start = float(self.inputvideoStart.get()) if float(self.inputvideoStart.get()) > 0 else None
                 slide.end = float(self.inputvideoEnd.get()) if float(self.inputvideoEnd.get()) > 0 and float(self.inputvideoEnd.get()) < slide.getDuration() else None
                 slide.calculateDurationAfterTrimming()
+            
+            slide.title = self.inputSubtitle.get() if len(self.inputSubtitle.get())>0 else None
+            
+            if len(self.inputOverlayTitle.get())>0 or len(self.inputOverlayFont.get())>0 or len(self.inputOverlayFontFile.get())>0 or len(self.inputOverlayFontSize.get())>0 or len(self.inputOverlayDuration.get())>0 or len(self.inputOverlayTransition.get())>0:
+                overlay_text = {}
+                if len(self.inputOverlayTitle.get())>0:
+                    overlay_text["title"] = self.inputOverlayTitle.get()
+                if len(self.inputOverlayFont.get())>0:
+                    overlay_text["font"] = self.inputOverlayFont.get()
+                if len(self.inputOverlayFontFile.get())>0:
+                    overlay_text["font_file"] = self.inputOverlayFontFile.get()
+                if len(self.inputOverlayFontSize.get())>0:
+                    overlay_text["font_size"] = float(self.inputOverlayFontSize.get())
+                if len(self.inputOverlayDuration.get())>0:
+                    overlay_text["duration"] = float(self.inputOverlayDuration.get())
+                if len(self.inputOverlayTransition.get())>0:
+                    overlay_text["transition_x"] = self.inputOverlayTransition.get()
+                    
+                slide.overlay_text = overlay_text if overlay_text else None
             
             self.slide_changed = False
     
@@ -401,6 +428,14 @@ class App(tk.Tk):
         generalframe = tk.LabelFrame(optionsFrame, text="General")
         generalframe.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=5) #columnspan=2, 
         
+        buttonsFrame = tk.Frame(optionsFrame)
+        buttonsFrame.grid(row=1, columnspan=3, sticky=tk.NW, padx=4, pady=4)
+        
+        #buttonSaveSlide = tk.Button(buttonsFrame, text="Save", command=(lambda: self.saveSlide()))
+        #buttonSaveSlide.pack()
+        buttonDeleteSlide = tk.Button(buttonsFrame, text="Delete", command=(lambda: self.deleteSlide()))
+        buttonDeleteSlide.pack()
+        
         fileLabel = tk.Label(generalframe, text="File")
         fileLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
         fileEntry = tk.Entry(generalframe, width=70)
@@ -409,7 +444,7 @@ class App(tk.Tk):
         fileEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
 
         transitionframe = tk.LabelFrame(optionsFrame, text="Transition")
-        transitionframe.grid(row=1, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        transitionframe.grid(row=2, column=0, sticky=tk.NSEW, padx=5, pady=5)
         
         if not slide.transition is None:
             self.inputTransition.set(slide.transition)
@@ -430,7 +465,7 @@ class App(tk.Tk):
         
         if isinstance(slide, ImageSlide):
             imageframe = tk.LabelFrame(optionsFrame, text="Image Options")
-            imageframe.grid(row=2, column=0, sticky=tk.NSEW, padx=5, pady=5)
+            imageframe.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=5)
             
             self.inputDurationMin.set(slide.slide_duration_min)
             durationMinLabel = tk.Label(imageframe, text="Duration (min)")
@@ -462,7 +497,7 @@ class App(tk.Tk):
         
         if isinstance(slide, VideoSlide):
             videoframe = tk.LabelFrame(optionsFrame, text="Video Options")
-            videoframe.grid(row=2, column=0, sticky=tk.NSEW, padx=5, pady=5)
+            videoframe.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=5)
         
             self.inputforceNoAudio.set(slide.force_no_audio)
             forceNoAudioLabel = tk.Label(videoframe, text="No Audio")
@@ -496,6 +531,63 @@ class App(tk.Tk):
         durationEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
         durationEntry.bind("<KeyRelease>",self.checkEntryModification)
         
+        
+        subtitleFrame = tk.LabelFrame(optionsFrame, text="Subtitle")
+        subtitleFrame.grid(row=4, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        
+        self.inputSubtitle.set(slide.title if slide.title else "")
+        subtitleLabel = tk.Label(subtitleFrame, text="Subtitle")
+        subtitleLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
+        subtitleEntry = tk.Entry(subtitleFrame, textvariable=self.inputSubtitle, width=50)
+        subtitleEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
+        subtitleEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        overlayFrame = tk.LabelFrame(optionsFrame, text="Overlay")
+        overlayFrame.grid(row=5, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        
+        self.inputOverlayTitle.set(slide.overlay_text["title"] if slide.overlay_text and "title" in slide.overlay_text else "")
+        overlayTitleLabel = tk.Label(overlayFrame, text="Title")
+        overlayTitleLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayTitleEntry = tk.Entry(overlayFrame, textvariable=self.inputOverlayTitle, width=50)
+        overlayTitleEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayTitleEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        self.inputOverlayFont.set(slide.overlay_text["font"] if slide.overlay_text and "font" in slide.overlay_text else "")
+        overlayFontLabel = tk.Label(overlayFrame, text="Font")
+        overlayFontLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontEntry = tk.Entry(overlayFrame, textvariable=self.inputOverlayFont, width=50)
+        overlayFontEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        self.inputOverlayFontFile.set(slide.overlay_text["font_file"] if slide.overlay_text and "font_file" in slide.overlay_text else "")
+        overlayFontFileLabel = tk.Label(overlayFrame, text="Font file")
+        overlayFontFileLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontFileEntry = tk.Entry(overlayFrame, textvariable=self.inputOverlayFontFile, width=50)
+        overlayFontFileEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontFileEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        self.inputOverlayFontSize.set(slide.overlay_text["font_size"] if slide.overlay_text and "font_size" in slide.overlay_text else "")
+        overlayFontSizeLabel = tk.Label(overlayFrame, text="Font size")
+        overlayFontSizeLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontSizeEntry = tk.Entry(overlayFrame, validate='all', validatecommand=(vcmd, '%P'), textvariable=self.inputOverlayFontSize)
+        overlayFontSizeEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontSizeEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        self.inputOverlayDuration.set(slide.overlay_text["duration"] if slide.overlay_text and "duration" in slide.overlay_text else "")
+        overlayFontDurationLabel = tk.Label(overlayFrame, text="Duration")
+        overlayFontDurationLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontDurationEntry = tk.Entry(overlayFrame, validate='all', validatecommand=(vcmd, '%P'), textvariable=self.inputOverlayDuration)
+        overlayFontDurationEntry.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        self.inputOverlayTransition.set(slide.overlay_text["transition_x"] if slide.overlay_text and "transition_x" in slide.overlay_text else "")
+        overlayTransitionLabel = tk.Label(overlayFrame, text="Scale Mode")
+        overlayTransitionLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionCombo = ttk.Combobox(overlayFrame, values=["center", "right-in", "left-in"], textvariable=self.inputOverlayTransition)
+        overlayTransitionCombo.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
+        
+        # Right column (image preview)
         imageframe = tk.LabelFrame(optionsFrame, text="Image")
         imageframe.grid(row=0, column=1, rowspan = 3, sticky=tk.NW, padx=5, pady=5)
         
@@ -509,14 +601,6 @@ class App(tk.Tk):
         self.imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
         # keep a reference
         self.imageLabel.image = photo        
-        
-        buttonsFrame = tk.Frame(optionsFrame)
-        buttonsFrame.grid(row=3, columnspan=3, sticky=tk.NW, padx=4, pady=4)
-        
-        #buttonSaveSlide = tk.Button(buttonsFrame, text="Save", command=(lambda: self.saveSlide()))
-        #buttonSaveSlide.pack()
-        buttonDeleteSlide = tk.Button(buttonsFrame, text="Delete", command=(lambda: self.deleteSlide()))
-        buttonDeleteSlide.pack()
         
         
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
