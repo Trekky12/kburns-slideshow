@@ -642,7 +642,13 @@ class App(tk.Tk):
                 y1 = 0
                 x2 = 0
                 y2 = 0
-                scale_factor = 1/(1+float(zoom_rate))
+                
+                z_initial = 1
+                z_step = float(zoom_rate)
+                if scale == "pan":
+                    z_initial = slideImage_ratio/output_ratio if slideImage_ratio > output_ratio else output_ratio/slideImage_ratio
+                
+                scale_factor = 1/(z_initial+z_step)
                 
                 if direction_x == "left":
                     x1 = 0
@@ -661,44 +667,14 @@ class App(tk.Tk):
                 x2 = x1 + output_width*scale_factor
                 y2 = y1 + output_height*scale_factor
                 
-                # adjust coordinates for panning  
+                # adjust coordinates for panning
                 if scale == "pan":
-                    if direction_y == "top":
-                        if direction_x == "left":
-                            x1 = x1 + thumb_x
-                        elif direction_x == "right":
-                            x2 = x2 - thumb_x
-                        elif direction_x == "center":
-                            x1 = x1 + thumb_x/2
-                            x2 = x2 - thumb_x/2
-                            y1 = y1 + thumb_y/2
-                            
-                    if direction_y == "bottom":
-                        if direction_x == "left":
-                            x1 = x1 + thumb_x
-                            y1 = height - int((x2 - x1)/output_ratio)
-                        elif direction_x == "right":
-                            x2 = x2 - thumb_x
-                            y1 = height - int((x2 - x1)/output_ratio)
-                        elif direction_x == "center":
-                            x1 = x1 + thumb_x/2
-                            x2 = x2 - thumb_x/2
-                            y1 = height - int((x2 - x1)/output_ratio) + thumb_y/2
-                            
-                    if direction_y == "center":
-                        if direction_x == "left":
-                            x1 = x1 + thumb_x
-                            y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
-                        elif direction_x == "right":
-                            x2 = x2 - thumb_x
-                            y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
-                        elif direction_x == "center":
-                            x1 = x1 + thumb_x/2
-                            x2 = x2 - thumb_x/2
-                            y1 = height/2 - int((x2 - x1)/output_ratio)/2 - thumb_y/2
-
-                    y2 = y1 + int((x2 - x1)/output_ratio)
-                
+                    if direction_x == "left":
+                        x1 = x1 + thumb_x
+                        x2 = x2 + thumb_x
+                    elif direction_x == "right":
+                        x1 = x1 - thumb_x
+                        x2 = x2 - thumb_x                
                 
                 draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3)
                 
