@@ -526,7 +526,7 @@ class SlideManager:
             # extract background audio sections between videos
             background_sections = []
             # is it starting with a video or an image?
-            section_start_slide = None if isinstance(self.getSlides()[0], VideoSlide) else 0
+            section_start_slide = None if isinstance(self.getSlides()[0], VideoSlide) and slide.has_audio else 0
             for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
                 if isinstance(slide, VideoSlide) and slide.has_audio and section_start_slide is not None:
