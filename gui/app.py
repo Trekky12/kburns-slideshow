@@ -895,7 +895,7 @@ class App(tk.Tk):
         
     def addSlide(self):
         self.saveSlide()
-        filetypes = self.slideshow_config["IMAGE_EXTENSIONS"] + self.slideshow_config["VIDEO_EXTENSIONS"]
+        filetypes = [ ".%s" % type for type in self.slideshow_config["IMAGE_EXTENSIONS"] + self.slideshow_config["VIDEO_EXTENSIONS"]]    
     
         ftypes = [
             ('Slide Files', " ".join(filetypes))
@@ -916,8 +916,10 @@ class App(tk.Tk):
         
     def addAudio(self):
         self.saveSlide()
+        filetypes = [ ".%s" % type for type in self.slideshow_config["AUDIO_EXTENSIONS"]]    
+        
         ftypes = [
-            ('Audio Files', " ".join(self.slideshow_config["AUDIO_EXTENSIONS"]))
+            ('Audio Files', " ".join(filetypes))
         ]
     
         filenames = askopenfilenames(filetypes=ftypes)
