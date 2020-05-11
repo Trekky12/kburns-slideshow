@@ -37,7 +37,7 @@ class SlideManager:
         self.reduceVariable = 10
         
         # is FFmpeg Version 3 or 4?
-        ffmpeg_version_extract = subprocess.check_output("%s -version" %(config["ffmpeg"])).decode()
+        ffmpeg_version_extract = subprocess.check_output(["%s" %(config["ffmpeg"]),"-version"]).decode()
         m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
         self.ffmpeg_version = int(m.group(2)) if m else 3
         

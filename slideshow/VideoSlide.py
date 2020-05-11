@@ -6,19 +6,19 @@ import subprocess
 class VideoSlide(Slide):
 
     def __init__(self, ffmpeg_version, file, ffprobe, output_width, output_height, fade_duration = 1, title = None, fps = 60, overlay_text = None, transition = "random", force_no_audio = False, video_start = None, video_end = None):
-        duration = subprocess.check_output("%s -show_entries format=duration -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()        
+        duration = subprocess.check_output(["%s" %(ffprobe), "-show_entries", "format=duration", "-v", "error", "-of", "default=noprint_wrappers=1:nokey=1", file]).decode()        
         duration = float(duration)
         
         super().__init__(ffmpeg_version, file, output_width, output_height, duration, fade_duration, fps, title, overlay_text, transition)
         
-        audio = subprocess.check_output("%s -select_streams a -show_entries stream=codec_type -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
+        audio = subprocess.check_output(["%s" %(ffprobe), "-select_streams", "a", "-show_entries", "stream=codec_type", "-v", "error", "-of",  "default=noprint_wrappers=1:nokey=1", file]).decode()
         self.video_has_audio = "audio" in str(audio)
         self.has_audio = self.video_has_audio
         
-        width = subprocess.check_output("%s -select_streams v -show_entries stream=width -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
+        width = subprocess.check_output(["%s" %(ffprobe), "-select_streams", "v", "-show_entries", "stream=width", "-v", "error", "-of" ,"default=noprint_wrappers=1:nokey=1", file]).decode()
         self.width = int(width)
         
-        height = subprocess.check_output("%s -select_streams v -show_entries stream=height -v error -of default=noprint_wrappers=1:nokey=1 \"%s\"" %(ffprobe, file)).decode()
+        height = subprocess.check_output(["%s" %(ffprobe), "-select_streams", "v", "-show_entries", "stream=height", "-v", "error", "-of", "default=noprint_wrappers=1:nokey=1", file]).decode()
         self.height = int(height)
         
         self.ratio = self.width/self.height
