@@ -589,7 +589,7 @@ class App(tk.Tk):
         
         # Right column (image preview)
         imageframe = tk.LabelFrame(optionsFrame, text="Image")
-        imageframe.grid(row=0, column=1, rowspan = 3, sticky=tk.NW, padx=5, pady=5)
+        imageframe.grid(row=0, column=1, rowspan = 5, sticky=tk.NW, padx=5, pady=5)
         
         # get image path from button and create "bigger" preview
         zd = slide.getZoomDirection() if isinstance(slide, ImageSlide) else None
@@ -674,8 +674,15 @@ class App(tk.Tk):
                         x2 = x2 + thumb_x
                     elif direction_x == "right":
                         x1 = x1 - thumb_x
-                        x2 = x2 - thumb_x                
-                
+                        x2 = x2 - thumb_x
+                        
+                    if direction_y == "top":
+                        y1 = y1 + thumb_y
+                        y2 = y2 + thumb_y
+                    elif direction_y == "bottom":
+                        y1 = y1 - thumb_y
+                        y2 = y2 - thumb_y
+                        
                 draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3)
                 
                 # direction
@@ -685,8 +692,8 @@ class App(tk.Tk):
                     bottom_left = (0, height)
                     bottom_right = (width, height)
                 elif scale == "pan":
-                    top_left = (thumb_x,0)
-                    top_right = (width-thumb_x, 0)
+                    top_left = (thumb_x,thumb_y)
+                    top_right = (width-thumb_x, thumb_y)
                     bottom_left = (thumb_x, height-thumb_y)
                     bottom_right = (width-thumb_x, height-thumb_y)
                     
