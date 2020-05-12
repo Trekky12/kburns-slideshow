@@ -103,7 +103,7 @@ class ImageSlide(Slide):
             z_rate = z_rate*self.ratio/self.output_ratio
             if self.ratio > self.output_ratio:
                 if (self.direction_x == "left" and self.direction_z != "out") or (self.direction_x == "right" and self.direction_z == "out"):
-                    x = "(1-on/%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
+                    x = "(1-on/(%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
                 elif (self.direction_x == "right" and self.direction_z != "out") or (self.direction_x == "left" and self.direction_z == "out"):
                     x = "(on/(%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
                 else:
