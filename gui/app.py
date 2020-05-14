@@ -682,8 +682,50 @@ class App(tk.Tk):
                     elif direction_y == "bottom":
                         y1 = y1 - thumb_y
                         y2 = y2 - thumb_y
-                        
                 draw.rectangle([(x1, y1), (x2, y2)], outline ="red", width=3)
+                
+                # draw initial rectangle on panning
+                if scale == "pan":
+                    # horizontal image in landscape output
+                    if slideImage_ratio < output_ratio:
+                        img_w = slidethumb_width
+                        img_h = slidethumb_width/output_ratio
+                        
+                        if direction_y == "top":
+                            x0_1 = thumb_x
+                            y0_1 = height - thumb_y
+                            x0_2 = thumb_x + img_w
+                            y0_2 = height - thumb_y - img_h
+                        elif direction_y == "bottom":
+                            x0_1 = thumb_x
+                            y0_1 = thumb_y
+                            x0_2 = thumb_x + img_w
+                            y0_2 = thumb_y + img_h
+                        elif direction_y == "center":
+                            x0_1 = thumb_x
+                            y0_1 = (height - thumb_y - img_h)/2
+                            x0_2 = thumb_x + img_w
+                            y0_2 = y0_1 + img_h
+                    else:
+                        img_w = slidethumb_height*output_ratio
+                        img_h = slidethumb_height
+                        
+                        if direction_x == "left":
+                            x0_1 = width - thumb_x - img_w
+                            y0_1 = height - thumb_y
+                            x0_2 = width - thumb_x
+                            y0_2 = height - thumb_y - img_h
+                        elif direction_x == "right":
+                            x0_1 = thumb_x
+                            y0_1 = height - thumb_y
+                            x0_2 = thumb_x + img_w
+                            y0_2 = height - thumb_y - img_h
+                        elif direction_x == "center":
+                            x0_1 = (width - thumb_x - img_w)/2
+                            y0_1 = thumb_y
+                            x0_2 = x0_1 + img_w
+                            y0_2 = thumb_y + img_h
+                    draw.rectangle([(x0_1, y0_1), (x0_2, y0_2)], outline ="red", width=3)
                 
                 # direction
                 if scale == "pad" or scale == "crop_center":
@@ -696,6 +738,12 @@ class App(tk.Tk):
                     top_right = (width-thumb_x, thumb_y)
                     bottom_left = (thumb_x, height-thumb_y)
                     bottom_right = (width-thumb_x, height-thumb_y)
+                    
+                    if (direction_y == "center" and slideImage_ratio < output_ratio) or (direction_x == "center" and not slideImage_ratio < output_ratio):
+                        top_left = (x0_1, y0_1)
+                        top_right = (x0_2, y0_1)
+                        bottom_left = (x0_1, y0_2)
+                        bottom_right = (x0_2, y0_2)
                     
                 if direction_y == "top":
                     if direction_x == "left":
