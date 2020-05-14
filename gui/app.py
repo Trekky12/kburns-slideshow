@@ -647,6 +647,7 @@ class App(tk.Tk):
                 z_step = float(zoom_rate)
                 if scale == "pan":
                     z_initial = slideImage_ratio/output_ratio if slideImage_ratio > output_ratio else output_ratio/slideImage_ratio
+                    z_step = z_step*z_initial
                 
                 scale_factor = 1/(z_initial+z_step)
                 
