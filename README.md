@@ -116,7 +116,7 @@ The bars and checkerboard transitions are configurable with the following global
     "transition_cell_size": 100,
 ```
 
-A preview for each transition is available at [docs/transitions.md](https://github.com/Trekky12/kburns-slideshow/tree/master/docs/transitions.md).
+A preview for each transition is available at [docs/transitions.md](https://github.com/Trekky12/kburns-slideshow/tree/development/docs/transitions.md).
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
