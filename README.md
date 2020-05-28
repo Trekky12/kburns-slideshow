@@ -1,7 +1,7 @@
 # kburns-slideshow
 kburns-slideshow allows the creation of video slideshows from images with kburns (zoom/pan) effect, videos with and without sound and background music.
 
-![kburns-slideshow](docs/demo/fade_in_one.gif)
+![kburns-slideshow](/docs/demo/fade_in_one.gif)
 
 ## Prerequisites
 
@@ -72,6 +72,19 @@ When you have python2 and python3 installed, you may need to run the application
 $ python3 main.py
 ```
 
+### Graphical User Interace
+Additionally there is a graphical user interface which allows to create a new slideshow or load a saved slideshow file. 
+The documentation can be found at [/docs/gui.md](/docs/gui.md).
+
+The gui can be used by calling `gui.py`.
+```
+$ python gui.py
+```
+When you have python2 and python3 installed, you may need to run the application with `python3` instead of `python`:
+```
+$ python3 gui.py
+```
+
 ## Notices 
 When using the overlay text you need to be aware of the font specific settings. 
 
@@ -116,7 +129,7 @@ The bars and checkerboard transitions are configurable with the following global
     "transition_cell_size": 100,
 ```
 
-A preview for each transition is available at [docs/transitions.md](/docs/transitions.md).
+A preview for each transition is available at [/docs/transitions.md](/docs/transitions.md).
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
