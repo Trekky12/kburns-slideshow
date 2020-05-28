@@ -61,7 +61,7 @@ pip install -r requirements.txt
 ## Usage
 
 ### Command Line Interace
-The application has a command line interface which parameters can be found at [docs/cli.md](https://github.com/Trekky12/kburns-slideshow/tree/development/docs/cli.md).
+The application has a command line interface which parameters can be found at [/docs/cli.md](/docs/cli.md).
 
 The cli can be used by calling `main.py` with some parameters.
 ```
@@ -82,7 +82,7 @@ or you can use the path to the font with the parameter `font_file`.
 With FFmpeg 4 the default font directory is recognized and the parameter `font` can be used. The font file is then automatically found with the help of fontconfig.
 
 ## Transitions
-It is easy possible to create custom transitions. Just place a python file in the following format in the folder [slideshow/transitions](https://github.com/Trekky12/kburns-slideshow/tree/master/slideshow/transitions):
+It is easy possible to create custom transitions. Just place a python file in the following format in the folder [slideshow/transitions](/slideshow/transitions):
 
 ```python
 def get(end, start, transition, i, fade_duration, config):
@@ -116,7 +116,7 @@ The bars and checkerboard transitions are configurable with the following global
     "transition_cell_size": 100,
 ```
 
-A preview for each transition is available at [docs/transitions.md](https://github.com/Trekky12/kburns-slideshow/tree/development/docs/transitions.md).
+A preview for each transition is available at [docs/transitions.md](/docs/transitions.md).
 
 ## License
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
