@@ -3,6 +3,8 @@ kburns-slideshow allows the creation of video slideshows from images with kburns
 
 ![kburns-slideshow](/docs/demo/fade_in_one.gif)
 
+![09_image_slide](/docs/screenshots/09_image_slide.png)
+
 ## Prerequisites
 
 kburns-slideshow is a python application and needs Python 3 installed.
@@ -146,4 +148,5 @@ The project is based on [the python implementation](https://github.com/Trekky12/
 A big thanks to [tanersener](https://github.com/tanersener/ffmpeg-video-slideshow-scripts) for doing the hard work of creating the various transitions.
 
 Photo of Jökulsárlón by [Jeremy Bishop](https://unsplash.com/@jeremybishop) on [Unsplash](https://unsplash.com/photos/h7bQ8VEZtws)
+
 Photo of Seljalandsfoss by [Andrey Andreyev](https://unsplash.com/@ludenus) on [Unsplash](https://unsplash.com/photos/dh8ONmfQyQQ)
