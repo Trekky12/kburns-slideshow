@@ -46,11 +46,17 @@ class ImageSlide(Slide):
         self.width = width
         self.height = height
 
+        self.setScaleMode(scale_mode)
+             
+        self.setZoomDirection(zoom_direction)
+        
+    def setScaleMode(self, scale_mode):
         if scale_mode == "auto":
             self.scale = "pad" if abs(self.ratio - self.output_ratio) > 0.5 else "crop_center"
         else:
             self.scale = scale_mode
-             
+        
+    def setZoomDirection(self, zoom_direction):
         if zoom_direction == "none":
             self.direction_x = "center"
             self.direction_y = "center"
@@ -75,6 +81,15 @@ class ImageSlide(Slide):
             width, height = [self.width, int(self.width/self.output_ratio)] if self.ratio > self.output_ratio else [int(self.height*self.output_ratio), self.height]
             slide_filters.append("pad=w=%s:h=%s:x='(ow-iw)/2':y='(oh-ih)/2'" %(width, height))
             
+        # Scale to fit image in output and crop
+        if self.scale == "crop_center":
+            width, height = [self.output_width, int(self.output_width/self.ratio)] if self.ratio < self.output_ratio else [int(self.output_height*self.ratio), self.output_height]
+            slide_filters.append("scale=w=%s:h=%s" %(width, height))
+            
+            crop_x = "(iw-ow)/2"
+            crop_y = "(ih-oh)/2"
+            slide_filters.append("crop=w=%s:h=%s:x='%s':y='%s'" %(self.output_width, self.output_height, crop_x, crop_y))
+            
         # Zoom/pan filter
         z_step = self.zoom_rate/(self.fps*self.duration)
         z_rate = self.zoom_rate
@@ -88,7 +103,7 @@ class ImageSlide(Slide):
             z_rate = z_rate*self.ratio/self.output_ratio
             if self.ratio > self.output_ratio:
                 if (self.direction_x == "left" and self.direction_z != "out") or (self.direction_x == "right" and self.direction_z == "out"):
-                    x = "(1-on/%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
+                    x = "(1-on/(%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
                 elif (self.direction_x == "right" and self.direction_z != "out") or (self.direction_x == "left" and self.direction_z == "out"):
                     x = "(on/(%s*%s))*(iw-iw/zoom)" %(self.fps, self.duration)
                 else:
@@ -122,6 +137,7 @@ class ImageSlide(Slide):
                     y = "(on/(%s*%s))*(ih-ih/zoom)" %(self.fps, self.duration)
                 else:
                     y = "(ih-oh)/2"
+
         else:
             if self.direction_x == "left":
                 x = 0
@@ -150,13 +166,13 @@ class ImageSlide(Slide):
           
         width = 0
         height = 0
-        if self.scale == "crop_center":
-            if self.output_ratio > self.ratio:
-                width, height = [self.output_width, int(self.output_width/self.ratio)]
-            else:
-                width, height = [int(self.output_height*self.ratio), self.output_height]
-        if self.scale == "pan" or self.scale == "pad":
-            width, height = [self.output_width, self.output_height]
+        #if self.scale == "crop_center":
+        #    if self.output_ratio > self.ratio:
+        #        width, height = [self.output_width, int(self.output_width/self.ratio)]
+        #    else:
+        #        width, height = [int(self.output_height*self.ratio), self.output_height]
+        #if self.scale == "pan" or self.scale == "pad":
+        width, height = [self.output_width, self.output_height]
 
         # workaround a float bug in zoompan filter that causes a jitter/shake
         # https://superuser.com/questions/1112617/ffmpeg-smooth-zoompan-with-no-jiggle/1112680#1112680
@@ -166,14 +182,11 @@ class ImageSlide(Slide):
 
         slide_filters.append("scale=%sx%s,zoompan=z='%s':x='%s':y='%s':fps=%s:d=%s*%s:s=%sx%s" %(supersample_width, supersample_height, z, x, y, self.fps, self.fps, self.duration, width, height))
         
-        # Crop filter
-        if self.scale == "crop_center":
-            crop_x = "(iw-ow)/2"
-            crop_y = "(ih-oh)/2"
-            slide_filters.append("crop=w=%s:h=%s:x='%s':y='%s'" %(self.output_width, self.output_height, crop_x, crop_y))
-            
         # return the filters for rendering
         return slide_filters
+        
+    def getZoomDirection(self):
+        return "%s-%s-%s" %(self.direction_y, self.direction_x, self.direction_z)
         
     def getObject(self, config):
         object = super().getObject(config)
@@ -184,7 +197,7 @@ class ImageSlide(Slide):
         if self.zoom_rate != config["zoom_rate"]:
             object["zoom_rate"] = self.zoom_rate
             
-        zoom_direction = "%s-%s-%s" %(self.direction_y, self.direction_x, self.direction_z)
+        zoom_direction = self.getZoomDirection()
         if zoom_direction != config["zoom_direction"]:
             object["zoom_direction"] = zoom_direction
         

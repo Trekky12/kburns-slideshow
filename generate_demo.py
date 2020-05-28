@@ -32,14 +32,14 @@ if __name__ == "__main__":
     
     for transition in transitions:
         input_files =   [{
-                            "file": "media\\andrey-andreyev-dh8ONmfQyQQ-unsplash.jpg",
+                            "file": "docs\\media\\andrey-andreyev-dh8ONmfQyQQ-unsplash.jpg",
                             "transition": transition,
                             "title": transition,
                             "zoom_direction": "none",
                             "scale_mode": "pad"
                         },
                         {
-                            "file": "media\\jeremy-bishop-h7bQ8VEZtws-unsplash.jpg",
+                            "file": "docs\\media\\jeremy-bishop-h7bQ8VEZtws-unsplash.jpg",
                             "title": transition,
                             "zoom_direction": "none",
                             "scale_mode": "pad"
@@ -47,4 +47,4 @@ if __name__ == "__main__":
 
         sm = SlideManager(config, input_files, [])
 
-        sm.createVideo("demo/%s.gif" %(transition))
+        sm.createVideo("docs\\demo\\%s.gif" %(transition))

@@ -37,7 +37,7 @@ class SlideManager:
         self.reduceVariable = 10
         
         # is FFmpeg Version 3 or 4?
-        ffmpeg_version_extract = subprocess.check_output("%s -version" %(config["ffmpeg"])).decode()
+        ffmpeg_version_extract = subprocess.check_output(["%s" %(config["ffmpeg"]),"-version"]).decode()
         m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
         self.ffmpeg_version = int(m.group(2)) if m else 3
         
@@ -150,6 +150,18 @@ class SlideManager:
         if self.config["loopable"]:
             return self.slides + [self.slides[0]]
         return self.slides
+        
+    def removeSlide(self, index):
+        del self.slides[index]
+    
+    def moveSlide(self, old, new):
+        self.slides.insert(new, self.slides.pop(old))
+        
+    def removeAudio(self, index):
+        del self.background_tracks[index]
+        
+    def moveAudio(self, old, new):
+        self.background_tracks.insert(new, self.background_tracks.pop(old))
             
     ###################################
     #      Duration Calculations      #
@@ -297,7 +309,7 @@ class SlideManager:
                 # on FFmpeg 4 the maximum thickness was changed from 'max' to 'fill'
                 # see https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/b3cb9bd43fa33a8aaf7a63e43f8418975b3bf0de
                 fill_mode = "max" if self.ffmpeg_version < 4 else "fill"
-                filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=%s:enable='between(t,0,%s)'" %(duration,duration))
+                filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=%s:enable='between(t,0,%s)'" %(fill_mode,duration))
                 filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: fontcolor=white:y=%s:x=%s:borderw=1%s%s:enable='between(t,0,%s)'" % (slide.overlay_text["title"], font_size, y, x, font, font_file, duration))
                 
                 if isinstance(slide, ImageSlide):
@@ -514,7 +526,7 @@ class SlideManager:
             # extract background audio sections between videos
             background_sections = []
             # is it starting with a video or an image?
-            section_start_slide = None if isinstance(self.getSlides()[0], VideoSlide) else 0
+            section_start_slide = None if isinstance(self.getSlides()[0], VideoSlide) and slide.has_audio else 0
             for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
                 if isinstance(slide, VideoSlide) and slide.has_audio and section_start_slide is not None:
@@ -616,30 +628,33 @@ class SlideManager:
     #         Create Video            #
     ###################################
     def getTotalDuration(self):
+        if len(self.getSlides()) <= 0:
+            return 0
         last_slide = self.getSlides()[-1]
         last_slide_start = self.getOffset(-1)
         
         return (last_slide_start + last_slide.getFrames())/self.config["fps"]
         
-    def createVideo(self, output_file):
+    def createVideo(self, output_file, check = False, save = None, test = False, overwrite = False):
         logger.info("Create video %s", output_file)
         
         # check if it is okay to have a shorter background track
-        video_duration = self.getTotalDuration()
-        audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
-        logger.info("Video length: %s", video_duration)
-        logger.info("Background track length: %s", audio_duration)
-        if len(self.background_tracks)> 0 and audio_duration < video_duration:
-            print("Background track (%s) is shorter than video length (%s)!" %(audio_duration, video_duration))
-            logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
-            
-            if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
-                sys.exit(1)
+        if check:
+            video_duration = self.getTotalDuration()
+            audio_duration = self.getAudioDuration() + self.getVideoAudioDuration()
+            logger.info("Video length: %s", video_duration)
+            logger.info("Background track length: %s", audio_duration)
+            if len(self.background_tracks)> 0 and audio_duration < video_duration:
+                print("Background track (%s) is shorter than video length (%s)!" %(audio_duration, video_duration))
+                logger.info("Background track (%s) is shorter than video length (%s)!", audio_duration, video_duration)
+                
+                if not input("Are you sure this is fine? (y/n): ").lower().strip()[:1] == "y": 
+                    sys.exit(1)
     
         # Save configuration
-        if self.config["save"] is not None: 
+        if save is not None: 
             self.saveConfig(self.config["save"])
-            
+        
         # Subtitles
         burnSubtitles = False if "mkv" in output_file.lower() else True
         srtInput = len(self.getSlides()) + len(self.getBackgroundTracks())
@@ -667,7 +682,7 @@ class SlideManager:
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
 
-        if not self.config["test"]:
+        if not test:
             # create temporary videos
             self.queue.createTemporaryVideos(self.config["ffmpeg"])
             
@@ -676,7 +691,7 @@ class SlideManager:
                 "-hide_banner", 
                 #"-v quiet",
                 "-stats",
-                "-y" if self.config["overwrite"] else "",
+                "-y" if overwrite else "",
                 # slides
                 " ".join(["-i \"%s\" " %(f) for f in inputs]),
                 " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
