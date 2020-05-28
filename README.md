@@ -3,7 +3,7 @@ kburns-slideshow allows the creation of video slideshows from images with kburns
 
 ![kburns-slideshow](/docs/demo/fade_in_one.gif)
 
-![09_image_slide](/docs/screenshots/09_image_slide.png)
+<img src="/docs/screenshots/09_image_slide.png" width="400px">
 
 ## Prerequisites
 

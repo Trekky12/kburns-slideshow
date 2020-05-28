@@ -13,33 +13,33 @@ $ python3 gui.py
 
 When starting the application the following window will be displayed:
 
-![01_start](screenshots/01_start.png)
+<img src="screenshots/01_start.png" width="400px">
 
 In the file menu a new slideshow can be created or loaded.
 
-![02_menu_file](screenshots/02_menu_file.png)
+<img src="screenshots/02_menu_file.png" width="400px">
 
 In the settings menu the slideshow specific and the general settings can be changed.
 
-![03_menu_settings](screenshots/03_menu_settings.png)
+<img src="screenshots/03_menu_settings.png" width="400px">
 
 ## Default Settings
 
 By selecting the menu item `General Settings` the default parameters, which are defined in `config.json`, can be changed:
 
-![04_general_settings_window](screenshots/04_general_settings_window.png)
+<img src="screenshots/04_general_settings_window.png" width="400px">
 
 ## New Slideshow
 
 After selecting the `New` button in the file menu a new slideshow is created:
 
-![05_new_slideshow](screenshots/05_new_slideshow.png)
+<img src="screenshots/05_new_slideshow.png" width="400px">
 
 ## Load Slideshow
 
 With the button `Open` a saved slideshow file (`*.json`) can be loaded. The saved file can be from the cli or from the gui.
 
-![06_open_slideshow](screenshots/06_open_slideshow.png)
+<img src="screenshots/06_open_slideshow.png" width="400px">
 
 ## Save Slideshow
 
@@ -49,7 +49,7 @@ A slideshow can be saved by selecting `Save` or saved as new file by selecting `
 
 After creating or loading a slideshow the slideshow specific settings can be edited in the settings menu:
 
-![07_slideshow_settings](screenshots/07_slideshow_settings.png)
+<img src="screenshots/07_slideshow_settings.png" width="400px">
 
 ## Edit Slideshow
 
@@ -58,7 +58,7 @@ After creating or loading a slideshow the slideshow specific settings can be edi
 New slides can be added to the current slideshow by clicking on the `Add slide` button.
 The selected files are then added to the current slideshow.
 
-![08_slide_added](screenshots/08_slide_added.png)
+<img src="screenshots/08_slide_added.png" width="400px">
 
 New audio files can be added by clicking on the `Add audio` button.
 
@@ -69,9 +69,9 @@ The possible filetypes are defined in the file `config.json`.
 By clicking on a slide the slide specific settings are displayed and can be changed.
 It is possible to change all the slide specific settings, which are already described in the file [docs/cli.md](/docs/cli.md#slide-specific-parameters).
 
-![09_image_slide](screenshots/09_image_slide.png)
-![10_image_slide_portrait](screenshots/10_image_slide_portrait.png)
-![11_video_slide](screenshots/11_video_slide.png)
+<img src="screenshots/09_image_slide.png" width="400px">
+<img src="screenshots/10_image_slide_portrait.png" width="400px">
+<img src="screenshots/11_video_slide.png" width="400px">
 
 On image slides the kburns effect is previewed in a thumbnail so you can see which part of the image is visible on start/end of the effect.
 When changing the zoom direction, zoom rate or scale mode the preview is updated.
@@ -80,7 +80,7 @@ When changing the zoom direction, zoom rate or scale mode the preview is updated
 
 By clicking on a audio file the audio file settings are displayed.
 
-![12_audio](screenshots/12_audio.png)
+<img src="screenshots/12_audio.png" width="400px">
 
 ### Remove slide/audio file
 
@@ -89,8 +89,9 @@ A slide or audio file can be removed from the slideshow by clicking the `Delete`
 ### Move slide/audio file
 
 When dragging a image or a audio file the position in the slideshow can be changed.
-![13_move_slide](screenshots/13_move_slide.png)
-![14_slide_moved](screenshots/14_slide_moved.png)
+
+<img src="screenshots/13_move_slide.png" width="400px">
+<img src="screenshots/14_slide_moved.png" width="400px">
 
 ## Create Video
 
