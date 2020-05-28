@@ -12,17 +12,21 @@ $ python3 gui.py
 ## Start-Window and Menu
 
 When starting the application the following window will be displayed:
+
 ![01_start](screenshots/01_start.png)
 
 In the file menu a new slideshow can be created or loaded.
+
 ![02_menu_file](screenshots/02_menu_file.png)
 
 In the settings menu the slideshow specific and the general settings can be changed.
+
 ![03_menu_settings](screenshots/03_menu_settings.png)
 
 ## Default Settings
 
 By selecting the menu item `General Settings` the default parameters, which are defined in `config.json`, can be changed:
+
 ![04_general_settings_window](screenshots/04_general_settings_window.png)
 
 ## New Slideshow
@@ -34,6 +38,7 @@ After selecting the `New` button in the file menu a new slideshow is created:
 ## Load Slideshow
 
 With the button `Open` a saved slideshow file (`*.json`) can be loaded. The saved file can be from the cli or from the gui.
+
 ![06_open_slideshow](screenshots/06_open_slideshow.png)
 
 ## Save Slideshow
@@ -43,6 +48,7 @@ A slideshow can be saved by selecting `Save` or saved as new file by selecting `
 ## Slideshow specific settings
 
 After creating or loading a slideshow the slideshow specific settings can be edited in the settings menu:
+
 ![07_slideshow_settings](screenshots/07_slideshow_settings.png)
 
 ## Edit Slideshow
@@ -51,6 +57,7 @@ After creating or loading a slideshow the slideshow specific settings can be edi
 
 New slides can be added to the current slideshow by clicking on the `Add slide` button.
 The selected files are then added to the current slideshow.
+
 ![08_slide_added](screenshots/08_slide_added.png)
 
 New audio files can be added by clicking on the `Add audio` button.
@@ -60,7 +67,7 @@ The possible filetypes are defined in the file `config.json`.
 ### Slide specific settings
 
 By clicking on a slide the slide specific settings are displayed and can be changed.
-It is possible to change all the slide specific settings, which are already described in the file [docs/cli.md](/docs/cli.md).
+It is possible to change all the slide specific settings, which are already described in the file [docs/cli.md](/docs/cli.md#slide-specific-parameters).
 
 ![09_image_slide](screenshots/09_image_slide.png)
 ![10_image_slide_portrait](screenshots/10_image_slide_portrait.png)
@@ -72,11 +79,12 @@ When changing the zoom direction, zoom rate or scale mode the preview is updated
 ### Audio file details
 
 By clicking on a audio file the audio file settings are displayed.
+
 ![12_audio](screenshots/12_audio.png)
 
 ### Remove slide/audio file
 
-A slide or audio file can be removed from the slideshow by clicking the `Remove` button on the details.
+A slide or audio file can be removed from the slideshow by clicking the `Delete` button on the details.
 
 ### Move slide/audio file
 
@@ -99,6 +107,9 @@ The resulting video can be created by pressing `Create Video`. Please note that 
 The screenshots are done with the following demo images:
 
 Photo of Jökulsárlón by [Jeremy Bishop](https://unsplash.com/@jeremybishop) on [Unsplash](https://unsplash.com/photos/h7bQ8VEZtws)
+
 Photo of Seljalandsfoss by [Andrey Andreyev](https://unsplash.com/@ludenus) on [Unsplash](https://unsplash.com/photos/dh8ONmfQyQQ)
-Photo of Sunbeams shining in Iceland by [Luke Stackpoole](https://unsplash.com/@withluke) on [Unsplash](https://unsplash.com/photos/ZRsJmpt9pNI
+
+Photo of Sunbeams shining in Iceland by [Luke Stackpoole](https://unsplash.com/@withluke) on [Unsplash](https://unsplash.com/photos/ZRsJmpt9pNI)
+
 Video of Iceland from [coverr](https://www.coverr.co/videos/forest-waterfall-hWGAKF358u)
