@@ -91,8 +91,8 @@ class App(tk.Tk):
         labelAudioDuration = tk.Label(frameActions, textvariable=self.audioDurationValue)
         labelAudioDuration.grid(row=1, column=1, sticky=tk.NW)
         
-        buttonSave = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
-        buttonSave.grid(row=0, column=2, rowspan = 2, sticky=tk.NW, padx=2)
+        #buttonSave = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
+        #buttonSave.grid(row=0, column=2, rowspan = 2, sticky=tk.NW, padx=2)
         
         buttonSync = tk.Button(frameActions, text="Sync Video to Audio", command=self.syncToAudio)
         buttonSync.grid(row=0, column=3, rowspan = 2, sticky=tk.NW, padx=2)
