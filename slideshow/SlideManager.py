@@ -716,7 +716,7 @@ class SlideManager:
                 "-map %s:s" %(srtInput) if self.hasSubtitles() and not burnSubtitles else "",
                 # set subtitles enabled (only mkv)
                 "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
-                output_file
+                "\"%s\"" %(output_file)
             ]
             
             logger.info("FFMPEG started")

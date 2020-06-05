@@ -61,7 +61,8 @@ class Queue:
         # re-use existing temp file
         if not os.path.exists(self.getOutputName(item)):
             logger.debug("Create temporary video %s for file %s", self.getOutputName(item), ",".join(item["inputs"]))
-            subprocess.call(" ".join(cmd))
+            #logger.debug("Command: %s", " ".join(cmd))
+            subprocess.call(" ".join(cmd), shell=True)
         else:
             logger.debug("Using existing temporary video %s for file %s", self.getOutputName(item), ",".join(item["inputs"]))
 

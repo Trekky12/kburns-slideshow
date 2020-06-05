@@ -239,8 +239,7 @@ class App(tk.Tk):
                 slide.slide_duration_min = float(self.inputDurationMin.get())
                 if slide.slide_duration_min > slide.getDuration():
                     slide.setDuration(slide.slide_duration_min)
-                    self.durationEntry.delete(0, 'end')
-                    self.durationEntry.insert(0, slide.getDuration())
+                    self.inputDuration.set(slide.getDuration())
                 
                 slide.setZoomDirection(self.inputZoomDirection.get())
                 slide.setScaleMode(self.inputScaleMode.get())
@@ -366,7 +365,7 @@ class App(tk.Tk):
             if isinstance(slide, VideoSlide):
                 video_input_path = slide.file
                 thumb_name = os.path.splitext(os.path.basename(video_input_path))[0]
-                img_path = 'temp\\thumbnail_%s.jpg' %(i)
+                img_path = os.path.join('temp', 'thumbnail_%s.jpg' %(i))
                 subprocess.call([self.slideshow_config["ffmpeg"], '-i', slide.file, '-ss', '00:00:00.000', '-vframes', '1', '-hide_banner', '-v', 'quiet', '-y', img_path])
                 self.thumbnails.append(img_path)
         
