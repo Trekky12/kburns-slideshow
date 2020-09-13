@@ -676,16 +676,18 @@ class SlideManager:
         temp_filter_script = "temp-kburns-video-script.txt"
         with open('%s' %(temp_filter_script), 'w') as file:
             file.write(";\n".join(video_filters + audio_filters))
+        
+        # create temporary videos
+        if not test:
+            self.queue.createTemporaryVideos(self.config["ffmpeg"])
             
-        # Get Frames
+        # Get frames of final video
         frames = round(sum([slide.getFrames() for slide in self.getSlides()]))
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
-
-        if not test:
-            # create temporary videos
-            self.queue.createTemporaryVideos(self.config["ffmpeg"])
             
+        # Create final video
+        if not test:
             # Run ffmpeg
             cmd = [ self.config["ffmpeg"], 
                 "-hide_banner", 
