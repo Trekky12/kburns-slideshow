@@ -36,7 +36,8 @@ class Queue:
         return os.path.join(self.tempFileFolder, self.getFileName(item))
         
     def createTemporaryVideos(self, ffmpeg):
-        for item in self.queue:
+        for idx, item in enumerate(self.queue):
+            print("Processing video %s/%s" %(idx, len(self.queue)))
             self.createTemporaryVideo(ffmpeg, item)
         
     def createTemporaryVideo(self, ffmpeg, item):
