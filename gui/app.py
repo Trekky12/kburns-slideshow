@@ -580,7 +580,7 @@ class App(tk.Tk):
         overlayFontDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
         
         self.inputOverlayTransition.set(slide.overlay_text["transition_x"] if slide.overlay_text and "transition_x" in slide.overlay_text else "")
-        overlayTransitionLabel = tk.Label(overlayFrame, text="Scale Mode")
+        overlayTransitionLabel = tk.Label(overlayFrame, text="Transition Direction")
         overlayTransitionLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
         overlayTransitionCombo = ttk.Combobox(overlayFrame, values=["center", "right-in", "left-in"], textvariable=self.inputOverlayTransition)
         overlayTransitionCombo.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
