@@ -49,7 +49,7 @@ class Queue:
         cmd = [
             ffmpeg, "-y", "-hide_banner", "-stats", "-v", "quiet",
             " ".join(["-i \"%s\" " % (i) for i in item["inputs"]]),
-            "-filter_complex \"%s [out]\"" %(filters),
+            "-filter_complex \"%s [out]\"" %(filters.replace("\n", " ")),
             #"-crf", "0" ,
             "-map [out]",
             "-preset", "ultrafast", 
