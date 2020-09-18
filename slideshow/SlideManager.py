@@ -658,6 +658,31 @@ class SlideManager:
         if save is not None: 
             self.saveConfig(self.config["save"])
         
+        burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script = self.prepareVideoProcessing(output_file)
+        
+        # create temporary videos
+        if not test:
+            for idx, item in enumerate(self.queue.getQueue()):
+                print("Processing video %s/%s" %(idx, self.queue.getQueueLength()))
+                self.queue.createTemporaryVideo(self.config["ffmpeg"], item)
+            
+        # Get frames of final video
+        frames = self.getFinalVideoFrames()
+        print("Number of Frames: %s" %(frames))
+        logger.info("Number of Frames: %s",frames)
+            
+        # Create final video
+        if not test:
+            # Run ffmpeg
+            cmd = self.getFinalVideoCommand(output_file, burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script, overwrite)
+            logger.info("FFMPEG started")
+            logger.debug(" ".join(cmd))
+            subprocess.call(" ".join(cmd), shell=True)
+            logger.info("FFMPEG finished")
+            
+            self.cleanVideoProcessing(temp_filter_script, srtFilename)
+                    
+    def prepareVideoProcessing(self, output_file):
         # Subtitles
         burnSubtitles = False if "mkv" in output_file.lower() else True
         srtInput = len(self.getSlides()) + len(self.getBackgroundTracks())
@@ -679,65 +704,54 @@ class SlideManager:
         temp_filter_script = "temp-kburns-video-script.txt"
         with open('%s' %(temp_filter_script), 'w') as file:
             file.write(";\n".join(video_filters + audio_filters))
+            
+        return burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script
         
-        # create temporary videos
-        if not test:
-            self.queue.createTemporaryVideos(self.config["ffmpeg"])
+    def getFinalVideoCommand(self, output_file, burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script, overwrite = False):
+        cmd = [ self.config["ffmpeg"], 
+            "-hide_banner", 
+            #"-v quiet",
+            "-stats",
+            "-y" if overwrite else "",
+            # slides
+            " ".join(["-i \"%s\" " %(f) for f in inputs]),
+            " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
+            # subtitles (only mkv)
+            "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
+            # filters
+            "-filter_complex_script \"%s\"" % (temp_filter_script),
+            # define duration
+            "-t %s" %(self.getTotalDuration()),
+            # define output
+            "-map", "[out]:v",
+            "-c:v %s" %(self.config["output_codec"]) if self.config["output_codec"] else "", 
+            #"-crf", "0" ,
+            #"-preset", "ultrafast", 
+            #"-tune", "stillimage",
+            self.config["output_parameters"],
+            "-map [aout]:a" if self.hasAudio() else "",
+            # audio compression and bitrate
+            "-c:a aac" if self.hasAudio() else "",
+            "-b:a 160k" if self.hasAudio() else "",
+            # map subtitles (only mkv)
+            "-map %s:s" %(srtInput) if self.hasSubtitles() and not burnSubtitles else "",
+            # set subtitles enabled (only mkv)
+            "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
+            "\"%s\"" %(output_file)
+        ]
+        
+        return cmd
+        
+    def cleanVideoProcessing(self, temp_filter_script, srtFilename):
+        if self.config["delete_temp"]:
+            logger.info("Delete temporary files")
+            self.queue.clean()
             
-        # Get frames of final video
-        frames = self.getFinalVideoFrames()
-        print("Number of Frames: %s" %(frames))
-        logger.info("Number of Frames: %s",frames)
-            
-        # Create final video
-        if not test:
-            # Run ffmpeg
-            cmd = [ self.config["ffmpeg"], 
-                "-hide_banner", 
-                #"-v quiet",
-                "-stats",
-                "-y" if overwrite else "",
-                # slides
-                " ".join(["-i \"%s\" " %(f) for f in inputs]),
-                " ".join(["-i \"%s\" " %(track.file) for track in self.getBackgroundTracks()]),
-                # subtitles (only mkv)
-                "-i %s" %(srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
-                # filters
-                "-filter_complex_script \"%s\"" % (temp_filter_script),
-                # define duration
-                "-t %s" %(self.getTotalDuration()),
-                # define output
-                "-map", "[out]:v",
-                "-c:v %s" %(self.config["output_codec"]) if self.config["output_codec"] else "", 
-                #"-crf", "0" ,
-                #"-preset", "ultrafast", 
-                #"-tune", "stillimage",
-                self.config["output_parameters"],
-                "-map [aout]:a" if self.hasAudio() else "",
-                # audio compression and bitrate
-                "-c:a aac" if self.hasAudio() else "",
-                "-b:a 160k" if self.hasAudio() else "",
-                # map subtitles (only mkv)
-                "-map %s:s" %(srtInput) if self.hasSubtitles() and not burnSubtitles else "",
-                # set subtitles enabled (only mkv)
-                "-disposition:s:s:0 default" if self.hasSubtitles() and not burnSubtitles else "",
-                "\"%s\"" %(output_file)
-            ]
-            
-            logger.info("FFMPEG started")
-            logger.debug(" ".join(cmd))
-            subprocess.call(" ".join(cmd), shell=True)
-            logger.info("FFMPEG finished")
-            
-            if self.config["delete_temp"]:
-                logger.info("Delete temporary files")
-                self.queue.clean()
-                
-                if os.path.exists(temp_filter_script):
-                    os.remove(temp_filter_script)
-                if os.path.exists(srtFilename):
-                    os.remove(srtFilename)
-                
+            if os.path.exists(temp_filter_script):
+                os.remove(temp_filter_script)
+            if os.path.exists(srtFilename):
+                os.remove(srtFilename)
+    
     def getFinalVideoFrames(self):
         return round(sum([slide.getFrames() for slide in self.getSlides()]))
         

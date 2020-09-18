@@ -32,16 +32,14 @@ class Queue:
     def getQueue(self):
         return self.queue
         
+    def getQueueLength(self):
+        return len(self.queue)
+        
     def getFileName(self, item):
         return "%s%s.mp4" %(self.tempFilePrefix, item["suffix"])
         
     def getOutputName(self, item):
         return os.path.join(self.tempFileFolder, self.getFileName(item))
-        
-    def createTemporaryVideos(self, ffmpeg):
-        for idx, item in enumerate(self.queue):
-            print("Processing video %s/%s" %(idx, len(self.queue)))
-            self.createTemporaryVideo(ffmpeg, item)
         
     def createTemporaryVideo(self, ffmpeg, item):
 

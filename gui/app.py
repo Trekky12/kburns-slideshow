@@ -957,7 +957,23 @@ class App(tk.Tk):
         x.start()
         
     def startVideoCreation(self, output_file):
-        self.sm.createVideo(output_file, overwrite = True)
+        burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script = self.sm.prepareVideoProcessing(output_file)
+        
+        queue_length = self.sm.queue.getQueueLength()
+        frames = self.sm.getFinalVideoFrames()
+        
+        for idx, item in enumerate(self.sm.queue.getQueue()):
+            print("Processing video %s/%s" %(idx+1, queue_length))
+            self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"], item)
+            
+        cmd = self.sm.getFinalVideoCommand(output_file, burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script, overwrite = True)
+        
+        logger.info("FFMPEG started")
+        logger.debug(" ".join(cmd))
+        subprocess.call(" ".join(cmd), shell=True)
+        logger.info("FFMPEG finished")
+            
+        self.sm.cleanVideoProcessing(temp_filter_script, srtFilename)
         
     def addSlide(self):
         self.saveSlide()
