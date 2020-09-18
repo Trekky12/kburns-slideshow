@@ -24,6 +24,8 @@ logger = logging.getLogger("kburns-slideshow")
 
 import subprocess
 
+import threading
+
 # https://stackoverflow.com/a/44633014
 import sys
 sys.path.append("..")
@@ -951,7 +953,11 @@ class App(tk.Tk):
     def createVideo(self):
         self.saveSlide()
         filename = asksaveasfilename()
-        self.sm.createVideo(filename, overwrite = True)
+        x = threading.Thread(target=self.startVideoCreation, args=(filename,))
+        x.start()
+        
+    def startVideoCreation(self, output_file):
+        self.sm.createVideo(output_file, overwrite = True)
         
     def addSlide(self):
         self.saveSlide()
