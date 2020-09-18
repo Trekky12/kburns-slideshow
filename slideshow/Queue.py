@@ -11,6 +11,9 @@ class Queue:
     def __init__(self, tempFileFolder, tempFilePrefix):
         self.tempFileFolder = tempFileFolder
         self.tempFilePrefix = tempFilePrefix
+        self.init()
+        
+    def init(self):
         self.queue = []
         
         if not os.path.exists(self.tempFileFolder):
@@ -75,3 +78,6 @@ class Queue:
             os.remove(file)
             logger.debug("Delete %s", file)
         os.rmdir(self.tempFileFolder)
+        
+        self.init()
+        

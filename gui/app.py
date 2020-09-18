@@ -312,7 +312,6 @@ class App(tk.Tk):
             ('Slideshow config', '*.json')
         ]
         self.filename = askopenfilename(filetypes=ftypes)
-        self.title("%s (%s)" %(self.general_title, self.filename))
         try:
             with open(self.filename) as f:
                 file_content = json.load(f)    
@@ -329,7 +328,9 @@ class App(tk.Tk):
                     audio_files = file_content["audio"]
                     logger.debug("get audio")
             
-            self.createSlideshow(input_files, audio_files)
+            res = self.createSlideshow(input_files, audio_files)
+            if res: 
+                self.title("%s (%s)" %(self.general_title, self.filename))
         except Exception as e:
             print("file must be a JSON file")
             print(e)
@@ -341,15 +342,19 @@ class App(tk.Tk):
         self.frameSlideSettings.clear()
         self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
         
-        
-        self.sm = SlideManager(self.slideshow_config, input_files, audio_files)
-        
-        self.loadSlideshowImagesRow()
-        self.loadSlideshowAudioRow()
-        self.generalmenu.entryconfig("Slideshow Settings", state="normal")
-        self.filemenu.entryconfig("Save", state="normal")
-        self.filemenu.entryconfig("Save As..", state="normal")
-        
+        try:
+            self.sm = SlideManager(self.slideshow_config, input_files, audio_files)
+            self.loadSlideshowImagesRow()
+            self.loadSlideshowAudioRow()
+            self.generalmenu.entryconfig("Slideshow Settings", state="normal")
+            self.filemenu.entryconfig("Save", state="normal")
+            self.filemenu.entryconfig("Save As..", state="normal")
+        except Exception as e:
+            logger.error("Could not initiate Slideshow Manager, Error: %s", e)
+            messagebox.showerror("Error", "Could not initiate Slideshow Manager.\nPlease check general Settings.\n\nError: %s" %(e))
+            return False
+            
+        return True
     
     def loadSlideshowImagesRow(self):
         canvas2 = self.frameSlides.getCanvas()

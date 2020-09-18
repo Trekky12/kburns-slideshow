@@ -37,9 +37,12 @@ class SlideManager:
         self.reduceVariable = 10
         
         # is FFmpeg Version 3 or 4?
-        ffmpeg_version_extract = subprocess.check_output(["%s" %(config["ffmpeg"]),"-version"]).decode()
-        m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
-        self.ffmpeg_version = int(m.group(2)) if m else 3
+        try:
+            ffmpeg_version_extract = subprocess.check_output(["%s" %(config["ffmpeg"]),"-version"]).decode()
+            m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
+            self.ffmpeg_version = int(m.group(2)) if m else 3
+        except Exception as e:
+            raise Exception("FFmpeg not found")
         
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         logger.debug("Init SlideManager")
@@ -682,7 +685,7 @@ class SlideManager:
             self.queue.createTemporaryVideos(self.config["ffmpeg"])
             
         # Get frames of final video
-        frames = round(sum([slide.getFrames() for slide in self.getSlides()]))
+        frames = self.getFinalVideoFrames()
         print("Number of Frames: %s" %(frames))
         logger.info("Number of Frames: %s",frames)
             
@@ -735,6 +738,9 @@ class SlideManager:
                 if os.path.exists(srtFilename):
                     os.remove(srtFilename)
                 
+    def getFinalVideoFrames(self):
+        return round(sum([slide.getFrames() for slide in self.getSlides()]))
+        
     ###################################
     #           Config                #
     ###################################
