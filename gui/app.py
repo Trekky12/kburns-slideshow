@@ -11,6 +11,7 @@ from tkinter import ttk
 from .ScrollFrame import ScrollFrame
 from .SettingsFrame import SettingsFrame
 from .ConfigFrame import ConfigFrame
+from .ProgressFrame import ProgressFrame
 
 import os
 import json
@@ -953,8 +954,8 @@ class App(tk.Tk):
     def createVideo(self):
         self.saveSlide()
         filename = asksaveasfilename()
-        x = threading.Thread(target=self.startVideoCreation, args=(filename,))
-        x.start()
+        createVideoThread = threading.Thread(target=self.startVideoCreation, args=(filename,), daemon = True)
+        createVideoThread.start()
         
     def startVideoCreation(self, output_file):
         burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script = self.sm.prepareVideoProcessing(output_file)
@@ -962,18 +963,35 @@ class App(tk.Tk):
         queue_length = self.sm.queue.getQueueLength()
         frames = self.sm.getFinalVideoFrames()
         
-        for idx, item in enumerate(self.sm.queue.getQueue()):
-            print("Processing video %s/%s" %(idx+1, queue_length))
-            self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"], item)
-            
-        cmd = self.sm.getFinalVideoCommand(output_file, burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script, overwrite = True)
+        progressPopup = ProgressFrame(self)
+        progressPopup.create(self.slideshow_config["generate_temp"], queue_length, frames)
+        progressPopup.startProgressBar()
         
-        logger.info("FFMPEG started")
-        logger.debug(" ".join(cmd))
-        subprocess.call(" ".join(cmd), shell=True)
-        logger.info("FFMPEG finished")
+        for idx, item in enumerate(self.sm.queue.getQueue()):
+            if progressPopup.is_cancelled:
+                break
+            print("Processing video %s/%s" %(idx+1, queue_length))
+            logger.info("Processing video %s/%s" %(idx+1, queue_length))
+            self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"], item)
+            progressPopup.progress_var1.set(idx+1)
+            progressPopup.update()
+        
+        if not progressPopup.is_cancelled:
+            cmd = self.sm.getFinalVideoCommand(output_file, burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script, overwrite = True)
             
+            logger.info("FFMPEG started")
+            logger.debug(" ".join(cmd))
+            p = subprocess.Popen(" ".join(cmd), shell=True, stdin = subprocess.PIPE)
+            # set the process to the popup so when clicking cancel the command "q" can be send to ffmpeg
+            progressPopup.setFinalVideoProcess(p)
+            # wait till the process is finished (regular or cancelled)
+            p.wait()
+            logger.info("FFMPEG finished")
+                
         self.sm.cleanVideoProcessing(temp_filter_script, srtFilename)
+    
+        # close popup
+        progressPopup.destroy()
         
     def addSlide(self):
         self.saveSlide()
