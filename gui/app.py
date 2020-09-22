@@ -26,6 +26,7 @@ logger = logging.getLogger("kburns-slideshow")
 import subprocess
 
 import threading
+import re
 
 # https://stackoverflow.com/a/44633014
 import sys
@@ -965,7 +966,6 @@ class App(tk.Tk):
         
         progressPopup = ProgressFrame(self)
         progressPopup.create(self.slideshow_config["generate_temp"], queue_length, frames)
-        progressPopup.startProgressBar()
         
         for idx, item in enumerate(self.sm.queue.getQueue()):
             if progressPopup.is_cancelled:
@@ -979,11 +979,27 @@ class App(tk.Tk):
         if not progressPopup.is_cancelled:
             cmd = self.sm.getFinalVideoCommand(output_file, burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script, overwrite = True)
             
+            cmd.append("-v")
+            cmd.append("quiet")
+            
             logger.info("FFMPEG started")
             logger.debug(" ".join(cmd))
-            p = subprocess.Popen(" ".join(cmd), shell=True, stdin = subprocess.PIPE)
+            p = subprocess.Popen(" ".join(cmd), shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, universal_newlines = True)
+            
             # set the process to the popup so when clicking cancel the command "q" can be send to ffmpeg
             progressPopup.setFinalVideoProcess(p)
+            
+            # read the stdout/stderr
+            for line in iter(p.stdout.readline, ""):
+                if p.returncode or progressPopup.is_cancelled:
+                    break
+                print(line.rstrip())
+                m = re.search('^frame= *(\d+)', line)
+                if m and m.group(1) is not None:
+                    progress = m.group(1)
+                    progressPopup.progress_var2.set(progress)
+                    progressPopup.update()
+            
             # wait till the process is finished (regular or cancelled)
             p.wait()
             logger.info("FFMPEG finished")

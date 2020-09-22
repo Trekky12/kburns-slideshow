@@ -37,22 +37,11 @@ class ProgressFrame(tk.Toplevel):
             progress_bar1.grid(row=1, column=0, sticky=tk.NSEW, padx=4, pady=4)
                 
         tk.Label(self, text="Final Video").grid(row=3,column=0, sticky=tk.W)
-        progress_bar2 = ttk.Progressbar(self, variable=self.progress_var2, value=0, maximum=100, mode = 'indeterminate', length=400)
+        progress_bar2 = ttk.Progressbar(self, variable=self.progress_var2, value=0, maximum=frame_number, length=400)
         progress_bar2.grid(row=4, column=0, sticky=tk.NSEW, padx=4, pady=4)
         
         buttonCancel = tk.Button(self, text="Cancel", command=(lambda: self.cancel()))
         buttonCancel.grid(row=5, column=0, sticky=tk.NSEW, padx=4, pady=4)
-    
-    def startProgressBar(self):
-        progressBarThread = threading.Thread(target=self.processProgressBar, daemon = True)
-        progressBarThread.start()
-        
-    def processProgressBar(self):
-        while True:
-            for i in [0,20,40,60,80,100,80,60,40,20]:
-                self.progress_var2.set(i)
-                self.update_idletasks() 
-                time.sleep(0.5)
                     
     def disable_event(self):
         pass
@@ -65,7 +54,7 @@ class ProgressFrame(tk.Toplevel):
         self.is_cancelled = True
         if self.ffmpeg_process is not None:
             try:
-                self.ffmpeg_process.communicate(b'q')
+                self.ffmpeg_process.communicate('q')
                 self.ffmpeg_process = None
             except Exception as e:
                 logger.info("Error FFMPEG cancel, Error: %s" %(e))
