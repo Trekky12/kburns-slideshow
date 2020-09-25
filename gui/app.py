@@ -274,6 +274,10 @@ class App(tk.Tk):
                 slide.overlay_text = overlay_text if overlay_text else None
             
             self.slide_changed = False
+            
+            # Recalculate video duration
+            duration = self.sm.getTotalDuration()
+            self.videoDurationValue.set(self.formatDuration(duration))
     
     # see https://stackoverflow.com/a/46670374
     def validateDigit(self, P):

@@ -631,12 +631,9 @@ class SlideManager:
     #         Create Video            #
     ###################################
     def getTotalDuration(self):
-        if len(self.getSlides()) <= 0:
-            return 0
-        last_slide = self.getSlides()[-1]
-        last_slide_start = self.getOffset(-1)
+        frames = self.getFinalVideoFrames()
         
-        return (last_slide_start + last_slide.getFrames())/self.config["fps"]
+        return frames/self.config["fps"]
         
     def createVideo(self, output_file, check = False, save = None, test = False, overwrite = False):
         logger.info("Create video %s", output_file)
@@ -753,7 +750,12 @@ class SlideManager:
                 os.remove(srtFilename)
     
     def getFinalVideoFrames(self):
-        return round(sum([slide.getFrames() for slide in self.getSlides()]))
+        if len(self.getSlides()) <= 0:
+            return 0
+        last_slide = self.getSlides()[-1]
+        last_slide_start = self.getOffset(-1)
+
+        return (last_slide_start + last_slide.getFrames())
         
     ###################################
     #           Config                #
