@@ -98,11 +98,15 @@ class App(tk.Tk):
         #buttonSave = tk.Button(frameActions, text="Save Configuration", command=self.saveSlideshow)
         #buttonSave.grid(row=0, column=2, rowspan = 2, sticky=tk.NW, padx=2)
         
+        self.moveSlidesBtn = tk.IntVar()
+        moveButton = ttk.Checkbutton(frameActions, text="Move slides/audio", variable=self.moveSlidesBtn)
+        moveButton.grid(row=0, column=3, rowspan = 2, sticky=tk.W, padx=2)
+        
         buttonSync = tk.Button(frameActions, text="Sync Video to Audio", command=self.syncToAudio)
-        buttonSync.grid(row=0, column=3, rowspan = 2, sticky=tk.NW, padx=2)
+        buttonSync.grid(row=0, column=4, rowspan = 2, sticky=tk.W, padx=2)
         
         buttonCreateVideo = tk.Button(frameActions, text="Create Video", command=self.createVideo)
-        buttonCreateVideo.grid(row=0, column=4, rowspan = 2, sticky=tk.NW, padx=2)
+        buttonCreateVideo.grid(row=0, column=5, rowspan = 2, sticky=tk.W, padx=2)
         
         # Menu
         menubar = tk.Menu(self)
@@ -833,27 +837,30 @@ class App(tk.Tk):
         widget._col = widget.grid_info()['column']
 
     def buttonDragMotion(self, event):
-        widget = event.widget
-        x = widget.winfo_x() - widget._drag_start_x + event.x
-        y = widget.winfo_y() - widget._drag_start_y + event.y
-        widget.place(x=x, y=y)
-        widget.tkraise()
+        if self.moveSlidesBtn.get() > 0:
+            widget = event.widget
+            x = widget.winfo_x() - widget._drag_start_x + event.x
+            y = widget.winfo_y() - widget._drag_start_y + event.y
+            widget.place(x=x, y=y)
+            widget.tkraise()
             
     def buttonDragStopAudio(self, event):
         widget = event.widget
-        x = widget.winfo_x() + event.x
-        y = widget.winfo_y() + event.y
-        (new_column, new_row) = self.frameAudio.getFrame().grid_location(x, y)
+        
+        if self.moveSlidesBtn.get() > 0:
+            x = widget.winfo_x() + event.x
+            y = widget.winfo_y() + event.y
+            (new_column, new_row) = self.frameAudio.getFrame().grid_location(x, y)
 
-        # move button to new position
-        # https://stackoverflow.com/a/3173159
-        if widget._col != new_column:
-            self.buttonsAudio.insert(new_column, self.buttonsAudio.pop(widget._col))
-            self.sm.moveAudio(widget._col, new_column)
+            # move button to new position
+            # https://stackoverflow.com/a/3173159
+            if widget._col != new_column:
+                self.buttonsAudio.insert(new_column, self.buttonsAudio.pop(widget._col))
+                self.sm.moveAudio(widget._col, new_column)
 
-            # rearrange buttons in grid
-            for i, btn in enumerate(self.buttonsAudio):
-                btn.grid(column=i)
+                # rearrange buttons in grid
+                for i, btn in enumerate(self.buttonsAudio):
+                    btn.grid(column=i)
         
         # Trigger Button Click
         # when using command the new button order is not respected
@@ -863,19 +870,21 @@ class App(tk.Tk):
         
     def buttonDragStopSlide(self, event):
         widget = event.widget
-        x = widget.winfo_x() + event.x
-        y = widget.winfo_y() + event.y
-        (new_column, new_row) = self.frameSlides.getFrame().grid_location(x, y)
+        
+        if self.moveSlidesBtn.get() > 0:
+            x = widget.winfo_x() + event.x
+            y = widget.winfo_y() + event.y
+            (new_column, new_row) = self.frameSlides.getFrame().grid_location(x, y)
 
-        # move button to new position
-        # https://stackoverflow.com/a/3173159
-        if widget._col != new_column:
-            self.buttons.insert(new_column, self.buttons.pop(widget._col))
-            self.sm.moveSlide(widget._col, new_column)
+            # move button to new position
+            # https://stackoverflow.com/a/3173159
+            if widget._col != new_column:
+                self.buttons.insert(new_column, self.buttons.pop(widget._col))
+                self.sm.moveSlide(widget._col, new_column)
 
-            # rearrange buttons in grid
-            for i, btn in enumerate(self.buttons):
-                btn.grid(column=i)
+                # rearrange buttons in grid
+                for i, btn in enumerate(self.buttons):
+                    btn.grid(column=i)
         
         # Trigger Button Click
         # when using command the new button order is not respected
