@@ -547,6 +547,8 @@ class App(tk.Tk):
         durationEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
         durationEntry.bind("<KeyRelease>",self.checkEntryModification)
         
+        if isinstance(slide, VideoSlide):
+            durationEntry.configure(state="disabled")
         
         subtitleFrame = tk.LabelFrame(optionsFrame, text="Subtitle")
         subtitleFrame.grid(row=4, column=0, sticky=tk.NSEW, padx=5, pady=5)
@@ -596,7 +598,7 @@ class App(tk.Tk):
         overlayFontDurationEntry.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
         
-        self.inputOverlayTransition.set(slide.overlay_text["transition_x"] if slide.overlay_text and "transition_x" in slide.overlay_text else "")
+        self.inputOverlayTransition.set(slide.overlay_text["transition_x"] if slide.overlay_text and "transition_x" in slide.overlay_text else "center")
         overlayTransitionLabel = tk.Label(overlayFrame, text="Transition Direction")
         overlayTransitionLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
         overlayTransitionCombo = ttk.Combobox(overlayFrame, values=["center", "right-in", "left-in"], textvariable=self.inputOverlayTransition)
@@ -968,8 +970,9 @@ class App(tk.Tk):
     def createVideo(self):
         self.saveSlide()
         filename = asksaveasfilename()
-        createVideoThread = threading.Thread(target=self.startVideoCreation, args=(filename,), daemon = True)
-        createVideoThread.start()
+        if filename:
+            createVideoThread = threading.Thread(target=self.startVideoCreation, args=(filename,), daemon = True)
+            createVideoThread.start()
         
     def startVideoCreation(self, output_file):
         burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script = self.sm.prepareVideoProcessing(output_file)
@@ -982,6 +985,7 @@ class App(tk.Tk):
         
         for idx, item in enumerate(self.sm.queue.getQueue()):
             if progressPopup.is_cancelled:
+                self.sm.queue.clean()
                 break
             print("Processing video %s/%s" %(idx+1, queue_length))
             logger.info("Processing video %s/%s" %(idx+1, queue_length))

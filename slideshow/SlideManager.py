@@ -315,8 +315,8 @@ class SlideManager:
                 filters.append("drawbox=w=iw:h=ih:color=black@0.8:t=%s:enable='between(t,0,%s)'" %(fill_mode,duration))
                 filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: fontcolor=white:y=%s:x=%s:borderw=1%s%s:enable='between(t,0,%s)'" % (slide.overlay_text["title"], font_size, y, x, font, font_file, duration))
                 
-                if isinstance(slide, ImageSlide):
-                    slide.slide_duration_min = slide.slide_duration_min + duration
+                #if isinstance(slide, ImageSlide):
+                #    slide.slide_duration_min = slide.slide_duration_min + duration
             
             # Time
             filters.append("setpts=PTS-STARTPTS")
