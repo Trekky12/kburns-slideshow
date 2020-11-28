@@ -65,26 +65,26 @@ pip install -r requirements.txt
 ### Command Line Interace
 The application has a command line interface which parameters can be found at [/docs/cli.md](/docs/cli.md).
 
-The cli can be used by calling `main.py` with some parameters.
+The cli can be used by calling `kbvs-cli.py` with some parameters.
 ```
-$ python main.py
+$ python kbvs-cli.py
 ```
 When you have python2 and python3 installed, you may need to run the application with `python3` instead of `python`:
 ```
-$ python3 main.py
+$ python3 kbvs-cli.py
 ```
 
 ### Graphical User Interace
 Additionally there is a graphical user interface which allows to create a new slideshow or load a saved slideshow file. 
 The documentation can be found at [/docs/gui.md](/docs/gui.md).
 
-The gui can be used by calling `gui.py`.
+The gui can be used by calling `kbvs.py`.
 ```
-$ python gui.py
+$ python kbvs.py
 ```
 When you have python2 and python3 installed, you may need to run the application with `python3` instead of `python`:
 ```
-$ python3 gui.py
+$ python3 kbvs.py
 ```
 
 ## Notices 

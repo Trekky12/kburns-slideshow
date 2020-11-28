@@ -1,15 +1,15 @@
 # Command Line Usage
-The application can be used by calling `main.py` with some parameters.
+The application can be used by calling `kbvs-cli.py` with some parameters.
 ```
-$ python main.py
+$ python kbvs-cli.py
 ```
 When you have python2 and python3 installed, you may need to run the application with `python3` instead of `python`:
 ```
-$ python3 main.py
+$ python3 kbvs-cli.py
 ```
 
 ```
-usage: main.py [-h] [-S WIDTHxHEIGHT] [-sd DURATION] [-sdm DURATION]
+usage: kbvs-cli.py [-h] [-S WIDTHxHEIGHT] [-sd DURATION] [-sdm DURATION]
                [-fd DURATION] [-ft TRANSITION] [-fps FPS] [-zd DIRECTION]
                [-zr RATE] [-sm SCALE_MODE] [-l] [-y] [-t] [-d]
                [-a [FILE [FILE ...]]] [-sy] [-i FILE [FILE ...]] [-f LIST]
@@ -19,13 +19,13 @@ usage: main.py [-h] [-S WIDTHxHEIGHT] [-sd DURATION] [-sdm DURATION]
 The default parameters are defined in `config.json` and can be changed with the corresponding command line argument.
 An output and one ore more input files (`-i <file>`) are always neccessary:
 ```
-python main.py out.mp4 -i data/1.jpg data/2.jpg data/1.mp4 data/3.jpg
+python kbvs-cli.py out.mp4 -i data/1.jpg data/2.jpg data/1.mp4 data/3.jpg
 ```
 
 It is also possible to define an input file list with modified config parameters and input files. With an input file list it is possible to define some parameters slide specific options (e.g. a overlay text, a subtitle text, a specific transition, a slide duration, a fade duration, ...).
 You can use the config file like that:
 ```
-python main.py out.mp4 -f example.json
+python kbvs-cli.py out.mp4 -f example.json
 ```
 
 ## Parameters

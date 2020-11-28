@@ -1,12 +1,12 @@
 # Graphical User Interface
 
-The gui can be used by calling `gui.py`.
+The gui can be used by calling `kbvs.py`.
 ```
-$ python gui.py
+$ python kbvs.py
 ```
 When you have python2 and python3 installed, you may need to run the application with `python3` instead of `python`:
 ```
-$ python3 gui.py
+$ python3 kbvs.py
 ```
 
 ## Start-Window and Menu
