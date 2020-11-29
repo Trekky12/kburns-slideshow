@@ -15,7 +15,9 @@ To sync the slide changes to the background music the music onsets are extracted
 
 The executables for FFmpeg, FFprobe and aubioonset, which are used, can be set in the `config.json` file.
 
-### Windows
+### Run from source
+
+#### Windows
 * Download and install [Python3](https://www.python.org/downloads/)
 * install Python modules
 ```
@@ -30,7 +32,7 @@ pip install -r requirements.txt
 * download and extract [FFmpeg 4.2.1](https://ffmpeg.zeranoe.com/builds/)
 * adjusts the paths to FFmpeg 4.2.1 (`bin/ffmpeg.exe`, `bin/ffprobe.exe`) and aubio (`bin/aubioonset.exe`) in `config.json`
 
-### Linux
+#### Linux
 * install Python3
 ```
 sudo apt-get install python3 python3-pip python3-dev python3-setuptools
@@ -47,7 +49,7 @@ sudo apt-get install ffmpeg aubio-tools libaubio-dev libaubio-doc
 ```
 * remove the `.exe` file extension from the paths to `ffmpeg`, `ffprobe` and `aubioonset` in `config.json`
 
-### MacOS
+#### MacOS
 
 * install Python3
 * install ffmpeg and aubio
@@ -59,6 +61,20 @@ brew install ffmpeg aubio
 pip install -r requirements.txt
 ```
 * remove the `.exe` file extension from the paths to `ffmpeg`, `ffprobe` and `aubioonset` in `config.json`
+
+
+### Create Executable
+
+* install Python3 (like above) 
+* install Python modules
+```
+pip install -r requirements.txt
+pip install -r requirements-build.txt
+```
+* create executable
+```
+pyinstaller kbvs.spec
+```
 
 ## Usage
 
@@ -97,7 +113,7 @@ or you can use the path to the font with the parameter `font_file`.
 With FFmpeg 4 the default font directory is recognized and the parameter `font` can be used. The font file is then automatically found with the help of fontconfig.
 
 ## Transitions
-It is easy possible to create custom transitions. Just place a python file in the following format in the folder [slideshow/transitions](/slideshow/transitions):
+It is easy possible to create custom transitions. Just place a python file in the following format in the folder [transitions](/transitions):
 
 ```python
 def get(end, start, transition, i, fade_duration, config):

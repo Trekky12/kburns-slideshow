@@ -86,4 +86,4 @@ class Slide:
         return object
         
     def getTransitions(self):
-        return [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(__file__))+"/transitions"])]
+        return [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.join(os.getcwd(), "transitions")])]

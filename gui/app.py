@@ -138,13 +138,13 @@ class App(tk.Tk):
         self.style.map(SUNKABLE_BUTTON, background=[('pressed', 'red'), ('disabled', 'red'), ('focus', 'red')])
         
         self.thumbnails = []
-        self.transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+"/slideshow/transitions"])]
+        self.transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.join(os.getcwd(), "transitions")])]
         self.transition_choices.append(" - None - ")
         zoom_direction_possibilities = [["top", "center", "bottom"], ["left", "center", "right"], ["in", "out"]]
         self.zoom_direction_choices = ["random", "none"] + list(map(lambda x: "-".join(x), itertools.product(*zoom_direction_possibilities)))
         self.scale_mode_choices = ["auto", "pad", "pan", "crop_center"]
         
-        self.config_path = os.path.dirname(os.path.realpath(os.path.dirname(__file__)))+'/config.json'
+        self.config_path = os.path.join(os.getcwd(), 'config.json')
         self.init() 
         # create empty slideshow
         # self.createSlideshow()
@@ -295,8 +295,9 @@ class App(tk.Tk):
         
     def loadConfig(self):
         self.slideshow_config = {}
-        with open(self.config_path) as config_file:
-            self.slideshow_config = json.load(config_file)  
+        if os.path.exists(self.config_path):
+            with open(self.config_path) as config_file:
+                self.slideshow_config = json.load(config_file)
     
     def init(self):
         self.filename = None
@@ -382,8 +383,12 @@ class App(tk.Tk):
             if isinstance(slide, VideoSlide):
                 video_input_path = slide.file
                 thumb_name = os.path.splitext(os.path.basename(video_input_path))[0]
-                img_path = os.path.join('temp', 'thumbnail_%s.jpg' %(i))
-                subprocess.call([self.slideshow_config["ffmpeg"], '-i', slide.file, '-ss', '00:00:00.000', '-vframes', '1', '-hide_banner', '-v', 'quiet', '-y', img_path])
+                img_path = os.path.join(self.sm.tempFileFolder, 'thumbnail_%s.jpg' %(i))
+                si = None
+                if hasattr(subprocess, 'STARTUPINFO'):
+                    si = subprocess.STARTUPINFO()
+                    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                subprocess.check_output([self.slideshow_config["ffmpeg"], '-i', slide.file, '-ss', '00:00:00.000', '-vframes', '1', '-hide_banner', '-v', 'quiet', '-y', img_path], stderr=subprocess.PIPE, stdin=subprocess.PIPE, startupinfo=si)
                 self.thumbnails.append(img_path)
         
             # https://stackoverflow.com/a/44978329

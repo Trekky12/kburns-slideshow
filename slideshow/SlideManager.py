@@ -28,6 +28,9 @@ class SlideManager:
         self.config = config
 
         self.tempFileFolder = config["temp_file_folder"] if "temp_file_folder" in config else "temp"
+        if not os.path.isabs(self.tempFileFolder):
+            self.tempFileFolder = os.path.join(os.getcwd(), self.tempFileFolder)
+        
         self.tempFilePrefix = config["temp_file_prefix"] if "temp_file_prefix" in config else "temp-kburns-"
         self.tempFileFullPrefix = os.path.join(self.tempFileFolder, self.tempFilePrefix)
         self.queue = Queue(self.tempFileFolder, self.tempFilePrefix)
@@ -38,11 +41,18 @@ class SlideManager:
         
         # is FFmpeg Version 3 or 4?
         try:
-            ffmpeg_version_extract = subprocess.check_output(["%s" %(config["ffmpeg"]),"-version"]).decode()
+            # On Windows, subprocess calls will pop up a command window by default
+            # when run from Pyinstaller with the ``--noconsole`` option. Avoid this
+            # distraction.
+            si = None
+            if hasattr(subprocess, 'STARTUPINFO'):
+                si = subprocess.STARTUPINFO()
+                si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            ffmpeg_version_extract = subprocess.check_output(["%s" %(config["ffmpeg"]),"-version"], stderr=subprocess.PIPE, stdin=subprocess.PIPE, startupinfo=si).decode()
             m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
-            self.ffmpeg_version = int(m.group(2)) if m else 3
+            self.ffmpeg_version = int(m.group(2)) if m else 4
         except Exception as e:
-            raise Exception("FFmpeg not found")
+            raise Exception("FFmpeg not found", config["ffmpeg"], str(e))
         
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         logger.debug("Init SlideManager")
@@ -232,7 +242,7 @@ class SlideManager:
         if fade_duration > 0:
             # Load transition
             try:
-                transition = importlib.import_module('slideshow.transitions.%s' %(self.getSlideTransition(i)))
+                transition = importlib.import_module('transitions.%s' %(self.getSlideTransition(i)))
                 filter, duration = transition.get(end, start, trans, i, fade_duration, self.config)
                 return filter, duration
             except ModuleNotFoundError:
