@@ -1,4 +1,4 @@
-name: Build GUI for Windows with Pyinstaller
+name: Build GUI for Linux with Pyinstaller
 
 on:
   push:
@@ -15,11 +15,11 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Package Application
-      uses: JackMcKew/pyinstaller-action-windows@main
+      uses: JackMcKew/pyinstaller-action-linux@main
       with:
         path: .
 
     - uses: actions/upload-artifact@v2
       with:
         name: kbvs
-        path: dist/windows
+        path: dist/linux
