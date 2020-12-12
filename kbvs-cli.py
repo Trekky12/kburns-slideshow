@@ -10,7 +10,7 @@ from slideshow.SlideManager import SlideManager
 # Logging
 logger = logging.getLogger("kburns-slideshow")
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler( os.path.dirname(os.path.realpath(__file__)) + '/kburns-slideshow.log')
+handler = logging.FileHandler(os.path.dirname(os.path.realpath(__file__)) + '/kburns-slideshow.log')
 handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
 handler.setFormatter(formatter)
@@ -20,9 +20,9 @@ logger.addHandler(handler)
 if __name__ == "__main__":
 
     config = {}
-    with open(os.path.dirname(os.path.realpath(__file__))+'/config.json') as config_file:
-        config = json.load(config_file)    
-    
+    with open(os.path.dirname(os.path.realpath(__file__)) + '/config.json') as config_file:
+        config = json.load(config_file)
+
     command_line = cli.CLI(config)
     config, input_files, audio_files, output_file = command_line.parse()
 
@@ -31,5 +31,5 @@ if __name__ == "__main__":
     if config["sync_to_audio"]:
         logger.info("Sync slides durations to audio")
         sm.adjustDurationsFromAudio()
-    
+
     sm.createVideo(output_file, True, config["save"], config["test"], config["overwrite"])
