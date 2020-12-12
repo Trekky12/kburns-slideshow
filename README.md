@@ -1,7 +1,7 @@
 # kburns-slideshow
 kburns-slideshow allows the creation of video slideshows from images with kburns (zoom/pan) effect, videos with and without sound and background music.
 
-![kburns-slideshow](/docs/demo/fade_in_one.gif)
+![kburns-slideshow](/docs/demo/demo.gif)
 
 <img src="/docs/screenshots/09_image_slide.png" width="400px">
 
