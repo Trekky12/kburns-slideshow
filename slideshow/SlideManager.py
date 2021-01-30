@@ -7,6 +7,7 @@ import sys
 import logging
 import re
 import importlib
+import copy
 
 from .ImageSlide import ImageSlide
 from .VideoSlide import VideoSlide
@@ -64,6 +65,10 @@ class SlideManager:
                     self.addSlide(os.path.join(file, folderfile))
             else:
                 self.addSlide(file)
+
+        if self.config["loopable"] and len(self.slides) > 0:
+            first_slide = copy.copy(self.slides[0])
+            self.slides.append(first_slide)
 
         for file in audio_files:
             self.addAudio(file)
@@ -166,8 +171,6 @@ class SlideManager:
         return [slide for slide in self.getSlides() if isinstance(slide, ImageSlide)]
 
     def getSlides(self):
-        if self.config["loopable"]:
-            return self.slides + [self.slides[0]]
         return self.slides
 
     def removeSlide(self, index):
@@ -758,7 +761,9 @@ class SlideManager:
                # filters
                "-filter_complex_script \"%s\"" % (temp_filter_script),
                # define duration
-               "-t %s" % (self.getTotalDuration()),
+               # if video should be loopable, skip the start fade-in (-ss) and the end fade-out (video is stopped after the fade-in of the last image which is the same as the first-image)
+               "-ss %s -t %s" %(self.getSlideFadeOutDuration(0)/ self.config["fps"], self.getOffset(-1, False)) if self.config["loopable"] else "-t %s" %(self.getTotalDuration()),
+               #"-t %s" % (self.getTotalDuration()),
                # define output
                "-map", "[out]:v",
                "-c:v %s" % (self.config["output_codec"]) if self.config["output_codec"] else "",
