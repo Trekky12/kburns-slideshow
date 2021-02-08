@@ -137,9 +137,7 @@ The function needs to return the filter and the number of frames of the transiti
 #### ffmpeg-video-slideshow-scripts transitions
 I have integrated all video transitions of [ffmpeg-video-slideshow-scripts](https://github.com/tanersener/ffmpeg-video-slideshow-scripts). 
 
-You can get the transitions by buying me two coffees from <a href="https://bmc.xyz/l/kburnstransit" target="_blank"><img src="https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>.
-
-I will redirect one coffee to tanersener for his hard work on implementing these transitions.
+You can get the transitions by buying me a coffee from <a href="https://bmc.xyz/l/kburnstransit" target="_blank"><img src="https://bmc-cdn.nyc3.digitaloceanspaces.com/BMC-button-images/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>.
 
 The bars and checkerboard transitions are configurable with the following global parameters:
 ```
