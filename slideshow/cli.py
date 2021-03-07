@@ -58,6 +58,8 @@ class CLI:
                                  help="One or more background audio tracks", nargs='*')
         self.parser.add_argument("-sy", "--sync-to-audio", action='store_true', help="Sync slides duration to audio")
 
+        self.parser.add_argument("--sync-titles-to-slides", action='store_true', help="Sync title duration to slides duration")
+
         self.parser.add_argument("-i", "--input-files", metavar='FILE', help="One or more input files", nargs='+')
         self.parser.add_argument("-f", "--file-list", metavar='LIST',)
 
@@ -167,6 +169,11 @@ class CLI:
         if args.sync_to_audio is True:
             self.config["sync_to_audio"] = True
             logger.debug("Set sync to audio")
+
+        self.config["sync_titles_to_slides"] = False
+        if args.sync_titles_to_slides is True:
+            self.config["sync_titles_to_slides"] = True
+            logger.debug("Set sync titles to slides duration")
 
         self.config["test"] = args.test
         if args.test is True:

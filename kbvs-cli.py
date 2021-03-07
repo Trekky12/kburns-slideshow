@@ -32,4 +32,8 @@ if __name__ == "__main__":
         logger.info("Sync slides durations to audio")
         sm.adjustDurationsFromAudio()
 
+    if config["sync_titles_to_slides"]:
+        logger.info("Sync titles durations to slides durations")
+        sm.adjustTitlesToSlides()
+
     sm.createVideo(output_file, True, config["save"], config["test"], config["overwrite"])

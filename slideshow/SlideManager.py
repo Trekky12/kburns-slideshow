@@ -668,6 +668,14 @@ class SlideManager:
         self.config["is_synced_to_audio"] = True
         logger.debug("Slide durations (after): %s", [slide.getDuration() for slide in self.getSlides()])
 
+    def adjustTitlesToSlides(self):
+
+        logger.debug("adjust title durations to slides durations")
+
+        for i, slide in enumerate(self.getSlides()):
+            if slide.overlay_text is not None and "title" in slide.overlay_text:
+                slide.overlay_text["duration"] = slide.duration
+
     ###################################
     #         Create Video            #
     ###################################
@@ -761,9 +769,11 @@ class SlideManager:
                # filters
                "-filter_complex_script \"%s\"" % (temp_filter_script),
                # define duration
-               # if video should be loopable, skip the start fade-in (-ss) and the end fade-out (video is stopped after the fade-in of the last image which is the same as the first-image)
-               "-ss %s -t %s" %(self.getSlideFadeOutDuration(0)/ self.config["fps"], self.getOffset(-1, False)) if self.config["loopable"] else "-t %s" %(self.getTotalDuration()),
-               #"-t %s" % (self.getTotalDuration()),
+               # if video should be loopable, skip the start fade-in (-ss) and the end fade-out
+               # (video is stopped after the fade-in of the last image which is the same as the first-image)
+               "-ss %s -t %s" % (self.getSlideFadeOutDuration(0) / self.config["fps"], self.getOffset(-1, False))
+               if self.config["loopable"] else "-t %s" % (self.getTotalDuration()),
+               # "-t %s" % (self.getTotalDuration()),
                # define output
                "-map", "[out]:v",
                "-c:v %s" % (self.config["output_codec"]) if self.config["output_codec"] else "",
@@ -832,6 +842,7 @@ class SlideManager:
                 "temp_file_prefix": self.tempFilePrefix,
                 # the slides duration is already synced to the audio
                 "sync_to_audio": False if self.config["is_synced_to_audio"] else self.config["sync_to_audio"],
+                "sync_titles_to_slides": self.config["sync_titles_to_slides"],
                 "is_synced_to_audio": self.config["is_synced_to_audio"]
             },
             "slides": [slide.getObject(self.config) for slide in self.slides],

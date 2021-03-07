@@ -28,6 +28,7 @@
     "temp_file_folder": "temp",
     "temp_file_prefix": "temp-kburns-",
     "sync_to_audio": false,
+    "sync_titles_to_slides": false,
     "save": false,
     "test": false
 }

@@ -17,6 +17,7 @@
         "generate_temp": false,
         "delete_temp": false,
         "sync_to_audio": false,
+        "sync_titles_to_slides": false,
         "is_synced_to_audio": false
     },
     "slides": [

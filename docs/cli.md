@@ -48,6 +48,7 @@ python kbvs-cli.py out.mp4 -f example.json
 | -d  / --delete-temp | delete temporary generated video files |   | False |
 | -a  / --audio | one or more background audio tracks | one ore multiple files (mp3, ogg, flac) | |
 | -sy  / --sync-to-audio | sync the slides changes to the background audio (modify the slides durations) |  | False |
+| --sync-titles-to-slides | sync the duration of titles to the slides durations |  | False |
 | -i  / --input-files | one or more input files or input folder(s) | one ore multiple files (jpg, jpeg, png, mp4, mpg, avi)  | |
 | -f  / --file-list | a JSON file with the input files | a config file which can be generated from the application / see `example.json`  | |
 | -s  / --save | save the config and the slides to a JSON file | file name |  |
