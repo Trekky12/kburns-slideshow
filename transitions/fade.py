@@ -24,8 +24,9 @@
 def get(end, start, transition, i, fade_duration, config):
     return "%(end)s %(start)s " \
            "blend=all_expr='A*(1-T/%(fade_duration)s)+B*(T/%(fade_duration)s)':shortest=1 %(transition)s" \
-           % {"end": end,
-              "start": start,
-              "fade_duration": fade_duration,
-              "transition": transition},\
-           fade_duration * config["fps"]
+           % {
+               "end": end,
+               "start": start,
+               "fade_duration": fade_duration,
+               "transition": transition
+           }, fade_duration * config["fps"]
