@@ -35,7 +35,7 @@ pip install -r requirements.txt
 #### Linux
 * install Python3
 ```
-sudo apt-get install python3 python3-pip python3-dev python3-setuptools
+sudo apt-get install python3 python3-pip python3-dev python3-setuptools python3-tk python3-pil python3-pil.imagetk
 ```
 
 * install Python modules
