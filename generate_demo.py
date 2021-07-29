@@ -27,7 +27,7 @@ if __name__ == "__main__":
         "overwrite": True
     })
 
-    transitions = [package_name for importer, package_name, _ in pkgutil.iter_modules(["slideshow/transitions"])]
+    transitions = [package_name for importer, package_name, _ in pkgutil.iter_modules(["transitions"])]
 
     for transition in transitions:
         input_files = [{

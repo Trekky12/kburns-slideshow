@@ -50,7 +50,7 @@ class Queue:
             filters = item["filters"]
 
         cmd = [
-            ffmpeg, "-y", "-hide_banner", "-stats", "-v", "quiet",
+            ffmpeg, "-y", "-hide_banner", "-stats", "-v", "warning",
             " ".join(["-i \"%s\" " % (i) for i in item["inputs"]]),
             "-filter_complex \"%s [out]\"" % (filters.replace("\n", " ")),
             # "-crf", "0" ,
@@ -71,13 +71,17 @@ class Queue:
             logger.debug("Using existing temporary video %s for file %s",
                          self.getOutputName(item), ",".join(item["inputs"]))
 
-        self.tempFiles.append(self.getFileName(item))
+        if os.path.exists(self.getOutputName(item)):
+            self.tempFiles.append(self.getFileName(item))
+            return self.getOutputName(item)
+
+        return None
 
     def clean(self):
         for temp in self.tempFiles:
             file = os.path.join(self.tempFileFolder, temp)
             os.remove(file)
             logger.debug("Delete %s", file)
-        os.rmdir(self.tempFileFolder)
+        # os.rmdir(self.tempFileFolder)
 
         self.init()

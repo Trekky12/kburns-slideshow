@@ -9,14 +9,16 @@ class ImageSlide(Slide):
 
     def __init__(self, ffmpeg_version, file, output_width, output_height,
                  duration, slide_duration_min, fade_duration=1, zoom_direction="random",
-                 scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None, transition="random"):
+                 scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None,
+                 overlay_color=None, transition="random"):
         self.zoom_rate = zoom_rate
         self.slide_duration_min = slide_duration_min
         if slide_duration_min > duration:
             duration = slide_duration_min
 
         super().__init__(ffmpeg_version, file, output_width, output_height,
-                         duration, fade_duration, fps, title, overlay_text, transition)
+                         duration, fade_duration, fps, title, overlay_text, overlay_color,
+                         transition)
 
         im = Image.open(self.file)
 

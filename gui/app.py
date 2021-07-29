@@ -166,12 +166,17 @@ class App(tk.Tk):
         self.inputDurationTransition = tk.StringVar()
 
         self.inputSubtitle = tk.StringVar()
-        self.inputOverlayTitle = tk.StringVar()
-        self.inputOverlayFont = tk.StringVar()
-        self.inputOverlayFontFile = tk.StringVar()
-        self.inputOverlayFontSize = tk.StringVar()
-        self.inputOverlayDuration = tk.StringVar()
-        self.inputOverlayTransition = tk.StringVar()
+        self.inputOverlayTextTitle = tk.StringVar()
+        self.inputOverlayTextFont = tk.StringVar()
+        self.inputOverlayTextFontFile = tk.StringVar()
+        self.inputOverlayTextFontSize = tk.StringVar()
+        self.inputOverlayTextDuration = tk.StringVar()
+        self.inputOverlayTextColor = tk.StringVar()
+        self.inputOverlayTextTransitionX = tk.StringVar()
+        self.inputOverlayTextTransitionY = tk.StringVar()
+        self.inputOverlayColorColor = tk.StringVar()
+        self.inputOverlayColorDuration = tk.StringVar()
+        self.inputOverlayColorOpacity = tk.StringVar()
 
     def hasSlides(self):
         return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
@@ -270,27 +275,46 @@ class App(tk.Tk):
 
             slide.title = self.inputSubtitle.get() if len(self.inputSubtitle.get()) > 0 else None
 
-            if (len(self.inputOverlayTitle.get()) > 0
-               or len(self.inputOverlayFont.get()) > 0
-               or len(self.inputOverlayFontFile.get()) > 0
-               or len(self.inputOverlayFontSize.get()) > 0
-               or len(self.inputOverlayDuration.get()) > 0
-               or len(self.inputOverlayTransition.get()) > 0):
+            if (len(self.inputOverlayTextTitle.get()) > 0
+               or len(self.inputOverlayTextFont.get()) > 0
+               or len(self.inputOverlayTextFontFile.get()) > 0
+               or len(self.inputOverlayTextFontSize.get()) > 0
+               or len(self.inputOverlayTextDuration.get()) > 0
+               or len(self.inputOverlayTextColor.get()) > 0
+               or len(self.inputOverlayTextTransitionX.get()) > 0
+               or len(self.inputOverlayTextTransitionY.get()) > 0):
                 overlay_text = {}
-                if len(self.inputOverlayTitle.get()) > 0:
-                    overlay_text["title"] = self.inputOverlayTitle.get()
-                if len(self.inputOverlayFont.get()) > 0:
-                    overlay_text["font"] = self.inputOverlayFont.get()
-                if len(self.inputOverlayFontFile.get()) > 0:
-                    overlay_text["font_file"] = self.inputOverlayFontFile.get()
-                if len(self.inputOverlayFontSize.get()) > 0:
-                    overlay_text["font_size"] = float(self.inputOverlayFontSize.get())
-                if len(self.inputOverlayDuration.get()) > 0:
-                    overlay_text["duration"] = float(self.inputOverlayDuration.get())
-                if len(self.inputOverlayTransition.get()) > 0:
-                    overlay_text["transition_x"] = self.inputOverlayTransition.get()
+                if len(self.inputOverlayTextTitle.get()) > 0:
+                    overlay_text["title"] = self.inputOverlayTextTitle.get()
+                if len(self.inputOverlayTextFont.get()) > 0:
+                    overlay_text["font"] = self.inputOverlayTextFont.get()
+                if len(self.inputOverlayTextFontFile.get()) > 0:
+                    overlay_text["font_file"] = self.inputOverlayTextFontFile.get()
+                if len(self.inputOverlayTextFontSize.get()) > 0:
+                    overlay_text["font_size"] = float(self.inputOverlayTextFontSize.get())
+                if len(self.inputOverlayTextDuration.get()) > 0:
+                    overlay_text["duration"] = float(self.inputOverlayTextDuration.get())
+                if len(self.inputOverlayTextColor.get()) > 0:
+                    overlay_text["color"] = self.inputOverlayTextColor.get()
+                if len(self.inputOverlayTextTransitionX.get()) > 0:
+                    overlay_text["transition_x"] = self.inputOverlayTextTransitionX.get()
+                if len(self.inputOverlayTextTransitionY.get()) > 0:
+                    overlay_text["transition_y"] = self.inputOverlayTextTransitionY.get()
 
                 slide.overlay_text = overlay_text if overlay_text else None
+
+            if (len(self.inputOverlayColorColor.get()) > 0
+               or len(self.inputOverlayColorOpacity.get()) > 0
+               or len(self.inputOverlayColorDuration.get()) > 0):
+                overlay_color = {}
+                if len(self.inputOverlayColorColor.get()) > 0:
+                    overlay_color["color"] = self.inputOverlayColorColor.get()
+                if len(self.inputOverlayColorOpacity.get()) > 0:
+                    overlay_color["opacity"] = float(self.inputOverlayColorOpacity.get())
+                if len(self.inputOverlayColorDuration.get()) > 0:
+                    overlay_color["duration"] = float(self.inputOverlayColorDuration.get())
+
+                slide.overlay_color = overlay_color if overlay_color else None
 
             self.slide_changed = False
 
@@ -598,57 +622,104 @@ class App(tk.Tk):
         subtitleEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
         subtitleEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-        overlayFrame = tk.LabelFrame(optionsFrame, text="Overlay")
-        overlayFrame.grid(row=5, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        overlayFrameColor = tk.LabelFrame(optionsFrame, text="Color Overlay")
+        overlayFrameColor.grid(row=5, column=0, sticky=tk.NSEW, padx=5, pady=5)
 
-        self.inputOverlayTitle.set(slide.overlay_text["title"] if slide.overlay_text and "title" in slide.overlay_text else "")
-        overlayTitleLabel = tk.Label(overlayFrame, text="Title")
+        self.inputOverlayColorDuration.set(
+            slide.overlay_color["duration"] if slide.overlay_color and "duration" in slide.overlay_color else "")
+        overlayColorDurationLabel = tk.Label(overlayFrameColor, text="Color Duration")
+        overlayColorDurationLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayColorDurationEntry = tk.Entry(overlayFrameColor, validate='all', validatecommand=(
+            vcmd, '%P'), textvariable=self.inputOverlayColorDuration)
+        overlayColorDurationEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayColorDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
+
+        self.inputOverlayColorColor.set(
+            slide.overlay_color["color"] if slide.overlay_color and "color" in slide.overlay_color else "black")
+        overlayColorColorLabel = tk.Label(overlayFrameColor, text="Color")
+        overlayColorColorLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayColorColorEntry = tk.Entry(overlayFrameColor, textvariable=self.inputOverlayColorColor, width=50)
+        overlayColorColorEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayColorColorEntry.bind("<KeyRelease>", self.checkEntryModification)
+
+        self.inputOverlayColorOpacity.set(
+            slide.overlay_color["opacity"] if slide.overlay_color and "opacity" in slide.overlay_color else 0.8)
+        overlayColorOpacityLabel = tk.Label(overlayFrameColor, text="Opacity")
+        overlayColorOpacityLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayColorOpacityEntry = tk.Entry(overlayFrameColor, textvariable=self.inputOverlayColorOpacity, width=50)
+        overlayColorOpacityEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayColorOpacityEntry.bind("<KeyRelease>", self.checkEntryModification)
+
+        overlayFrameText = tk.LabelFrame(optionsFrame, text="Text Overlay")
+        overlayFrameText.grid(row=6, column=0, sticky=tk.NSEW, padx=5, pady=5)
+
+        self.inputOverlayTextTitle.set(
+            slide.overlay_text["title"] if slide.overlay_text and "title" in slide.overlay_text else "")
+        overlayTitleLabel = tk.Label(overlayFrameText, text="Title")
         overlayTitleLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayTitleEntry = tk.Entry(overlayFrame, textvariable=self.inputOverlayTitle, width=50)
+        overlayTitleEntry = tk.Entry(overlayFrameText, textvariable=self.inputOverlayTextTitle, width=50)
         overlayTitleEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
         overlayTitleEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-        self.inputOverlayFont.set(slide.overlay_text["font"] if slide.overlay_text and "font" in slide.overlay_text else "")
-        overlayFontLabel = tk.Label(overlayFrame, text="Font")
+        self.inputOverlayTextFont.set(
+            slide.overlay_text["font"] if slide.overlay_text and "font" in slide.overlay_text else "")
+        overlayFontLabel = tk.Label(overlayFrameText, text="Font")
         overlayFontLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayFontEntry = tk.Entry(overlayFrame, textvariable=self.inputOverlayFont, width=50)
+        overlayFontEntry = tk.Entry(overlayFrameText, textvariable=self.inputOverlayTextFont, width=50)
         overlayFontEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-        self.inputOverlayFontFile.set(
+        self.inputOverlayTextFontFile.set(
             slide.overlay_text["font_file"] if slide.overlay_text and "font_file" in slide.overlay_text else "")
-        overlayFontFileLabel = tk.Label(overlayFrame, text="Font file")
+        overlayFontFileLabel = tk.Label(overlayFrameText, text="Font file")
         overlayFontFileLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayFontFileEntry = tk.Entry(overlayFrame, textvariable=self.inputOverlayFontFile, width=50)
+        overlayFontFileEntry = tk.Entry(overlayFrameText, textvariable=self.inputOverlayTextFontFile, width=50)
         overlayFontFileEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontFileEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-        self.inputOverlayFontSize.set(
+        self.inputOverlayTextFontSize.set(
             slide.overlay_text["font_size"] if slide.overlay_text and "font_size" in slide.overlay_text else "")
-        overlayFontSizeLabel = tk.Label(overlayFrame, text="Font size")
+        overlayFontSizeLabel = tk.Label(overlayFrameText, text="Font size")
         overlayFontSizeLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayFontSizeEntry = tk.Entry(overlayFrame, validate='all', validatecommand=(
-            vcmd, '%P'), textvariable=self.inputOverlayFontSize)
+        overlayFontSizeEntry = tk.Entry(overlayFrameText, validate='all', validatecommand=(
+            vcmd, '%P'), textvariable=self.inputOverlayTextFontSize)
         overlayFontSizeEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontSizeEntry.bind("<KeyRelease>", self.checkEntryModification)
+        
+        self.inputOverlayTextColor.set(
+            slide.overlay_text["color"] if slide.overlay_text and "color" in slide.overlay_text else "white")
+        overlayFontColorLabel = tk.Label(overlayFrameText, text="Color")
+        overlayFontColorLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontColorEntry = tk.Entry(overlayFrameText, textvariable=self.inputOverlayTextColor, width=50)
+        overlayFontColorEntry.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontColorEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-        self.inputOverlayDuration.set(
+        self.inputOverlayTextDuration.set(
             slide.overlay_text["duration"] if slide.overlay_text and "duration" in slide.overlay_text else "")
-        overlayFontDurationLabel = tk.Label(overlayFrame, text="Duration")
-        overlayFontDurationLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayFontDurationEntry = tk.Entry(overlayFrame, validate='all', validatecommand=(
-            vcmd, '%P'), textvariable=self.inputOverlayDuration)
-        overlayFontDurationEntry.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontDurationLabel = tk.Label(overlayFrameText, text="Duration")
+        overlayFontDurationLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontDurationEntry = tk.Entry(overlayFrameText, validate='all', validatecommand=(
+            vcmd, '%P'), textvariable=self.inputOverlayTextDuration)
+        overlayFontDurationEntry.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-        self.inputOverlayTransition.set(
+        self.inputOverlayTextTransitionX.set(
             slide.overlay_text["transition_x"] if slide.overlay_text and "transition_x" in slide.overlay_text else "center")
-        overlayTransitionLabel = tk.Label(overlayFrame, text="Transition Direction")
-        overlayTransitionLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayTransitionCombo = ttk.Combobox(overlayFrame, values=[
-                                              "center", "right-in", "left-in"], textvariable=self.inputOverlayTransition)
-        overlayTransitionCombo.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
-        overlayTransitionCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
+        overlayTransitionXLabel = tk.Label(overlayFrameText, text="Transition X Direction")
+        overlayTransitionXLabel.grid(row=6, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionXCombo = ttk.Combobox(overlayFrameText, values=["center", "right-to-center", "left-to-center"],
+                                               textvariable=self.inputOverlayTextTransitionX)
+        overlayTransitionXCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionXCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
+
+        self.inputOverlayTextTransitionY.set(
+            slide.overlay_text["transition_y"] if slide.overlay_text and "transition_y" in slide.overlay_text else "center")
+        overlayTransitionYLabel = tk.Label(overlayFrameText, text="Transition Y Direction")
+        overlayTransitionYLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionYCombo = ttk.Combobox(overlayFrameText, values=["center", "top-to-bottom", "bottom-to-top"],
+                                               textvariable=self.inputOverlayTextTransitionY)
+        overlayTransitionYCombo.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionYCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
         # Right column (image preview)
         imageframe = tk.LabelFrame(optionsFrame, text="Image")
@@ -1038,10 +1109,17 @@ class App(tk.Tk):
         for idx, item in enumerate(self.sm.queue.getQueue()):
             if progressPopup.is_cancelled:
                 self.sm.queue.clean()
+                self.sm.tempInputFiles = []
                 break
             print("Processing video %s/%s" % (idx + 1, queue_length))
             logger.info("Processing video %s/%s" % (idx + 1, queue_length))
-            self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"], item)
+            # logger.debug(item)
+            tempFile = self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"], item)
+
+            if tempFile is None:
+                print("Error while creating the temporary video file!")
+                logger.error("Error while creating the temporary video file!")
+
             progressPopup.progress_var1.set(idx + 1)
             progressPopup.update()
 

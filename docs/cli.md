@@ -94,23 +94,29 @@ It is possible to define a subtitle for a slide by setting the `title` parameter
 When using a MP4 output the subtitles are burned in the video. With a MKV output the subtitle is added as individual subtitle stream (default).
 
 #### Overlay
-Additionally it is possible to a text `overlay`:
+Additionally it is possible to add a text `overlay`:
 ```
 ...
 {
             "file": "1.jpg",
-            "overlay": {
+            "overlay_text": {
                 "title": "Intro Text",
                 "font": "Bauhaus 93",
                 "font_size": 200,
                 "duration": 2,
                 "transition_x": "left-in"
-            }
+            },
+            "overlay_color": {
+                "duration": 2,
+                "color": "black",
+                "opacity": 0.8
+            },
         },
 ...
 ```
-A text overlay has a half transparent black background and a overlaying text.
-The following parameters can be set for overlays:
+A overlay can contain a color overlay and a overlaying text.
+
+The following parameters can be set for text overlays (`overlay_text`):
 
 | Parameter | Description | default |
 | - | - | - |
@@ -118,8 +124,18 @@ The following parameters can be set for overlays:
 | font | the font | the default FFmpeg font |
 | font_file | the path to the font file, e.g. "C:\/Windows\/Fonts\/BAUHS93.TTF" | |
 | font_size | the font size | 150 |
+| color | the font color | white |
 | duration | the duration for the overlay | 1 |
-| transition_x | the text animation which can be "center" (text is positioned on the center), "left-in" (text scrolls from left to the middle) or "right-in" (text scrolls from right to the middle) | "center" |
+| transition_x | the x-direction of the text animation which can be "center" (text is positioned on the center), "left-to-center" (text scrolls from left to the middle) or "right-to-center" (text scrolls from right to the middle) | "center" |
+| transition_y | the y-direction of the text animation which can be "center" (text is positioned on the center), "top-to-bottom" (text scrolls from top to bottom) or "bottom-to-top" (text scrolls from bottom to top) | "center" |
+
+The following parameters can be set for color overlays (`overlay_color`):
+
+| Parameter | Description | default |
+| - | - | - |
+| duration | the duration for the overlay | 1 |
+| color | the background color | black |
+| opacity | the background color opacity | 0.8 |
 
 
 #### Video parameters
