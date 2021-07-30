@@ -105,8 +105,11 @@ class App(tk.Tk):
         buttonSync = tk.Button(frameActions, text="Sync Video to Audio", command=self.syncToAudio)
         buttonSync.grid(row=0, column=4, rowspan=2, sticky=tk.W, padx=2)
 
+        buttonResetTime = tk.Button(frameActions, text="Reset slide durations", command=self.resetSlideDurations)
+        buttonResetTime.grid(row=0, column=5, rowspan=2, sticky=tk.W, padx=2)
+
         buttonCreateVideo = tk.Button(frameActions, text="Create Video", command=self.createVideo)
-        buttonCreateVideo.grid(row=0, column=5, rowspan=2, sticky=tk.W, padx=2)
+        buttonCreateVideo.grid(row=0, column=6, rowspan=2, sticky=tk.W, padx=2)
 
         # Menu
         menubar = tk.Menu(self)
@@ -1089,6 +1092,17 @@ class App(tk.Tk):
         logger.info("Sync slides durations to audio")
         self.saveSlide()
         self.sm.adjustDurationsFromAudio()
+        self.frameSlides.clear()
+        self.frameAudio.clear()
+        self.frameSlideSettings.clear()
+        self.loadSlideshowImagesRow()
+        self.loadSlideshowAudioRow()
+        self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
+
+    def resetSlideDurations(self):
+        logger.info("Reset slides durations to default")
+        self.saveSlide()
+        self.sm.resetSlideDurations()
         self.frameSlides.clear()
         self.frameAudio.clear()
         self.frameSlideSettings.clear()

@@ -81,10 +81,10 @@ class Slide:
         if self.title is not None:
             object["title"] = self.title
 
-        if self.overlay_text is not None:
+        if self.overlay_text is not None and "duration" in self.overlay_text:
             object["overlay_text"] = self.overlay_text
 
-        if self.overlay_color is not None:
+        if self.overlay_color is not None and "duration" in self.overlay_color:
             object["overlay_color"] = self.overlay_color
 
         if self.transition != config["transition"]:

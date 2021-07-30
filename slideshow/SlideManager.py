@@ -122,6 +122,8 @@ class SlideManager:
             overlay_text = None
             if isinstance(file, dict) and "overlay_text" in file:
                 overlay_text = file["overlay_text"]
+            elif isinstance(file, dict) and "overlay" in file:
+                overlay_text = file["overlay"]
 
             overlay_color = None
             if isinstance(file, dict) and "overlay_color" in file:
@@ -315,8 +317,8 @@ class SlideManager:
                 filters = []
 
             # Overlay Text (e.g. Intro)
-            if slide.overlay_color is not None and "color" in slide.overlay_color:
-                color_duration = slide.overlay_color["duration"] if "duration" in slide.overlay_color else 1
+            if slide.overlay_color is not None and "duration" in slide.overlay_color and "color" in slide.overlay_color:
+                color_duration = slide.overlay_color["duration"] if "duration" in slide.overlay_color else 0
                 color = slide.overlay_color["color"] if "color" in slide.overlay_color else "black"
                 opacity = slide.overlay_color["opacity"] if "opacity" in slide.overlay_color else 0.8
 
@@ -326,8 +328,8 @@ class SlideManager:
                 filters.append("drawbox=w=iw:h=ih:color=%s@%s:t=%s:enable='between(t,0,%s)'"
                                % (color, opacity, fill_mode, color_duration))
 
-            if slide.overlay_text is not None and "title" in slide.overlay_text:
-                text_duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 1
+            if slide.overlay_text is not None and "duration" in slide.overlay_text and "title" in slide.overlay_text:
+                text_duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 0
                 font = ":font='%s'" % (slide.overlay_text["font"]) if "font" in slide.overlay_text else ""
                 font_file = ":fontfile='%s'" \
                             % (slide.overlay_text["font_file"]) if "font_file" in slide.overlay_text else ""
@@ -703,6 +705,12 @@ class SlideManager:
                 slide.overlay_text["duration"] = slide.duration
             if slide.overlay_color is not None and "color" in slide.overlay_color:
                 slide.overlay_color["duration"] = slide.duration
+
+    def resetSlideDurations(self):
+        logger.debug("reset slides durations")
+
+        for i, slide in enumerate(self.getSlides()):
+            slide.setDuration(self.config["slide_duration"])
 
     ###################################
     #         Create Video            #
