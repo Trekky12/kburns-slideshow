@@ -36,11 +36,11 @@ class Queue:
     def getQueueLength(self):
         return len(self.queue)
 
-    def getFileName(self, item):
-        return "%s%s.mp4" % (self.tempFilePrefix, item["suffix"])
+    def getFileName(self, item, extension="mp4"):
+        return "%s%s.%s" % (self.tempFilePrefix, item["suffix"], extension)
 
-    def getOutputName(self, item):
-        return os.path.join(self.tempFileFolder, self.getFileName(item))
+    def getOutputName(self, item, extension="mp4"):
+        return os.path.join(self.tempFileFolder, self.getFileName(item, extension))
 
     def createTemporaryVideo(self, ffmpeg, item):
 
@@ -49,10 +49,14 @@ class Queue:
         else:
             filters = item["filters"]
 
+        temp_filter_script = self.getOutputName(item, "txt")
+        with open('%s' % (temp_filter_script), 'w') as file:
+            file.write("%s [out]" % (filters))
+
         cmd = [
             ffmpeg, "-y", "-hide_banner", "-stats", "-v", "warning",
             " ".join(["-i \"%s\" " % (i) for i in item["inputs"]]),
-            "-filter_complex \"%s [out]\"" % (filters.replace("\n", " ")),
+            "-filter_complex_script \"%s\"" % (temp_filter_script),
             # "-crf", "0" ,
             "-map [out]",
             "-preset", "ultrafast",
@@ -73,6 +77,7 @@ class Queue:
 
         if os.path.exists(self.getOutputName(item)):
             self.tempFiles.append(self.getFileName(item))
+            self.tempFiles.append(self.getFileName(item, "txt"))
             return self.getOutputName(item)
 
         return None

@@ -178,6 +178,8 @@ class App(tk.Tk):
         self.inputOverlayColorDuration = tk.StringVar()
         self.inputOverlayColorOpacity = tk.StringVar()
 
+        self.overlayTitleEntry  = None
+
     def hasSlides(self):
         return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
 
@@ -243,6 +245,9 @@ class App(tk.Tk):
 
         self.imageLabel.configure(image=photo)
         self.imageLabel.image = photo
+        
+        if self.overlayTitleEntry is not None:
+            self.inputOverlayTextTitle.set(self.overlayTitleEntry.get('1.0', 'end-1c'))
 
     def saveSlide(self):
         if self.slide_changed:
@@ -657,9 +662,10 @@ class App(tk.Tk):
             slide.overlay_text["title"] if slide.overlay_text and "title" in slide.overlay_text else "")
         overlayTitleLabel = tk.Label(overlayFrameText, text="Title")
         overlayTitleLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
-        overlayTitleEntry = tk.Entry(overlayFrameText, textvariable=self.inputOverlayTextTitle, width=50)
-        overlayTitleEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
-        overlayTitleEntry.bind("<KeyRelease>", self.checkEntryModification)
+        self.overlayTitleEntry = tk.Text(overlayFrameText, width=41, height=2)
+        self.overlayTitleEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
+        self.overlayTitleEntry.bind("<KeyRelease>", self.checkEntryModification)
+        self.overlayTitleEntry.insert('1.0', self.inputOverlayTextTitle.get())
 
         self.inputOverlayTextFont.set(
             slide.overlay_text["font"] if slide.overlay_text and "font" in slide.overlay_text else "")
