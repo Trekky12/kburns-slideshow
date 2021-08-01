@@ -181,7 +181,7 @@ class App(tk.Tk):
         self.inputOverlayColorDuration = tk.StringVar()
         self.inputOverlayColorOpacity = tk.StringVar()
 
-        self.overlayTitleEntry  = None
+        self.overlayTitleEntry = None
 
     def hasSlides(self):
         return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
@@ -248,7 +248,7 @@ class App(tk.Tk):
 
         self.imageLabel.configure(image=photo)
         self.imageLabel.image = photo
-        
+
         if self.overlayTitleEntry is not None:
             self.inputOverlayTextTitle.set(self.overlayTitleEntry.get('1.0', 'end-1c'))
 
@@ -694,7 +694,7 @@ class App(tk.Tk):
             vcmd, '%P'), textvariable=self.inputOverlayTextFontSize)
         overlayFontSizeEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontSizeEntry.bind("<KeyRelease>", self.checkEntryModification)
-        
+
         self.inputOverlayTextColor.set(
             slide.overlay_text["color"] if slide.overlay_text and "color" in slide.overlay_text else "white")
         overlayFontColorLabel = tk.Label(overlayFrameText, text="Color")
