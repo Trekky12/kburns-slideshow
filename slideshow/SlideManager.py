@@ -262,7 +262,7 @@ class SlideManager:
             try:
                 transition = importlib.import_module('transitions.%s' % (self.getSlideTransition(i)))
                 filter, duration = transition.get(end, start, trans, i, fade_duration, self.config)
-                return filter.replace("\n", " "), duration
+                return filter, duration
             except ModuleNotFoundError:
                 return None, 0
 
