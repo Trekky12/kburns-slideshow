@@ -104,10 +104,13 @@ Additionally it is possible to add a text `overlay`:
                 "font": "Bauhaus 93",
                 "font_size": 200,
                 "duration": 2,
-                "transition_x": "left-in"
+                "offset": 0,
+                "transition_x": "left-in",
+                "transition_y": "center"
             },
             "overlay_color": {
                 "duration": 2,
+                "offset": 0,
                 "color": "black",
                 "opacity": 0.8
             },
@@ -126,6 +129,7 @@ The following parameters can be set for text overlays (`overlay_text`):
 | font_size | the font size | 150 |
 | color | the font color | white |
 | duration | the duration for the overlay | 1 |
+| offset | the start offset for the overlay | 0 |
 | transition_x | the x-direction of the text animation which can be "center" (text is positioned on the center), "left-to-center" (text scrolls from left to the middle) or "right-to-center" (text scrolls from right to the middle) | "center" |
 | transition_y | the y-direction of the text animation which can be "center" (text is positioned on the center), "top-to-bottom" (text scrolls from top to bottom) or "bottom-to-top" (text scrolls from bottom to top) | "center" |
 
@@ -134,6 +138,7 @@ The following parameters can be set for color overlays (`overlay_color`):
 | Parameter | Description | default |
 | - | - | - |
 | duration | the duration for the overlay | 1 |
+| offset | the start offset for the overlay | 0 |
 | color | the background color | black |
 | opacity | the background color opacity | 0.8 |
 

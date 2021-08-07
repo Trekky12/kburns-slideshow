@@ -174,11 +174,13 @@ class App(tk.Tk):
         self.inputOverlayTextFontFile = tk.StringVar()
         self.inputOverlayTextFontSize = tk.StringVar()
         self.inputOverlayTextDuration = tk.StringVar()
+        self.inputOverlayTextOffset = tk.StringVar()
         self.inputOverlayTextColor = tk.StringVar()
         self.inputOverlayTextTransitionX = tk.StringVar()
         self.inputOverlayTextTransitionY = tk.StringVar()
         self.inputOverlayColorColor = tk.StringVar()
         self.inputOverlayColorDuration = tk.StringVar()
+        self.inputOverlayColorOffset = tk.StringVar()
         self.inputOverlayColorOpacity = tk.StringVar()
 
         self.overlayTitleEntry = None
@@ -288,6 +290,7 @@ class App(tk.Tk):
                or len(self.inputOverlayTextFontFile.get()) > 0
                or len(self.inputOverlayTextFontSize.get()) > 0
                or len(self.inputOverlayTextDuration.get()) > 0
+               or len(self.inputOverlayTextOffset.get()) > 0
                or len(self.inputOverlayTextColor.get()) > 0
                or len(self.inputOverlayTextTransitionX.get()) > 0
                or len(self.inputOverlayTextTransitionY.get()) > 0):
@@ -302,6 +305,8 @@ class App(tk.Tk):
                     overlay_text["font_size"] = float(self.inputOverlayTextFontSize.get())
                 if len(self.inputOverlayTextDuration.get()) > 0:
                     overlay_text["duration"] = float(self.inputOverlayTextDuration.get())
+                if len(self.inputOverlayTextOffset.get()) > 0:
+                    overlay_text["offset"] = float(self.inputOverlayTextOffset.get())
                 if len(self.inputOverlayTextColor.get()) > 0:
                     overlay_text["color"] = self.inputOverlayTextColor.get()
                 if len(self.inputOverlayTextTransitionX.get()) > 0:
@@ -313,7 +318,8 @@ class App(tk.Tk):
 
             if (len(self.inputOverlayColorColor.get()) > 0
                or len(self.inputOverlayColorOpacity.get()) > 0
-               or len(self.inputOverlayColorDuration.get()) > 0):
+               or len(self.inputOverlayColorDuration.get()) > 0
+               or len(self.inputOverlayColorOffset.get()) > 0):
                 overlay_color = {}
                 if len(self.inputOverlayColorColor.get()) > 0:
                     overlay_color["color"] = self.inputOverlayColorColor.get()
@@ -321,6 +327,8 @@ class App(tk.Tk):
                     overlay_color["opacity"] = float(self.inputOverlayColorOpacity.get())
                 if len(self.inputOverlayColorDuration.get()) > 0:
                     overlay_color["duration"] = float(self.inputOverlayColorDuration.get())
+                if len(self.inputOverlayColorOffset.get()) > 0:
+                    overlay_color["offset"] = float(self.inputOverlayColorOffset.get())
 
                 slide.overlay_color = overlay_color if overlay_color else None
 
@@ -635,27 +643,36 @@ class App(tk.Tk):
 
         self.inputOverlayColorDuration.set(
             slide.overlay_color["duration"] if slide.overlay_color and "duration" in slide.overlay_color else "")
-        overlayColorDurationLabel = tk.Label(overlayFrameColor, text="Color Duration")
+        overlayColorDurationLabel = tk.Label(overlayFrameColor, text="Duration")
         overlayColorDurationLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
         overlayColorDurationEntry = tk.Entry(overlayFrameColor, validate='all', validatecommand=(
             vcmd, '%P'), textvariable=self.inputOverlayColorDuration)
         overlayColorDurationEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
         overlayColorDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
 
+        self.inputOverlayColorOffset.set(
+            slide.overlay_color["offset"] if slide.overlay_color and "offset" in slide.overlay_color else 0)
+        overlayColorOffsetLabel = tk.Label(overlayFrameColor, text="Offset")
+        overlayColorOffsetLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayColoOffsetEntry = tk.Entry(overlayFrameColor, validate='all', validatecommand=(
+            vcmd, '%P'), textvariable=self.inputOverlayColorOffset)
+        overlayColoOffsetEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayColoOffsetEntry.bind("<KeyRelease>", self.checkEntryModification)
+
         self.inputOverlayColorColor.set(
             slide.overlay_color["color"] if slide.overlay_color and "color" in slide.overlay_color else "black")
         overlayColorColorLabel = tk.Label(overlayFrameColor, text="Color")
-        overlayColorColorLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayColorColorLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
         overlayColorColorEntry = tk.Entry(overlayFrameColor, textvariable=self.inputOverlayColorColor, width=50)
-        overlayColorColorEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayColorColorEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
         overlayColorColorEntry.bind("<KeyRelease>", self.checkEntryModification)
 
         self.inputOverlayColorOpacity.set(
             slide.overlay_color["opacity"] if slide.overlay_color and "opacity" in slide.overlay_color else 0.8)
         overlayColorOpacityLabel = tk.Label(overlayFrameColor, text="Opacity")
-        overlayColorOpacityLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayColorOpacityLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
         overlayColorOpacityEntry = tk.Entry(overlayFrameColor, textvariable=self.inputOverlayColorOpacity, width=50)
-        overlayColorOpacityEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayColorOpacityEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
         overlayColorOpacityEntry.bind("<KeyRelease>", self.checkEntryModification)
 
         overlayFrameText = tk.LabelFrame(optionsFrame, text="Text Overlay")
@@ -712,22 +729,31 @@ class App(tk.Tk):
         overlayFontDurationEntry.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
         overlayFontDurationEntry.bind("<KeyRelease>", self.checkEntryModification)
 
+        self.inputOverlayTextOffset.set(
+            slide.overlay_text["offset"] if slide.overlay_text and "offset" in slide.overlay_text else 0)
+        overlayFonOffsetLabel = tk.Label(overlayFrameText, text="Offset")
+        overlayFonOffsetLabel.grid(row=6, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayFontOffsetEntry = tk.Entry(overlayFrameText, validate='all', validatecommand=(
+            vcmd, '%P'), textvariable=self.inputOverlayTextOffset)
+        overlayFontOffsetEntry.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayFontOffsetEntry.bind("<KeyRelease>", self.checkEntryModification)
+
         self.inputOverlayTextTransitionX.set(
             slide.overlay_text["transition_x"] if slide.overlay_text and "transition_x" in slide.overlay_text else "center")
         overlayTransitionXLabel = tk.Label(overlayFrameText, text="Transition X Direction")
-        overlayTransitionXLabel.grid(row=6, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionXLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
         overlayTransitionXCombo = ttk.Combobox(overlayFrameText, values=["center", "right-to-center", "left-to-center"],
                                                textvariable=self.inputOverlayTextTransitionX)
-        overlayTransitionXCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionXCombo.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
         overlayTransitionXCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
         self.inputOverlayTextTransitionY.set(
             slide.overlay_text["transition_y"] if slide.overlay_text and "transition_y" in slide.overlay_text else "center")
         overlayTransitionYLabel = tk.Label(overlayFrameText, text="Transition Y Direction")
-        overlayTransitionYLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionYLabel.grid(row=8, column=0, sticky=tk.W, padx=4, pady=4)
         overlayTransitionYCombo = ttk.Combobox(overlayFrameText, values=["center", "top-to-bottom", "bottom-to-top"],
                                                textvariable=self.inputOverlayTextTransitionY)
-        overlayTransitionYCombo.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
+        overlayTransitionYCombo.grid(row=8, column=1, sticky=tk.W, padx=4, pady=4)
         overlayTransitionYCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
         # Right column (image preview)
@@ -1128,8 +1154,7 @@ class App(tk.Tk):
 
         for idx, item in enumerate(self.sm.queue.getQueue()):
             if progressPopup.is_cancelled:
-                self.sm.queue.clean()
-                self.sm.tempInputFiles = []
+                self.sm.cleanVideoProcessing()
                 break
             print("Processing video %s/%s" % (idx + 1, queue_length))
             logger.info("Processing video %s/%s" % (idx + 1, queue_length))

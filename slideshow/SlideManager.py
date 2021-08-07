@@ -319,17 +319,19 @@ class SlideManager:
             # Overlay Text (e.g. Intro)
             if slide.overlay_color is not None and "duration" in slide.overlay_color and "color" in slide.overlay_color:
                 color_duration = slide.overlay_color["duration"] if "duration" in slide.overlay_color else 0
+                color_offset = slide.overlay_color["offset"] if "offset" in slide.overlay_color else 0
                 color = slide.overlay_color["color"] if "color" in slide.overlay_color else "black"
                 opacity = slide.overlay_color["opacity"] if "opacity" in slide.overlay_color else 0.8
 
                 # on FFmpeg 4 the maximum thickness was changed from 'max' to 'fill'
                 # see https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/b3cb9bd43fa33a8aaf7a63e43f8418975b3bf0de
                 fill_mode = "max" if self.ffmpeg_version < 4 else "fill"
-                filters.append("drawbox=w=iw:h=ih:color=%s@%s:t=%s:enable='between(t,0,%s)'"
-                               % (color, opacity, fill_mode, color_duration))
+                filters.append("drawbox=w=iw:h=ih:color=%s@%s:t=%s:enable='between(t,%s,%s)'"
+                               % (color, opacity, fill_mode, color_offset, color_offset + color_duration))
 
             if slide.overlay_text is not None and "duration" in slide.overlay_text and "title" in slide.overlay_text:
                 text_duration = slide.overlay_text["duration"] if "duration" in slide.overlay_text else 0
+                text_offset = slide.overlay_text["offset"] if "offset" in slide.overlay_text else 0
                 font = ":font='%s'" % (slide.overlay_text["font"]) if "font" in slide.overlay_text else ""
                 font_file = ":fontfile='%s'" \
                             % (slide.overlay_text["font_file"]) if "font_file" in slide.overlay_text else ""
@@ -337,32 +339,33 @@ class SlideManager:
                 font_color = slide.overlay_text["color"] if "color" in slide.overlay_text else "white"
                 transition_x = slide.overlay_text["transition_x"] if "transition_x" in slide.overlay_text else "center"
                 transition_y = slide.overlay_text["transition_y"] if "transition_y" in slide.overlay_text else "center"
+                text = slide.overlay_text["title"].replace(':', '\:')
 
                 # fixed text in the middle
                 if transition_x == "center":
                     x = "(main_w/2-text_w/2)"
                 # scroll from left to right till the middle of the image in half of the duration time
                 elif transition_x == "left-in" or transition_x == "left-to-center":
-                    x = "'if(lte(x,(main_w/2-text_w/2)),t*(main_w/2-text_w/2)/(%s/2),(main_w/2-text_w/2))'" \
-                        % (text_duration)
+                    x = "'if(lte(x,(main_w/2-text_w/2)),(t-%s)*(main_w/2-text_w/2)/(%s/2),(main_w/2-text_w/2))'" \
+                        % (text_offset, text_duration)
                 # same but from right to left
                 elif transition_x == "right-in" or transition_x == "right-to-center":
-                    x = "'if(gte(x,(main_w/2-text_w/2)),main_w-t*(main_w/2-text_w/2)/(%s/2),(main_w/2-text_w/2))'" \
-                        % (text_duration)
+                    x = "'if(gte(x,(main_w/2-text_w/2)),main_w-(t-%s)*(main_w/2-text_w/2)/(%s/2),(main_w/2-text_w/2))'" \
+                        % (text_offset, text_duration)
 
                 # fixed text in the middle
                 if transition_y == "center":
                     y = "(main_h/2-text_h/2)"
                 # scroll from top to bottom
                 elif transition_y == "top-to-bottom":
-                    y = "'-text_h + ((main_h+text_h)/%s)*t'" % (text_duration)
+                    y = "'-text_h + ((main_h+text_h)/%s)*(t-%s)'" % (text_duration, text_offset)
                 # same but from bottom to top
                 elif transition_y == "bottom-to-top":
-                    y = "'main_h-(((main_h+text_h)/%s)*t)'" % (text_duration)
+                    y = "'main_h-(((main_h+text_h)/%s)*(t-%s))'" % (text_duration, text_offset)
 
                 filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: "
-                               "fontcolor=%s:y=%s:x=%s:borderw=1%s%s:enable='between(t,0,%s)'"
-                               % (slide.overlay_text["title"], font_size, font_color, y, x, font, font_file, text_duration))
+                               "fontcolor=%s:y=%s:x=%s:borderw=1%s%s:enable='between(t,%s,%s)'"
+                               % (text, font_size, font_color, y, x, font, font_file, text_offset, text_offset + text_duration))
 
                 # if isinstance(slide, ImageSlide):
                 #    slide.slide_duration_min = slide.slide_duration_min + duration
@@ -773,7 +776,7 @@ class SlideManager:
         # Subtitles
         burnSubtitles = False if "mkv" in output_file.lower() else True
         srtInput = len(self.getSlides()) + len(self.getBackgroundTracks())
-        srtFilename = "temp-kburns-subs.srt"
+        srtFilename = os.path.join(self.tempFileFolder, "temp-kburns-subs.srt")
         if self.hasSubtitles():
             self.createSubtitles(srtFilename)
 
@@ -788,7 +791,7 @@ class SlideManager:
         # Get Audio Filter
         audio_filters = self.getAudioFilterChains()
 
-        temp_filter_script = "temp-kburns-video-script.txt"
+        temp_filter_script = os.path.join(self.tempFileFolder, "temp-kburns-video-script.txt")
         with open('%s' % (temp_filter_script), 'w') as file:
             file.write(";\n".join(video_filters + audio_filters))
 
@@ -834,15 +837,15 @@ class SlideManager:
 
         return cmd
 
-    def cleanVideoProcessing(self, temp_filter_script, srtFilename):
-        if self.config["delete_temp"]:
-            logger.info("Delete temporary files")
-            self.queue.clean()
-            self.tempInputFiles = []
+    def cleanVideoProcessing(self, temp_filter_script = None, srtFilename = None):
+        logger.info("Clean Video processing")
+        self.queue.clean(self.config["delete_temp"])
+        self.tempInputFiles = []
 
-            if os.path.exists(temp_filter_script):
+        if self.config["delete_temp"]:
+            if temp_filter_script is not None and os.path.exists(temp_filter_script):
                 os.remove(temp_filter_script)
-            if os.path.exists(srtFilename):
+            if srtFilename is not None and os.path.exists(srtFilename):
                 os.remove(srtFilename)
 
     def getFinalVideoFrames(self):

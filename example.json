@@ -25,12 +25,20 @@
         {
             "file": "data\\1.jpg",
             "slide_duration": 5,
-            "overlay":{
+            "overlay_text":{
                 "title": "Title 1",
                 "font": "Bauhaus 93",
                 "font_size": 200,
                 "duration": 2,
-                "transition_x": "left-in"
+                "transition_x": "left-to-center",
+                "transition_y": "center",
+                "offset": 0
+            },
+            "overlay_color":{
+                "color": "black",
+                "opacity": 0.8,
+                "duration": 2,
+                "offset": 0
             }
         },
 
@@ -40,12 +48,20 @@
         },
         {
             "file": "data\\2.mp4",
-            "overlay":{
+            "overlay_text":{
                 "title": "Title 2",
                 "font": "Bauhaus 93",
                 "font_size": 200,
                 "duration": 2,
-                "transition_x": "center"
+                "transition_x": "center",
+                "transition_y": "bottom-to-top",
+                "offset": 0
+            },
+            "overlay_color":{
+                "color": "black",
+                "opacity": 0.8,
+                "duration": 2,
+                "offset": 0
             }
         },
         {

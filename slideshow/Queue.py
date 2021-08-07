@@ -82,11 +82,11 @@ class Queue:
 
         return None
 
-    def clean(self):
-        for temp in self.tempFiles:
-            file = os.path.join(self.tempFileFolder, temp)
-            os.remove(file)
-            logger.debug("Delete %s", file)
-        # os.rmdir(self.tempFileFolder)
-
+    def clean(self, delete_temp = True):
         self.init()
+        if delete_temp:
+            for temp in self.tempFiles:
+                file = os.path.join(self.tempFileFolder, temp)
+                os.remove(file)
+                logger.debug("Delete %s", file)
+            # os.rmdir(self.tempFileFolder)
