@@ -27,20 +27,24 @@ if __name__ == "__main__":
         "overwrite": True
     })
 
-    transitions = [package_name for importer, package_name, _ in pkgutil.iter_modules(["slideshow/transitions"])]
+    transitions = [package_name for importer, package_name, _ in pkgutil.iter_modules(["transitions"])]
 
     for transition in transitions:
         input_files = [{
             "file": "docs\\media\\andrey-andreyev-dh8ONmfQyQQ-unsplash.jpg",
             "transition": transition,
             "title": transition,
-            "zoom_direction": "none",
+            "zoom_direction_x": "center",
+            "zoom_direction_y": "center",
+            "zoom_direction_z": "none",
             "scale_mode": "pad"
         },
             {
             "file": "docs\\media\\jeremy-bishop-h7bQ8VEZtws-unsplash.jpg",
             "title": transition,
-            "zoom_direction": "none",
+            "zoom_direction_x": "center",
+            "zoom_direction_y": "center",
+            "zoom_direction_z": "none",
             "scale_mode": "pad"
         }]
 

@@ -102,9 +102,26 @@ class SlideManager:
             if isinstance(file, dict) and "fade_duration" in file:
                 fade_duration = file["fade_duration"]
 
-            zoom_direction = self.config["zoom_direction"]
-            if isinstance(file, dict) and "zoom_direction" in file:
-                zoom_direction = file["zoom_direction"]
+            zoom_direction_x = self.config["zoom_direction_x"]
+            if isinstance(file, dict) and "zoom_direction_x" in file:
+                zoom_direction_x = file["zoom_direction_x"]
+
+            zoom_direction_y = self.config["zoom_direction_x"]
+            if isinstance(file, dict) and "zoom_direction_y" in file:
+                zoom_direction_y = file["zoom_direction_y"]
+
+            zoom_direction_z = self.config["zoom_direction_z"]
+            if isinstance(file, dict) and "zoom_direction_z" in file:
+                zoom_direction_z = file["zoom_direction_z"]
+
+            # If random is selected prevent same z-direction for following slides
+            if zoom_direction_z == "random":
+                last_slide = self.getImageSlides()[-1] if len(self.getImageSlides()) > 0 else None
+                if last_slide is not None:
+                    if last_slide.getZoomDirectionZ() == "in":
+                        zoom_direction_z = "out"
+                    else:
+                        zoom_direction_z = "in"
 
             zoom_rate = self.config["zoom_rate"]
             if isinstance(file, dict) and "zoom_rate" in file:
@@ -144,7 +161,8 @@ class SlideManager:
                                    fade_duration, title, fps, overlay_text, transition, force_no_audio, video_start, video_end)
             if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                 slide = ImageSlide(self.ffmpeg_version, filename, output_width, output_height, slide_duration,
-                                   slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps,
+                                   slide_duration_min, fade_duration, zoom_direction_x, zoom_direction_y, zoom_direction_z,
+                                   scale_mode, zoom_rate, fps,
                                    title, overlay_text, transition)
 
         if slide is not None:
@@ -832,7 +850,9 @@ class SlideManager:
                 "transition_cell_size": self.config["transition_cell_size"],
                 "fps": self.config["fps"],
                 "zoom_rate": self.config["zoom_rate"],
-                "zoom_direction": self.config["zoom_direction"],
+                "zoom_direction_x": self.config["zoom_direction_x"],
+                "zoom_direction_y": self.config["zoom_direction_y"],
+                "zoom_direction_z": self.config["zoom_direction_Z"],
                 "scale_mode": self.config["scale_mode"],
                 "loopable": self.config["loopable"],
                 "overwrite": self.config["overwrite"],

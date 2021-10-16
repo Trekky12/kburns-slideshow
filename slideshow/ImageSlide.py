@@ -8,7 +8,8 @@ import random
 class ImageSlide(Slide):
 
     def __init__(self, ffmpeg_version, file, output_width, output_height,
-                 duration, slide_duration_min, fade_duration=1, zoom_direction="random",
+                 duration, slide_duration_min, fade_duration=1,
+                 zoom_direction_x="random", zoom_direction_y="random", zoom_direction_z="random",
                  scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None, transition="random"):
         self.zoom_rate = zoom_rate
         self.slide_duration_min = slide_duration_min
@@ -52,7 +53,9 @@ class ImageSlide(Slide):
 
         self.setScaleMode(scale_mode)
 
-        self.setZoomDirection(zoom_direction)
+        self.setZoomDirectionX(zoom_direction_x)
+        self.setZoomDirectionY(zoom_direction_y)
+        self.setZoomDirectionZ(zoom_direction_z)
 
     def setScaleMode(self, scale_mode):
         if scale_mode == "auto":
@@ -61,19 +64,27 @@ class ImageSlide(Slide):
         else:
             self.scale = scale_mode
 
-    def setZoomDirection(self, zoom_direction):
-        if zoom_direction == "none":
+    def setZoomDirectionX(self, zoom_direction):
+        if zoom_direction == "random":
+            self.direction_x = random.choice(["left", "right"])
+        else:
+            self.direction_x = zoom_direction
+
+    def setZoomDirectionY(self, zoom_direction):
+        if zoom_direction == "random":
+            self.direction_y = random.choice(["top", "bottom"])
+        else:
+            self.direction_y = zoom_direction
+
+    def setZoomDirectionZ(self, zoom_direction):
+        if zoom_direction == "random":
+            self.direction_z = random.choice(["in", "out"])
+        elif zoom_direction == "none":
             self.direction_x = "center"
             self.direction_y = "center"
             self.direction_z = "none"
-        elif zoom_direction == "random":
-            self.direction_x = random.choice(["left", "right"])
-            self.direction_y = random.choice(["top", "bottom"])
-            self.direction_z = random.choice(["in", "out"])
         else:
-            self.direction_x = zoom_direction.split("-")[1]
-            self.direction_y = zoom_direction.split("-")[0]
-            self.direction_z = zoom_direction.split("-")[2]
+            self.direction_z = zoom_direction
 
     def getFilter(self):
         slide_filters = ["format=pix_fmts=yuva420p"]
@@ -196,8 +207,14 @@ class ImageSlide(Slide):
         # return the filters for rendering
         return slide_filters
 
-    def getZoomDirection(self):
-        return "%s-%s-%s" % (self.direction_y, self.direction_x, self.direction_z)
+    def getZoomDirectionX(self):
+        return self.direction_x
+
+    def getZoomDirectionY(self):
+        return self.direction_y
+
+    def getZoomDirectionZ(self):
+        return self.direction_z
 
     def getObject(self, config):
         object = super().getObject(config)
@@ -208,9 +225,17 @@ class ImageSlide(Slide):
         if self.zoom_rate != config["zoom_rate"]:
             object["zoom_rate"] = self.zoom_rate
 
-        zoom_direction = self.getZoomDirection()
-        if zoom_direction != config["zoom_direction"]:
-            object["zoom_direction"] = zoom_direction
+        zoom_direction_x = self.getZoomDirectionX()
+        if zoom_direction_x != config["zoom_direction_x"]:
+            object["zoom_direction_x"] = zoom_direction_x
+
+        zoom_direction_y = self.getZoomDirectionY()
+        if zoom_direction_y != config["zoom_direction_y"]:
+            object["zoom_direction_y"] = zoom_direction_y
+
+        zoom_direction_z = self.getZoomDirectionZ()
+        if zoom_direction_z != config["zoom_direction_z"]:
+            object["zoom_direction_z"] = zoom_direction_z
 
         if self.scale != config["scale_mode"]:
             object["scale_mode"] = self.scale
