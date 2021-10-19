@@ -8,7 +8,8 @@ import os
 class Slide:
 
     def __init__(self, ffmpeg_version, file, output_width, output_height, duration,
-                 fade_duration=1, fps=60, title=None, overlay_text=None, transition="random"):
+                 fade_duration=1, fps=60, title=None, overlay_text=None, overlay_color=None,
+                 transition="random"):
         self.ffmpeg_version = ffmpeg_version
         self.file = file
         self.has_audio = False
@@ -19,6 +20,7 @@ class Slide:
         self.fade_duration = fade_duration
         self.title = title
         self.overlay_text = overlay_text
+        self.overlay_color = overlay_color
         self.output_ratio = self.output_width / self.output_height
         self.fps = fps
 
@@ -79,8 +81,11 @@ class Slide:
         if self.title is not None:
             object["title"] = self.title
 
-        if self.overlay_text is not None:
-            object["overlay"] = self.overlay_text
+        if self.overlay_text is not None and "duration" in self.overlay_text:
+            object["overlay_text"] = self.overlay_text
+
+        if self.overlay_color is not None and "duration" in self.overlay_color:
+            object["overlay_color"] = self.overlay_color
 
         if self.transition != config["transition"]:
             object["transition"] = self.transition
