@@ -82,7 +82,7 @@ class Queue:
 
         return None
 
-    def clean(self, delete_temp = True):
+    def clean(self, delete_temp=True):
         self.init()
         if delete_temp:
             for temp in self.tempFiles:

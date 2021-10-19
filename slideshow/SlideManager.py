@@ -357,7 +357,7 @@ class SlideManager:
                 font_color = slide.overlay_text["color"] if "color" in slide.overlay_text else "white"
                 transition_x = slide.overlay_text["transition_x"] if "transition_x" in slide.overlay_text else "center"
                 transition_y = slide.overlay_text["transition_y"] if "transition_y" in slide.overlay_text else "center"
-                text = slide.overlay_text["title"].replace(':', '\:')
+                text = slide.overlay_text["title"].replace(':', r'\:')
 
                 # fixed text in the middle
                 if transition_x == "center":
@@ -383,7 +383,17 @@ class SlideManager:
 
                 filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: "
                                "fontcolor=%s:y=%s:x=%s:borderw=1%s%s:enable='between(t,%s,%s)'"
-                               % (text, font_size, font_color, y, x, font, font_file, text_offset, text_offset + text_duration))
+                               % (text,
+                                  font_size,
+                                  font_color,
+                                  y,
+                                  x,
+                                  font,
+                                  font_file,
+                                  text_offset,
+                                  text_offset + text_duration
+                                  )
+                               )
 
                 # if isinstance(slide, ImageSlide):
                 #    slide.slide_duration_min = slide.slide_duration_min + duration
@@ -855,7 +865,7 @@ class SlideManager:
 
         return cmd
 
-    def cleanVideoProcessing(self, temp_filter_script = None, srtFilename = None):
+    def cleanVideoProcessing(self, temp_filter_script=None, srtFilename=None):
         logger.info("Clean Video processing")
         self.queue.clean(self.config["delete_temp"])
         self.tempInputFiles = []

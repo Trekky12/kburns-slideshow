@@ -10,7 +10,7 @@ class ImageSlide(Slide):
     def __init__(self, ffmpeg_version, file, output_width, output_height,
                  duration, slide_duration_min, fade_duration=1,
                  zoom_direction_x="random", zoom_direction_y="random", zoom_direction_z="random",
-                 scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None, 
+                 scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None,
                  overlay_color=None, transition="random"):
         self.zoom_rate = zoom_rate
         self.slide_duration_min = slide_duration_min
