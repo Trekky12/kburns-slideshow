@@ -852,7 +852,7 @@ class SlideManager:
                 "zoom_rate": self.config["zoom_rate"],
                 "zoom_direction_x": self.config["zoom_direction_x"],
                 "zoom_direction_y": self.config["zoom_direction_y"],
-                "zoom_direction_z": self.config["zoom_direction_Z"],
+                "zoom_direction_z": self.config["zoom_direction_z"],
                 "scale_mode": self.config["scale_mode"],
                 "loopable": self.config["loopable"],
                 "overwrite": self.config["overwrite"],
