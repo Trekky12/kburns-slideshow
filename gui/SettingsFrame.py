@@ -24,7 +24,9 @@ class SettingsFrame(tk.Toplevel):
         self.inputDuration = tk.StringVar()
         self.inputDurationMin = tk.StringVar()
         self.inputZoomRate = tk.StringVar()
-        self.inputZoomDirection = tk.StringVar()
+        self.inputZoomDirectionX = tk.StringVar()
+        self.inputZoomDirectionY = tk.StringVar()
+        self.inputZoomDirectionZ = tk.StringVar()
         self.inputScaleMode = tk.StringVar()
 
         self.inputTransitionDuration = tk.StringVar()
@@ -140,20 +142,35 @@ class SettingsFrame(tk.Toplevel):
         zoomRateEntry = tk.Entry(slideFrame, textvariable=self.inputZoomRate)
         zoomRateEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
 
-        self.inputZoomDirection.set(slideshow_config["zoom_direction"])
-        zoomDirectionLabel = tk.Label(slideFrame, text="Zoom Direction")
-        zoomDirectionLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
-        zoomDirectionCombo = ttk.Combobox(slideFrame, values=choices["zoom_direction"], textvariable=self.inputZoomDirection)
-        zoomDirectionCombo.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
+        self.inputZoomDirectionX.set(slideshow_config["zoom_direction_x"])
+        zoomDirectionXLabel = tk.Label(slideFrame, text="Zoom Direction X")
+        zoomDirectionXLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
+        zoomDirectionXCombo = ttk.Combobox(slideFrame, values=choices["zoom_direction_x"],
+                                           textvariable=self.inputZoomDirectionX)
+        zoomDirectionXCombo.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
+
+        self.inputZoomDirectionY.set(slideshow_config["zoom_direction_y"])
+        zoomDirectionYLabel = tk.Label(slideFrame, text="Zoom Direction Y")
+        zoomDirectionYLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+        zoomDirectionYCombo = ttk.Combobox(slideFrame, values=choices["zoom_direction_x"],
+                                           textvariable=self.inputZoomDirectionY)
+        zoomDirectionYCombo.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+
+        self.inputZoomDirectionZ.set(slideshow_config["zoom_direction_z"])
+        zoomDirectionZLabel = tk.Label(slideFrame, text="Zoom Direction Z")
+        zoomDirectionZLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
+        zoomDirectionZCombo = ttk.Combobox(slideFrame, values=choices["zoom_direction_x"],
+                                           textvariable=self.inputZoomDirectionZ)
+        zoomDirectionZCombo.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
 
         self.inputScaleMode.set(slideshow_config["scale_mode"])
         scaleModeLabel = tk.Label(slideFrame, text="Scale Mode")
-        scaleModeLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+        scaleModeLabel.grid(row=6, column=0, sticky=tk.W, padx=4, pady=4)
         scaleModeCombo = ttk.Combobox(slideFrame, values=choices["scale_mode"], textvariable=self.inputScaleMode)
-        scaleModeCombo.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+        scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
 
         transitionFrame = tk.LabelFrame(self, text="Transition")
-        transitionFrame.grid(row=4, column=0, sticky=tk.NSEW, padx=4, pady=4)
+        transitionFrame.grid(row=7, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputTransitionDuration.set(slideshow_config["fade_duration"])
         transitionDurationLabel = tk.Label(transitionFrame, text="Duration")
@@ -194,7 +211,9 @@ class SettingsFrame(tk.Toplevel):
             "transition_cell_size": int(self.inputTransitionCells.get()),
             "fps": int(self.inputFPS.get()),
             "zoom_rate": float(self.inputZoomRate.get()),
-            "zoom_direction": self.inputZoomDirection.get(),
+            "zoom_direction_x": self.inputZoomDirectionX.get(),
+            "zoom_direction_y": self.inputZoomDirectionY.get(),
+            "zoom_direction_z": self.inputZoomDirectionZ.get(),
             "scale_mode": self.inputScaleMode.get(),
             "loopable": self.inputLoopable.get(),
             "overwrite": self.inputOverwrite.get(),

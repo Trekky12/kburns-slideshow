@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import itertools
 import json
 import os
 import logging
@@ -37,11 +36,15 @@ class CLI:
         self.parser.add_argument("-fps", "--fps", metavar='FPS', type=int,
                                  help="Output framerate (frames per second) (default: %s)" % (self.config["fps"]))
 
-        zoom_direction_possibilities = [["top", "center", "bottom"], ["left", "center", "right"], ["in", "out"]]
-        zoom_direction_choices = ["random", "none"] + list(
-            map(lambda x: "-".join(x), itertools.product(*zoom_direction_possibilities)))
-        self.parser.add_argument("-zd", "--zoom-direction", metavar='DIRECTION', choices=zoom_direction_choices,
-                                 help="Zoom direction (default: %s)" % (self.config["zoom_direction"]))
+        self.parser.add_argument("-zdx", "--zoom-direction-x", metavar='DIRECTION_X',
+                                 choices=["random", "left", "center", "right"],
+                                 help="Zoom direction (default: %s)" % (self.config["zoom_direction_x"]))
+        self.parser.add_argument("-zdy", "--zoom-direction-y", metavar='DIRECTION_Y',
+                                 choices=["random", "top", "center", "bottom"],
+                                 help="Zoom direction (default: %s)" % (self.config["zoom_direction_y"]))
+        self.parser.add_argument("-zdz", "--zoom-direction-z", metavar='DIRECTION_Z',
+                                 choices=["random", "none", "in", "out"],
+                                 help="Zoom direction (default: %s)" % (self.config["zoom_direction_z"]))
 
         self.parser.add_argument("-zr", "--zoom-rate", metavar='RATE', type=float,
                                  help="Zoom rate (default:  %s)" % (self.config["zoom_rate"]))
@@ -134,9 +137,17 @@ class CLI:
             self.config["fps"] = args.fps
             logger.debug("Set fps to %s", args.fps)
 
-        if args.zoom_direction is not None:
-            self.config["zoom_direction"] = args.zoom_direction
-            logger.debug("Set zoom direction to %s", args.zoom_direction)
+        if args.zoom_direction_x is not None:
+            self.config["zoom_direction_x"] = args.zoom_direction_x
+            logger.debug("Set zoom direction X to %s", args.zoom_direction_x)
+
+        if args.zoom_direction_y is not None:
+            self.config["zoom_direction_y"] = args.zoom_direction_y
+            logger.debug("Set zoom direction Y to %s", args.zoom_direction_y)
+
+        if args.zoom_direction_z is not None:
+            self.config["zoom_direction_z"] = args.zoom_direction_z
+            logger.debug("Set zoom direction Z to %s", args.zoom_direction_z)
 
         if args.zoom_rate is not None:
             self.config["zoom_rate"] = args.zoom_rate

@@ -34,13 +34,17 @@ if __name__ == "__main__":
             "file": "docs\\media\\andrey-andreyev-dh8ONmfQyQQ-unsplash.jpg",
             "transition": transition,
             "title": transition,
-            "zoom_direction": "none",
+            "zoom_direction_x": "center",
+            "zoom_direction_y": "center",
+            "zoom_direction_z": "none",
             "scale_mode": "pad"
         },
             {
             "file": "docs\\media\\jeremy-bishop-h7bQ8VEZtws-unsplash.jpg",
             "title": transition,
-            "zoom_direction": "none",
+            "zoom_direction_x": "center",
+            "zoom_direction_y": "center",
+            "zoom_direction_z": "none",
             "scale_mode": "pad"
         }]
 

@@ -39,7 +39,9 @@ python kbvs-cli.py out.mp4 -f example.json
 | -fd / --fade-duration | transition duration (seconds) | int | 1 |
 | -ft / --fade-transition | the transition type | the names of the available transitions | "random"
 | -fps / --fps | output framerate | integer | 60 |
-| -zd / --zoom-direction | the zoom direction for the zoom/pan effect | "random", "top-left-in", "top-left-out", "top-center-in", "top-center-out", "top-right-in", "top-right-out", "center-left-in", "center-left-out", "center-center-in", "center-center-out", "center-right-in", "center-right-out", "bottom-left-in", "bottom-left-out", "bottom-center-in", "bottom-center-out", "bottom-right-in", "bottom-right-out" | "random" |
+| -zdx / --zoom-direction-x | the zoom direction for the zoom/pan effect on the x-axes | "random", "left", "center", "right" | "random" |
+| -zdy / --zoom-direction-y | the zoom direction for the zoom/pan effect on the y-axes | "random", "top", "center", "bottom" | "random" |
+| -zdz / --zoom-direction-z | the zoom direction for the zoom/pan effect on the z-axes | "random", "none", "in", "out" | "random" |
 | -zr / --zoom-rate | the zoom rate on the zoom/pan effect | float  | 0.1 |
 | -sm / --scale-mode | the scale mode for the zoom/pan effect | "pad", "crop_center", "pan" | "auto" |
 | -l / --loopable | create loopable video |   | False |
@@ -59,7 +61,9 @@ When using a JSON input file it is possible to change some values for specific s
 * `slide_duration`
 * `slide_duration_min`
 * `fade_duration`
-* `zoom_direction`
+* `zoom_direction_x`
+* `zoom_direction_y`
+* `zoom_direction_z`
 * `zoom_rate`
 * `scale_mode`
 * `transition`
@@ -71,7 +75,9 @@ When using a JSON input file it is possible to change some values for specific s
             "slide_duration": 5.0,
             "slide_duration_min": 1.0,
             "fade_duration": 2,
-            "zoom_direction": "top-left-out",
+            "zoom_direction_x": "left",
+            "zoom_direction_y": "top",
+            "zoom_direction_z": "out",
             "zoom_rate": 0.2,
             "scale_mode": "crop_center",
             "transition": "fade"
@@ -79,7 +85,7 @@ When using a JSON input file it is possible to change some values for specific s
 ...
 ```
 
-To disable the zoom/pan effect the `zoom_direction` has to be `none`. When the whole image should be visible the `scale_mode` `pad` is needed.
+To disable the zoom/pan effect the `zoom_direction_z` has to be `none` and the `zoom_direction_x` and `zoom_direction_y` has to be `center`. When the whole image should be visible the `scale_mode` `pad` is needed.
 
 #### Subtitle
 It is possible to define a subtitle for a slide by setting the `title` parameter in the input file list:

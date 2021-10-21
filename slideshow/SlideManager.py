@@ -103,9 +103,26 @@ class SlideManager:
             if isinstance(file, dict) and "fade_duration" in file:
                 fade_duration = file["fade_duration"]
 
-            zoom_direction = self.config["zoom_direction"]
-            if isinstance(file, dict) and "zoom_direction" in file:
-                zoom_direction = file["zoom_direction"]
+            zoom_direction_x = self.config["zoom_direction_x"]
+            if isinstance(file, dict) and "zoom_direction_x" in file:
+                zoom_direction_x = file["zoom_direction_x"]
+
+            zoom_direction_y = self.config["zoom_direction_x"]
+            if isinstance(file, dict) and "zoom_direction_y" in file:
+                zoom_direction_y = file["zoom_direction_y"]
+
+            zoom_direction_z = self.config["zoom_direction_z"]
+            if isinstance(file, dict) and "zoom_direction_z" in file:
+                zoom_direction_z = file["zoom_direction_z"]
+
+            # If random is selected prevent same z-direction for following slides
+            if zoom_direction_z == "random":
+                last_slide = self.getImageSlides()[-1] if len(self.getImageSlides()) > 0 else None
+                if last_slide is not None:
+                    if last_slide.getZoomDirectionZ() == "in":
+                        zoom_direction_z = "out"
+                    else:
+                        zoom_direction_z = "in"
 
             zoom_rate = self.config["zoom_rate"]
             if isinstance(file, dict) and "zoom_rate" in file:
@@ -152,7 +169,8 @@ class SlideManager:
                                    video_start, video_end)
             if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                 slide = ImageSlide(self.ffmpeg_version, filename, output_width, output_height, slide_duration,
-                                   slide_duration_min, fade_duration, zoom_direction, scale_mode, zoom_rate, fps,
+                                   slide_duration_min, fade_duration, zoom_direction_x, zoom_direction_y, zoom_direction_z,
+                                   scale_mode, zoom_rate, fps,
                                    title, overlay_text, overlay_color, transition)
 
         if slide is not None:
@@ -339,7 +357,7 @@ class SlideManager:
                 font_color = slide.overlay_text["color"] if "color" in slide.overlay_text else "white"
                 transition_x = slide.overlay_text["transition_x"] if "transition_x" in slide.overlay_text else "center"
                 transition_y = slide.overlay_text["transition_y"] if "transition_y" in slide.overlay_text else "center"
-                text = slide.overlay_text["title"].replace(':', '\:')
+                text = slide.overlay_text["title"].replace(':', r'\:')
 
                 # fixed text in the middle
                 if transition_x == "center":
@@ -365,7 +383,17 @@ class SlideManager:
 
                 filters.append("drawtext=text='%s':line_spacing=20:fontsize=%s: "
                                "fontcolor=%s:y=%s:x=%s:borderw=1%s%s:enable='between(t,%s,%s)'"
-                               % (text, font_size, font_color, y, x, font, font_file, text_offset, text_offset + text_duration))
+                               % (text,
+                                  font_size,
+                                  font_color,
+                                  y,
+                                  x,
+                                  font,
+                                  font_file,
+                                  text_offset,
+                                  text_offset + text_duration
+                                  )
+                               )
 
                 # if isinstance(slide, ImageSlide):
                 #    slide.slide_duration_min = slide.slide_duration_min + duration
@@ -837,7 +865,7 @@ class SlideManager:
 
         return cmd
 
-    def cleanVideoProcessing(self, temp_filter_script = None, srtFilename = None):
+    def cleanVideoProcessing(self, temp_filter_script=None, srtFilename=None):
         logger.info("Clean Video processing")
         self.queue.clean(self.config["delete_temp"])
         self.tempInputFiles = []
@@ -876,7 +904,9 @@ class SlideManager:
                 "transition_cell_size": self.config["transition_cell_size"],
                 "fps": self.config["fps"],
                 "zoom_rate": self.config["zoom_rate"],
-                "zoom_direction": self.config["zoom_direction"],
+                "zoom_direction_x": self.config["zoom_direction_x"],
+                "zoom_direction_y": self.config["zoom_direction_y"],
+                "zoom_direction_z": self.config["zoom_direction_z"],
                 "scale_mode": self.config["scale_mode"],
                 "loopable": self.config["loopable"],
                 "overwrite": self.config["overwrite"],

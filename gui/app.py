@@ -23,7 +23,6 @@ import os
 import json
 
 import pkgutil
-import itertools
 
 import logging
 
@@ -144,9 +143,9 @@ class App(tk.Tk):
         self.transition_choices = [package_name for importer, package_name, _ in pkgutil.iter_modules(
             [os.path.join(os.getcwd(), "transitions")])]
         self.transition_choices.append(" - None - ")
-        zoom_direction_possibilities = [["top", "center", "bottom"], ["left", "center", "right"], ["in", "out"]]
-        self.zoom_direction_choices = ["random", "none"] + list(
-            map(lambda x: "-".join(x), itertools.product(*zoom_direction_possibilities)))
+        self.zoom_direction_choices_x = ["random", "left", "center", "right"]
+        self.zoom_direction_choices_y = ["random", "top", "center", "bottom"]
+        self.zoom_direction_choices_z = ["random", "none", "in", "out"]
         self.scale_mode_choices = ["auto", "pad", "pan", "crop_center"]
 
         self.config_path = os.path.join(os.getcwd(), 'config.json')
@@ -156,7 +155,9 @@ class App(tk.Tk):
 
         # Save Slide Input Fields
         self.inputTransition = tk.StringVar()
-        self.inputZoomDirection = tk.StringVar()
+        self.inputZoomDirectionX = tk.StringVar()
+        self.inputZoomDirectionY = tk.StringVar()
+        self.inputZoomDirectionZ = tk.StringVar()
         self.inputScaleMode = tk.StringVar()
 
         self.inputforceNoAudio = tk.BooleanVar()
@@ -218,7 +219,9 @@ class App(tk.Tk):
     def slideshowSettingsWindow(self):
         filewin = SettingsFrame(self)
 
-        choices = {"zoom_direction": self.zoom_direction_choices,
+        choices = {"zoom_direction_x": self.zoom_direction_choices_x,
+                   "zoom_direction_y": self.zoom_direction_choices_y,
+                   "zoom_direction_z": self.zoom_direction_choices_z,
                    "transition": self.transition_choices,
                    "scale_mode": self.scale_mode_choices}
         filewin.create(self.slideshow_config, choices)
@@ -228,7 +231,9 @@ class App(tk.Tk):
     def generalSettingsWindow(self):
         filewin = ConfigFrame(self)
 
-        choices = {"zoom_direction": self.zoom_direction_choices,
+        choices = {"zoom_direction_x": self.zoom_direction_choices_x,
+                   "zoom_direction_y": self.zoom_direction_choices_y,
+                   "zoom_direction_z": self.zoom_direction_choices_z,
                    "transition": self.transition_choices,
                    "scale_mode": self.scale_mode_choices}
         filewin.create(self.config_path, choices)
@@ -243,10 +248,12 @@ class App(tk.Tk):
 
         slide = self.sm.getSlides()[self.slide_selected]
 
-        zd = self.inputZoomDirection.get() if isinstance(slide, ImageSlide) else None
+        zd_x = self.inputZoomDirectionX.get() if isinstance(slide, ImageSlide) else None
+        zd_y = self.inputZoomDirectionY.get() if isinstance(slide, ImageSlide) else None
+        zd_z = self.inputZoomDirectionZ.get() if isinstance(slide, ImageSlide) else None
         zr = self.inputZoomRate.get() if isinstance(slide, ImageSlide) else None
         sc = self.inputScaleMode.get() if isinstance(slide, ImageSlide) else None
-        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd, zr, sc)
+        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd_x, zd_y, zd_z, zr, sc)
 
         self.imageLabel.configure(image=photo)
         self.imageLabel.image = photo
@@ -273,7 +280,9 @@ class App(tk.Tk):
                     slide.setDuration(slide.slide_duration_min)
                     self.inputDuration.set(slide.getDuration())
 
-                slide.setZoomDirection(self.inputZoomDirection.get())
+                slide.setZoomDirectionX(self.inputZoomDirectionX.get())
+                slide.setZoomDirectionY(self.inputZoomDirectionY.get())
+                slide.setZoomDirectionZ(self.inputZoomDirectionZ.get())
                 slide.setScaleMode(self.inputScaleMode.get())
 
             if isinstance(slide, VideoSlide):
@@ -564,27 +573,43 @@ class App(tk.Tk):
             durationMinEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
             durationMinEntry.bind("<KeyRelease>", self.checkEntryModification)
 
-            self.inputZoomDirection.set(slide.getZoomDirection())
-            zoomDirectionLabel = tk.Label(imageframe, text="Zoom Direction")
-            zoomDirectionLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
-            zoomDirectionCombo = ttk.Combobox(
-                imageframe, values=self.zoom_direction_choices, textvariable=self.inputZoomDirection)
-            zoomDirectionCombo.grid(row=2, column=1, sticky=tk.E, padx=4, pady=4)
-            zoomDirectionCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
+            self.inputZoomDirectionX.set(slide.getZoomDirectionX())
+            zoomDirectionXLabel = tk.Label(imageframe, text="Zoom Direction X")
+            zoomDirectionXLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
+            zoomDirectionXCombo = ttk.Combobox(
+                imageframe, values=self.zoom_direction_choices_x, textvariable=self.inputZoomDirectionX)
+            zoomDirectionXCombo.grid(row=2, column=1, sticky=tk.E, padx=4, pady=4)
+            zoomDirectionXCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
+
+            self.inputZoomDirectionY.set(slide.getZoomDirectionY())
+            zoomDirectionYLabel = tk.Label(imageframe, text="Zoom Direction Y")
+            zoomDirectionYLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
+            zoomDirectionYCombo = ttk.Combobox(
+                imageframe, values=self.zoom_direction_choices_y, textvariable=self.inputZoomDirectionY)
+            zoomDirectionYCombo.grid(row=3, column=1, sticky=tk.E, padx=4, pady=4)
+            zoomDirectionYCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
+
+            self.inputZoomDirectionZ.set(slide.getZoomDirectionZ())
+            zoomDirectionZLabel = tk.Label(imageframe, text="Zoom Direction Z")
+            zoomDirectionZLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+            zoomDirectionZCombo = ttk.Combobox(
+                imageframe, values=self.zoom_direction_choices_z, textvariable=self.inputZoomDirectionZ)
+            zoomDirectionZCombo.grid(row=4, column=1, sticky=tk.E, padx=4, pady=4)
+            zoomDirectionZCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
             self.inputZoomRate.set(slide.zoom_rate)
             zoomRateLabel = tk.Label(imageframe, text="Zoom Rate")
-            zoomRateLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
+            zoomRateLabel.grid(row=5, column=0, sticky=tk.W, padx=4, pady=4)
             zoomRateEntry = tk.Entry(imageframe, validate='all', validatecommand=(
                 vcmd, '%P'), textvariable=self.inputZoomRate)
-            zoomRateEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
+            zoomRateEntry.grid(row=5, column=1, sticky=tk.W, padx=4, pady=4)
             zoomRateEntry.bind("<KeyRelease>", self.checkEntryModification)
 
             self.inputScaleMode.set(slide.scale)
             scaleModeLabel = tk.Label(imageframe, text="Scale Mode")
-            scaleModeLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+            scaleModeLabel.grid(row=6, column=0, sticky=tk.W, padx=4, pady=4)
             scaleModeCombo = ttk.Combobox(imageframe, values=self.scale_mode_choices, textvariable=self.inputScaleMode)
-            scaleModeCombo.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+            scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
             scaleModeCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
         if isinstance(slide, VideoSlide):
@@ -761,10 +786,12 @@ class App(tk.Tk):
         imageframe.grid(row=0, column=1, rowspan=5, sticky=tk.NW, padx=5, pady=5)
 
         # get image path from button and create "bigger" preview
-        zd = slide.getZoomDirection() if isinstance(slide, ImageSlide) else None
+        zd_x = slide.getZoomDirectionX() if isinstance(slide, ImageSlide) else None
+        zd_y = slide.getZoomDirectionY() if isinstance(slide, ImageSlide) else None
+        zd_z = slide.getZoomDirectionZ() if isinstance(slide, ImageSlide) else None
         zr = slide.zoom_rate if isinstance(slide, ImageSlide) else None
         sc = slide.scale if isinstance(slide, ImageSlide) else None
-        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd, zr, sc)
+        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd_x, zd_y, zd_z, zr, sc)
 
         self.imageLabel = tk.Label(imageframe, image=photo)
         self.imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
@@ -773,7 +800,8 @@ class App(tk.Tk):
 
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
 
-    def getPreviewImage(self, img_path, zoom_direction=None, zoom_rate=None, scale=None):
+    def getPreviewImage(self, img_path, zoom_direction_x=None, zoom_direction_y=None, zoom_direction_z=None,
+                        zoom_rate=None, scale=None):
         output_ratio = float(self.slideshow_config["output_width"]) / float(self.slideshow_config["output_height"])
         thumb_width = 250
         thumb_height = int(thumb_width / output_ratio)
@@ -802,157 +830,153 @@ class App(tk.Tk):
         img.paste(slideImage, (thumb_x, thumb_y))
 
         # transition preview
-        if zoom_direction is not None and zoom_rate is not None:
-            zd = zoom_direction.split("-")
-            if len(zd) > 1:
-                direction_x = zoom_direction.split("-")[1]
-                direction_y = zoom_direction.split("-")[0]
+        if zoom_direction_x is not None and zoom_direction_y is not None and zoom_direction_z is not None \
+           and zoom_direction_z != "none" and zoom_rate is not None:
+            draw = ImageDraw.Draw(img)
+            # [thumb_width, int(thumb_width/output_ratio)]
+            width, height = img.size
+            output_width = width
+            output_height = int(output_width / output_ratio)
+            x1 = 0
+            y1 = 0
+            x2 = 0
+            y2 = 0
 
-                draw = ImageDraw.Draw(img)
-                # [thumb_width, int(thumb_width/output_ratio)]
-                width, height = img.size
-                output_width = width
-                output_height = int(output_width / output_ratio)
+            z_initial = 1
+            z_step = float(zoom_rate)
+            if scale == "pan":
+                z_initial = slideImage_ratio / \
+                    output_ratio if slideImage_ratio > output_ratio else output_ratio / slideImage_ratio
+                z_step = z_step * z_initial
+
+            scale_factor = 1 / (z_initial + z_step)
+
+            if zoom_direction_x == "left":
                 x1 = 0
+            elif zoom_direction_x == "right":
+                x1 = width - width * scale_factor
+            elif zoom_direction_x == "center":
+                x1 = (width - output_width * scale_factor) / 2
+
+            if zoom_direction_y == "top":
                 y1 = 0
-                x2 = 0
-                y2 = 0
+            elif zoom_direction_y == "bottom":
+                y1 = height - output_height * scale_factor
+            elif zoom_direction_y == "center":
+                y1 = (height - output_height * scale_factor) / 2
 
-                z_initial = 1
-                z_step = float(zoom_rate)
-                if scale == "pan":
-                    z_initial = slideImage_ratio / \
-                        output_ratio if slideImage_ratio > output_ratio else output_ratio / slideImage_ratio
-                    z_step = z_step * z_initial
+            x2 = x1 + output_width * scale_factor
+            y2 = y1 + output_height * scale_factor
 
-                scale_factor = 1 / (z_initial + z_step)
+            # adjust coordinates for panning
+            if scale == "pan":
+                if zoom_direction_x == "left":
+                    x1 = x1 + thumb_x
+                    x2 = x2 + thumb_x
+                elif zoom_direction_x == "right":
+                    x1 = x1 - thumb_x
+                    x2 = x2 - thumb_x
 
-                if direction_x == "left":
-                    x1 = 0
-                elif direction_x == "right":
-                    x1 = width - width * scale_factor
-                elif direction_x == "center":
-                    x1 = (width - output_width * scale_factor) / 2
+                if zoom_direction_y == "top":
+                    y1 = y1 + thumb_y
+                    y2 = y2 + thumb_y
+                elif zoom_direction_y == "bottom":
+                    y1 = y1 - thumb_y
+                    y2 = y2 - thumb_y
+            draw.rectangle([(x1, y1), (x2, y2)], outline="red", width=3)
 
-                if direction_y == "top":
-                    y1 = 0
-                elif direction_y == "bottom":
-                    y1 = height - output_height * scale_factor
-                elif direction_y == "center":
-                    y1 = (height - output_height * scale_factor) / 2
+            # draw initial rectangle on panning
+            if scale == "pan":
+                # horizontal image in landscape output
+                if slideImage_ratio < output_ratio:
+                    img_w = slidethumb_width
+                    img_h = slidethumb_width / output_ratio
 
-                x2 = x1 + output_width * scale_factor
-                y2 = y1 + output_height * scale_factor
+                    if zoom_direction_y == "top":
+                        x0_1 = thumb_x
+                        y0_1 = height - thumb_y
+                        x0_2 = thumb_x + img_w
+                        y0_2 = height - thumb_y - img_h
+                    elif zoom_direction_y == "bottom":
+                        x0_1 = thumb_x
+                        y0_1 = thumb_y
+                        x0_2 = thumb_x + img_w
+                        y0_2 = thumb_y + img_h
+                    elif zoom_direction_y == "center":
+                        x0_1 = thumb_x
+                        y0_1 = (height - thumb_y - img_h) / 2
+                        x0_2 = thumb_x + img_w
+                        y0_2 = y0_1 + img_h
+                else:
+                    img_w = slidethumb_height * output_ratio
+                    img_h = slidethumb_height
 
-                # adjust coordinates for panning
-                if scale == "pan":
-                    if direction_x == "left":
-                        x1 = x1 + thumb_x
-                        x2 = x2 + thumb_x
-                    elif direction_x == "right":
-                        x1 = x1 - thumb_x
-                        x2 = x2 - thumb_x
+                    if zoom_direction_x == "left":
+                        x0_1 = width - thumb_x - img_w
+                        y0_1 = height - thumb_y
+                        x0_2 = width - thumb_x
+                        y0_2 = height - thumb_y - img_h
+                    elif zoom_direction_x == "right":
+                        x0_1 = thumb_x
+                        y0_1 = height - thumb_y
+                        x0_2 = thumb_x + img_w
+                        y0_2 = height - thumb_y - img_h
+                    elif zoom_direction_x == "center":
+                        x0_1 = (width - thumb_x - img_w) / 2
+                        y0_1 = thumb_y
+                        x0_2 = x0_1 + img_w
+                        y0_2 = thumb_y + img_h
+                draw.rectangle([(x0_1, y0_1), (x0_2, y0_2)], outline="red", width=3)
 
-                    if direction_y == "top":
-                        y1 = y1 + thumb_y
-                        y2 = y2 + thumb_y
-                    elif direction_y == "bottom":
-                        y1 = y1 - thumb_y
-                        y2 = y2 - thumb_y
-                draw.rectangle([(x1, y1), (x2, y2)], outline="red", width=3)
+            # direction
+            if scale == "pad" or scale == "crop_center":
+                top_left = (0, 0)
+                top_right = (width, 0)
+                bottom_left = (0, height)
+                bottom_right = (width, height)
+            elif scale == "pan":
+                top_left = (thumb_x, thumb_y)
+                top_right = (width - thumb_x, thumb_y)
+                bottom_left = (thumb_x, height - thumb_y)
+                bottom_right = (width - thumb_x, height - thumb_y)
 
-                # draw initial rectangle on panning
-                if scale == "pan":
-                    # horizontal image in landscape output
-                    if slideImage_ratio < output_ratio:
-                        img_w = slidethumb_width
-                        img_h = slidethumb_width / output_ratio
+                if ((zoom_direction_y == "center" and slideImage_ratio < output_ratio)
+                   or (zoom_direction_x == "center" and not slideImage_ratio < output_ratio)):
+                    top_left = (x0_1, y0_1)
+                    top_right = (x0_2, y0_1)
+                    bottom_left = (x0_1, y0_2)
+                    bottom_right = (x0_2, y0_2)
 
-                        if direction_y == "top":
-                            x0_1 = thumb_x
-                            y0_1 = height - thumb_y
-                            x0_2 = thumb_x + img_w
-                            y0_2 = height - thumb_y - img_h
-                        elif direction_y == "bottom":
-                            x0_1 = thumb_x
-                            y0_1 = thumb_y
-                            x0_2 = thumb_x + img_w
-                            y0_2 = thumb_y + img_h
-                        elif direction_y == "center":
-                            x0_1 = thumb_x
-                            y0_1 = (height - thumb_y - img_h) / 2
-                            x0_2 = thumb_x + img_w
-                            y0_2 = y0_1 + img_h
-                    else:
-                        img_w = slidethumb_height * output_ratio
-                        img_h = slidethumb_height
+            if zoom_direction_y == "top":
+                if zoom_direction_x == "left":
+                    draw.line([(x2, y2), bottom_right], fill="red", width=3)
+                elif zoom_direction_x == "right":
+                    draw.line([(x1, y2), bottom_left], fill="red", width=3)
+                elif zoom_direction_x == "center":
+                    draw.line([(x2, y2), bottom_right], fill="red", width=3)
+                    draw.line([(x1, y2), bottom_left], fill="red", width=3)
 
-                        if direction_x == "left":
-                            x0_1 = width - thumb_x - img_w
-                            y0_1 = height - thumb_y
-                            x0_2 = width - thumb_x
-                            y0_2 = height - thumb_y - img_h
-                        elif direction_x == "right":
-                            x0_1 = thumb_x
-                            y0_1 = height - thumb_y
-                            x0_2 = thumb_x + img_w
-                            y0_2 = height - thumb_y - img_h
-                        elif direction_x == "center":
-                            x0_1 = (width - thumb_x - img_w) / 2
-                            y0_1 = thumb_y
-                            x0_2 = x0_1 + img_w
-                            y0_2 = thumb_y + img_h
-                    draw.rectangle([(x0_1, y0_1), (x0_2, y0_2)], outline="red", width=3)
+            if zoom_direction_y == "bottom":
+                if zoom_direction_x == "left":
+                    draw.line([(x2, y1), top_right], fill="red", width=3)
+                elif zoom_direction_x == "right":
+                    draw.line([(x1, y1), top_left], fill="red", width=3)
+                elif zoom_direction_x == "center":
+                    draw.line([(x1, y1), top_left], fill="red", width=3)
+                    draw.line([(x2, y1), top_right], fill="red", width=3)
 
-                # direction
-                if scale == "pad" or scale == "crop_center":
-                    top_left = (0, 0)
-                    top_right = (width, 0)
-                    bottom_left = (0, height)
-                    bottom_right = (width, height)
-                elif scale == "pan":
-                    top_left = (thumb_x, thumb_y)
-                    top_right = (width - thumb_x, thumb_y)
-                    bottom_left = (thumb_x, height - thumb_y)
-                    bottom_right = (width - thumb_x, height - thumb_y)
-
-                    if ((direction_y == "center" and slideImage_ratio < output_ratio)
-                       or (direction_x == "center" and not slideImage_ratio < output_ratio)):
-                        top_left = (x0_1, y0_1)
-                        top_right = (x0_2, y0_1)
-                        bottom_left = (x0_1, y0_2)
-                        bottom_right = (x0_2, y0_2)
-
-                if direction_y == "top":
-                    if direction_x == "left":
-                        draw.line([(x2, y2), bottom_right], fill="red", width=3)
-                    elif direction_x == "right":
-                        draw.line([(x1, y2), bottom_left], fill="red", width=3)
-                    elif direction_x == "center":
-                        draw.line([(x2, y2), bottom_right], fill="red", width=3)
-                        draw.line([(x1, y2), bottom_left], fill="red", width=3)
-
-                if direction_y == "bottom":
-                    if direction_x == "left":
-                        draw.line([(x2, y1), top_right], fill="red", width=3)
-                    elif direction_x == "right":
-                        draw.line([(x1, y1), top_left], fill="red", width=3)
-                    elif direction_x == "center":
-                        draw.line([(x1, y1), top_left], fill="red", width=3)
-                        draw.line([(x2, y1), top_right], fill="red", width=3)
-
-                if direction_y == "center":
-                    if direction_x == "left":
-                        draw.line([(x2, y2), bottom_right], fill="red", width=3)
-                        draw.line([(x2, y1), top_right], fill="red", width=3)
-                    elif direction_x == "right":
-                        draw.line([(x1, y2), bottom_left], fill="red", width=3)
-                        draw.line([(x1, y1), top_left], fill="red", width=3)
-                    elif direction_x == "center":
-                        draw.line([(x2, y2), bottom_right], fill="red", width=3)
-                        draw.line([(x1, y2), bottom_left], fill="red", width=3)
-                        draw.line([(x1, y1), top_left], fill="red", width=3)
-                        draw.line([(x2, y1), top_right], fill="red", width=3)
+            if zoom_direction_y == "center":
+                if zoom_direction_x == "left":
+                    draw.line([(x2, y2), bottom_right], fill="red", width=3)
+                    draw.line([(x2, y1), top_right], fill="red", width=3)
+                elif zoom_direction_x == "right":
+                    draw.line([(x1, y2), bottom_left], fill="red", width=3)
+                    draw.line([(x1, y1), top_left], fill="red", width=3)
+                elif zoom_direction_x == "center":
+                    draw.line([(x2, y2), bottom_right], fill="red", width=3)
+                    draw.line([(x1, y2), bottom_left], fill="red", width=3)
+                    draw.line([(x1, y1), top_left], fill="red", width=3)
+                    draw.line([(x2, y1), top_right], fill="red", width=3)
 
         # crop padding on pan
         if scale == "pan":
