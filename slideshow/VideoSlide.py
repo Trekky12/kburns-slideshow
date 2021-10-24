@@ -13,6 +13,8 @@ class VideoSlide(Slide):
                                          "-v", "error", "-of", "default=noprint_wrappers=1:nokey=1", file])
         duration = float(duration)
 
+        self.video_duration = duration
+
         super().__init__(ffmpeg_version, file, output_width, output_height,
                          duration, fade_duration, fps, title, overlay_text, overlay_color, transition)
 

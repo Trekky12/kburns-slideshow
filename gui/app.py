@@ -265,7 +265,8 @@ class App(tk.Tk):
         if self.slide_changed:
             slide = self.sm.getSlides()[self.slide_selected]
 
-            slide.setDuration(float(self.inputDuration.get()))
+            if isinstance(slide, ImageSlide):
+                slide.setDuration(float(self.inputDuration.get()))
             slide.fade_duration = float(self.inputDurationTransition.get())
 
             if self.inputTransition.get() != " - None - ":
@@ -651,6 +652,7 @@ class App(tk.Tk):
         durationEntry.bind("<KeyRelease>", self.checkEntryModification)
 
         if isinstance(slide, VideoSlide):
+            self.inputDuration.set(slide.video_duration)
             durationEntry.configure(state="disabled")
 
         subtitleFrame = tk.LabelFrame(optionsFrame, text="Subtitle")
