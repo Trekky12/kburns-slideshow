@@ -74,7 +74,7 @@ class SlideManager:
         for file in audio_files:
             self.addAudio(file)
 
-    def addSlide(self, file):
+    def addSlide(self, file, position=None):
         logger.debug("Slide: %s", file)
 
         slide = None
@@ -174,7 +174,10 @@ class SlideManager:
                                    title, overlay_text, overlay_color, transition)
 
         if slide is not None:
-            self.slides.append(slide)
+            if position is not None:
+                self.slides.insert(position + 1, slide)
+            else:
+                self.slides.append(slide)
             logger.debug("added valid video/image file")
 
     def addAudio(self, file):
