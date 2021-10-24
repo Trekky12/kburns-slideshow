@@ -741,7 +741,8 @@ class SlideManager:
         logger.debug("reset slides durations")
 
         for i, slide in enumerate(self.getSlides()):
-            slide.setDuration(self.config["slide_duration"])
+            if not isinstance(slide, VideoSlide):
+                slide.setDuration(self.config["slide_duration"])
 
     ###################################
     #         Create Video            #
