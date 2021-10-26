@@ -55,27 +55,33 @@ class App(tk.Tk):
 
         # scale subframes to width of master frame
         master_frame.columnconfigure(0, weight=1)
-        # top row(s) not changable
+        # scroll row(s) not changable
         master_frame.rowconfigure(0, weight=0)
         master_frame.rowconfigure(1, weight=0)
+        master_frame.rowconfigure(2, weight=0)
+        master_frame.rowconfigure(3, weight=0)
         # scale bottom row to height of master frame
-        master_frame.rowconfigure(2, weight=1)
+        master_frame.rowconfigure(4, weight=1)
 
         # Image Frame with fill parent (sticky=tk.NSEW)
+        self.addSlideButton = ttk.Button(master_frame, text="Add slide", command=self.addSlide, state=tk.DISABLED)
+        self.addSlideButton.grid(row=0, column=0, sticky=tk.SW)
         self.frameSlides = ScrollFrame(master_frame, 100, False)
-        self.frameSlides.grid(row=0, column=0, sticky=tk.NSEW)
+        self.frameSlides.grid(row=1, column=0, sticky=tk.NSEW)
 
         # Image Frame with fill parent (sticky=tk.NSEW)
+        self.addAudioButton = ttk.Button(master_frame, text="Add audio", command=self.addAudio, state=tk.DISABLED)
+        self.addAudioButton.grid(row=2, column=0, sticky=tk.SW)
         self.frameAudio = ScrollFrame(master_frame, 50, False)
-        self.frameAudio.grid(row=1, column=0, sticky=tk.NSEW)
+        self.frameAudio.grid(row=3, column=0, sticky=tk.NSEW)
 
         # Bottom Frame with fill parent (sticky=tk.NSEW)
         self.frameSlideSettings = ScrollFrame(master_frame, 100)
-        self.frameSlideSettings.grid(row=2, column=0, sticky=tk.NSEW)
+        self.frameSlideSettings.grid(row=4, column=0, sticky=tk.NSEW)
 
         # Buttons Frame
         frameActions = tk.Frame(master_frame, height=50)
-        frameActions.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=2)
+        frameActions.grid(row=5, column=0, sticky=tk.NSEW, padx=5, pady=2)
         frameActions.columnconfigure(1, weight=1)
 
         labelVideoDuration = tk.Label(frameActions, text="Video Duration:")
@@ -265,7 +271,8 @@ class App(tk.Tk):
         if self.slide_changed:
             slide = self.sm.getSlides()[self.slide_selected]
 
-            slide.setDuration(float(self.inputDuration.get()))
+            if isinstance(slide, ImageSlide):
+                slide.setDuration(float(self.inputDuration.get()))
             slide.fade_duration = float(self.inputDurationTransition.get())
 
             if self.inputTransition.get() != " - None - ":
@@ -414,9 +421,7 @@ class App(tk.Tk):
             logger.error("file %s must be a JSON file", self.filename)
 
     def createSlideshow(self, input_files=[], audio_files=[]):
-        self.frameSlides.clear()
-        self.frameAudio.clear()
-        self.frameSlideSettings.clear()
+        self.resetGUI()
         self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
 
         try:
@@ -433,6 +438,13 @@ class App(tk.Tk):
             return False
 
         return True
+
+    def resetGUI(self):
+        self.frameSlides.clear()
+        self.frameAudio.clear()
+        self.frameSlideSettings.clear()
+        self.addSlideButton["state"] = tk.DISABLED
+        self.addAudioButton["state"] = tk.DISABLED
 
     def loadSlideshowImagesRow(self):
         canvas2 = self.frameSlides.getCanvas()
@@ -489,12 +501,16 @@ class App(tk.Tk):
 
             self.buttons.append(b)
 
-        addButton = ttk.Button(images_frame, text="Add slide", command=self.addSlide)
-        addButton.grid(row=0, column=i + 1, sticky=tk.SW)
+        # addButton = ttk.Button(images_frame, text="Add slide", command=self.addSlide)
+        # addButton.grid(row=0, column=i + 1, sticky=tk.SW)
+
+        self.addSlideButton["state"] = tk.NORMAL
 
         self.frameSlides.addFrame(images_frame)
         duration = self.sm.getTotalDuration()
         self.videoDurationValue.set(self.formatDuration(duration))
+
+        self.slide_selected = None
 
     def onSlideClicked(self, button_id):
         for btn in self.buttons:
@@ -529,7 +545,7 @@ class App(tk.Tk):
 
         # buttonSaveSlide = tk.Button(buttonsFrame, text="Save", command=(lambda: self.saveSlide()))
         # buttonSaveSlide.pack()
-        buttonDeleteSlide = tk.Button(buttonsFrame, text="Delete", command=(lambda: self.deleteSlide()))
+        buttonDeleteSlide = tk.Button(buttonsFrame, text="Remove", command=(lambda: self.deleteSlide()))
         buttonDeleteSlide.pack()
 
         fileLabel = tk.Label(generalframe, text="File")
@@ -651,6 +667,7 @@ class App(tk.Tk):
         durationEntry.bind("<KeyRelease>", self.checkEntryModification)
 
         if isinstance(slide, VideoSlide):
+            self.inputDuration.set(slide.video_duration)
             durationEntry.configure(state="disabled")
 
         subtitleFrame = tk.LabelFrame(optionsFrame, text="Subtitle")
@@ -1007,8 +1024,10 @@ class App(tk.Tk):
 
             self.buttonsAudio.append(b)
 
-        self.addAudioButton = ttk.Button(frame, text="Add audio", command=self.addAudio)
-        self.addAudioButton.grid(row=0, column=i + 1, sticky=tk.SW)
+        # self.addAudioButton = ttk.Button(frame, text="Add audio", command=self.addAudio)
+        # self.addAudioButton.grid(row=0, column=i + 1, sticky=tk.SW)
+
+        self.addAudioButton["state"] = tk.NORMAL
 
         self.frameAudio.addFrame(frame)
         duration = self.sm.getAudioDuration() + self.sm.getVideoAudioDuration()
@@ -1117,8 +1136,8 @@ class App(tk.Tk):
         buttonsFrame = tk.Frame(optionsFrame)
         buttonsFrame.grid(row=3, columnspan=3, sticky=tk.NW, padx=4, pady=4)
 
-        buttonDeleteSlide = tk.Button(buttonsFrame, text="Delete", command=(lambda: self.deleteAudio()))
-        buttonDeleteSlide.pack()
+        buttonDeleteAudio = tk.Button(buttonsFrame, text="Remove", command=(lambda: self.deleteAudio()))
+        buttonDeleteAudio.pack()
 
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
 
@@ -1142,9 +1161,7 @@ class App(tk.Tk):
         logger.info("Sync slides durations to audio")
         self.saveSlide()
         self.sm.adjustDurationsFromAudio()
-        self.frameSlides.clear()
-        self.frameAudio.clear()
-        self.frameSlideSettings.clear()
+        self.resetGUI()
         self.loadSlideshowImagesRow()
         self.loadSlideshowAudioRow()
         self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
@@ -1153,9 +1170,7 @@ class App(tk.Tk):
         logger.info("Reset slides durations to default")
         self.saveSlide()
         self.sm.resetSlideDurations()
-        self.frameSlides.clear()
-        self.frameAudio.clear()
-        self.frameSlideSettings.clear()
+        self.resetGUI()
         self.loadSlideshowImagesRow()
         self.loadSlideshowAudioRow()
         self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
@@ -1241,7 +1256,7 @@ class App(tk.Tk):
 
         filenames = askopenfilenames(filetypes=ftypes)
         for file in list(filenames):
-            self.sm.addSlide(file)
+            self.sm.addSlide(file, self.slide_selected)
         self.frameSlides.clear()
         self.frameSlideSettings.clear()
         self.loadSlideshowImagesRow()
