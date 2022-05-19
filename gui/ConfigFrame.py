@@ -5,13 +5,15 @@ import json
 
 import logging
 
+from .ScrollFrame import ScrollFrame
+
 logger = logging.getLogger("kburns-slideshow")
 
 
 class ConfigFrame(tk.Toplevel):
     def __init__(self, parent, **options):
         super().__init__()
-
+        
         self.inputffmpeg = tk.StringVar()
         self.inputffprobe = tk.StringVar()
         self.inputAubio = tk.StringVar()
@@ -53,7 +55,16 @@ class ConfigFrame(tk.Toplevel):
         with open(self.config_path) as config_file:
             self.config = json.load(config_file)
 
-        pathFrame = tk.LabelFrame(self, text="Paths")
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.geometry("700x700")
+
+        scrollFrame = ScrollFrame(self, 200, True)
+        scrollFrame.grid(row=0, column=0, sticky=tk.NSEW)
+        
+        configFrame = tk.Frame(scrollFrame.getCanvas())
+
+        pathFrame = tk.LabelFrame(configFrame, text="Paths")
         pathFrame.grid(row=0, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputffmpeg.set(self.config["ffmpeg"])
@@ -74,7 +85,7 @@ class ConfigFrame(tk.Toplevel):
         aubioEntry = tk.Entry(pathFrame, width=70, textvariable=self.inputAubio)
         aubioEntry.grid(row=2, column=1, columnspan=3, sticky=tk.W, padx=4, pady=4)
 
-        outputFrame = tk.LabelFrame(self, text="Output")
+        outputFrame = tk.LabelFrame(configFrame, text="Output")
         outputFrame.grid(row=1, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputOutputWidth.set(self.config["output_width"])
@@ -125,7 +136,7 @@ class ConfigFrame(tk.Toplevel):
         syncToAudioCheckBox = tk.Checkbutton(outputFrame, var=self.inputSyncToAudio)
         syncToAudioCheckBox.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
 
-        tempFrame = tk.LabelFrame(self, text="Temporary files")
+        tempFrame = tk.LabelFrame(configFrame, text="Temporary files")
         tempFrame.grid(row=2, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputTempFileFolder.set(self.config["temp_file_folder"])
@@ -152,7 +163,7 @@ class ConfigFrame(tk.Toplevel):
         deleteTempCheckBox = tk.Checkbutton(tempFrame, var=self.inputDeleteTemp)
         deleteTempCheckBox.grid(row=2, column=3, sticky=tk.W, padx=4, pady=4)
 
-        slideFrame = tk.LabelFrame(self, text="Image Slides")
+        slideFrame = tk.LabelFrame(configFrame, text="Image Slides")
         slideFrame.grid(row=3, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputDuration.set(self.config["slide_duration"])
@@ -200,7 +211,7 @@ class ConfigFrame(tk.Toplevel):
         scaleModeCombo = ttk.Combobox(slideFrame, values=choices["scale_mode"], textvariable=self.inputScaleMode)
         scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
 
-        transitionFrame = tk.LabelFrame(self, text="Transition")
+        transitionFrame = tk.LabelFrame(configFrame, text="Transition")
         transitionFrame.grid(row=7, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputTransitionDuration.set(self.config["fade_duration"])
@@ -228,8 +239,11 @@ class ConfigFrame(tk.Toplevel):
         transitionCellsEntry = tk.Entry(transitionFrame, textvariable=self.inputTransitionCells)
         transitionCellsEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
 
-        buttonSaveSlide = tk.Button(self, text="Save", command=(lambda: self.saveConfig()))
+        buttonSaveSlide = tk.Button(configFrame, text="Save", command=(lambda: self.saveConfig()))
         buttonSaveSlide.grid(row=8, column=0, sticky=tk.NW, padx=4, pady=4)
+        
+        scrollFrame.addFrame(configFrame, tk.NW)
+        
 
     def getConfig(self):
         return {
