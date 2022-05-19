@@ -10,7 +10,7 @@ logger = logging.getLogger("kburns-slideshow")
 
 class ConfigFrame(tk.Toplevel):
     def __init__(self, parent, **options):
-        tk.Toplevel.__init__(self, options)
+        super().__init__()
 
         self.inputffmpeg = tk.StringVar()
         self.inputffprobe = tk.StringVar()
