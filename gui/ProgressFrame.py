@@ -8,7 +8,7 @@ logger = logging.getLogger("kburns-slideshow")
 
 class ProgressFrame(tk.Toplevel):
     def __init__(self, parent, **options):
-        tk.Toplevel.__init__(self, options)
+        super().__init__()
 
         self.title("Processing")
         self.resizable(False, False)

@@ -37,7 +37,7 @@ SUNKABLE_BUTTON = 'SunkableButton.TButton'
 
 class App(tk.Tk):
     def __init__(self, title="", *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+        super().__init__()
 
         self.general_title = title
 
