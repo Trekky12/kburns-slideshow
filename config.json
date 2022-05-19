@@ -23,6 +23,7 @@
     "zoom_direction_y": "random",
     "zoom_direction_z": "random",
     "scale_mode": "auto",
+    "pad_color": "black",
     "loopable": false,
     "overwrite": false,
     "generate_temp": false,

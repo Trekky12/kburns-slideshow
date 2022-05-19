@@ -165,6 +165,7 @@ class App(tk.Tk):
         self.inputZoomDirectionY = tk.StringVar()
         self.inputZoomDirectionZ = tk.StringVar()
         self.inputScaleMode = tk.StringVar()
+        self.inputPadColor = tk.StringVar()
 
         self.inputforceNoAudio = tk.BooleanVar()
         self.inputvideoStart = tk.StringVar()
@@ -259,10 +260,12 @@ class App(tk.Tk):
         zd_z = self.inputZoomDirectionZ.get() if isinstance(slide, ImageSlide) else None
         zr = self.inputZoomRate.get() if isinstance(slide, ImageSlide) else None
         sc = self.inputScaleMode.get() if isinstance(slide, ImageSlide) else None
-        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd_x, zd_y, zd_z, zr, sc)
+        pad_c = self.inputPadColor.get() if isinstance(slide, ImageSlide) else None
+        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c)
 
-        self.imageLabel.configure(image=photo)
-        self.imageLabel.image = photo
+        if photo is not None:
+            self.imageLabel.configure(image=photo)
+            self.imageLabel.image = photo
 
         if self.overlayTitleEntry is not None:
             self.inputOverlayTextTitle.set(self.overlayTitleEntry.get('1.0', 'end-1c'))
@@ -291,6 +294,7 @@ class App(tk.Tk):
                 slide.setZoomDirectionY(self.inputZoomDirectionY.get())
                 slide.setZoomDirectionZ(self.inputZoomDirectionZ.get())
                 slide.setScaleMode(self.inputScaleMode.get())
+                slide.setPadColor(self.inputPadColor.get())
 
             if isinstance(slide, VideoSlide):
                 slide.setForceNoAudio(self.inputforceNoAudio.get())
@@ -628,6 +632,14 @@ class App(tk.Tk):
             scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
             scaleModeCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
+            self.inputPadColor.set(slide.pad_color)
+            padColorLabel = tk.Label(imageframe, text="Padding Background Color")
+            padColorLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
+            padColorEntry = tk.Entry(imageframe, validate='all', validatecommand=(
+                vcmd, '%P'), textvariable=self.inputPadColor)
+            padColorEntry.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
+            padColorEntry.bind("<KeyRelease>", self.checkEntryModification)
+
         if isinstance(slide, VideoSlide):
             videoframe = tk.LabelFrame(optionsFrame, text="Video Options")
             videoframe.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=5)
@@ -808,17 +820,19 @@ class App(tk.Tk):
         zd_z = slide.getZoomDirectionZ() if isinstance(slide, ImageSlide) else None
         zr = slide.zoom_rate if isinstance(slide, ImageSlide) else None
         sc = slide.scale if isinstance(slide, ImageSlide) else None
-        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd_x, zd_y, zd_z, zr, sc)
+        pad_c = slide.pad_color if isinstance(slide, ImageSlide) else None
+        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c)
 
-        self.imageLabel = tk.Label(imageframe, image=photo)
-        self.imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
-        # keep a reference
-        self.imageLabel.image = photo
+        if photo is not None:
+            self.imageLabel = tk.Label(imageframe, image=photo)
+            self.imageLabel.grid(row=0, column=0, sticky=tk.E, padx=4, pady=4)
+            # keep a reference
+            self.imageLabel.image = photo
 
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
 
     def getPreviewImage(self, img_path, zoom_direction_x=None, zoom_direction_y=None, zoom_direction_z=None,
-                        zoom_rate=None, scale=None):
+                        zoom_rate=None, scale=None, pad_color='black'):
         output_ratio = float(self.slideshow_config["output_width"]) / float(self.slideshow_config["output_height"])
         thumb_width = 250
         thumb_height = int(thumb_width / output_ratio)
@@ -841,7 +855,11 @@ class App(tk.Tk):
 
         slideImage.thumbnail((slidethumb_width, slidethumb_height))
 
-        img = Image.new('RGB', (thumb_width, thumb_height), color='black')
+        try:
+            img = Image.new('RGB', (thumb_width, thumb_height), color=pad_color)
+        except ValueError:
+            logger.debug("Error creating preview image, wrong color name")
+            return None
         thumb_x = int((thumb_width - slidethumb_width) / 2)
         thumb_y = int((thumb_height - slidethumb_height) / 2)
         img.paste(slideImage, (thumb_x, thumb_y))

@@ -59,6 +59,8 @@ class SlideManager:
 
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         self.config["sync_titles_to_slides"] = config["sync_titles_to_slides"] if "sync_titles_to_slides" in config else False
+        self.config["pad_color"] = config["pad_color"] if "pad_color" in config else "black"
+
         logger.debug("Init SlideManager")
         for file in input_files:
             if not type(file) is dict and os.path.isdir(file):
@@ -132,6 +134,10 @@ class SlideManager:
             if isinstance(file, dict) and "scale_mode" in file:
                 scale_mode = file["scale_mode"]
 
+            pad_color = self.config["pad_color"]
+            if isinstance(file, dict) and "pad_color" in file:
+                pad_color = file["pad_color"]
+
             title = None
             if isinstance(file, dict) and "title" in file:
                 title = file["title"]
@@ -171,7 +177,7 @@ class SlideManager:
                 slide = ImageSlide(self.ffmpeg_version, filename, output_width, output_height, slide_duration,
                                    slide_duration_min, fade_duration, zoom_direction_x, zoom_direction_y, zoom_direction_z,
                                    scale_mode, zoom_rate, fps,
-                                   title, overlay_text, overlay_color, transition)
+                                   title, overlay_text, overlay_color, transition, pad_color)
 
         if slide is not None:
             if position is not None:
@@ -912,6 +918,7 @@ class SlideManager:
                 "zoom_direction_y": self.config["zoom_direction_y"],
                 "zoom_direction_z": self.config["zoom_direction_z"],
                 "scale_mode": self.config["scale_mode"],
+                "pad_color": self.config["pad_color"],
                 "loopable": self.config["loopable"],
                 "overwrite": self.config["overwrite"],
                 "generate_temp": self.config["generate_temp"],

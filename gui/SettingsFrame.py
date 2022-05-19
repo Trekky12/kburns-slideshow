@@ -30,6 +30,7 @@ class SettingsFrame(tk.Toplevel):
         self.inputZoomDirectionY = tk.StringVar()
         self.inputZoomDirectionZ = tk.StringVar()
         self.inputScaleMode = tk.StringVar()
+        self.inputPadColor = tk.StringVar()
 
         self.inputTransitionDuration = tk.StringVar()
         self.inputTransition = tk.StringVar()
@@ -44,14 +45,14 @@ class SettingsFrame(tk.Toplevel):
     def create(self, slideshow_config, choices):
 
         self.slideshow_config = slideshow_config
-        
+
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.geometry("700x700")
 
         scrollFrame = ScrollFrame(self, 200, True)
         scrollFrame.grid(row=0, column=0, sticky=tk.NSEW)
-        
+
         configFrame = tk.Frame(scrollFrame.getCanvas())
 
         outputFrame = tk.LabelFrame(configFrame, text="Output")
@@ -105,7 +106,7 @@ class SettingsFrame(tk.Toplevel):
         syncToAudioCheckBox = tk.Checkbutton(outputFrame, var=self.inputSyncToAudio)
         syncToAudioCheckBox.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
 
-        tempFrame = tk.LabelFrame(configFrame,  text="Temporary files")
+        tempFrame = tk.LabelFrame(configFrame, text="Temporary files")
         tempFrame.grid(row=2, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputTempFileFolder.set(slideshow_config["temp_file_folder"])
@@ -132,7 +133,7 @@ class SettingsFrame(tk.Toplevel):
         deleteTempCheckBox = tk.Checkbutton(tempFrame, var=self.inputDeleteTemp)
         deleteTempCheckBox.grid(row=2, column=3, sticky=tk.W, padx=4, pady=4)
 
-        slideFrame = tk.LabelFrame(configFrame,  text="Image Slides")
+        slideFrame = tk.LabelFrame(configFrame, text="Image Slides")
         slideFrame.grid(row=3, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputDuration.set(slideshow_config["slide_duration"])
@@ -180,7 +181,13 @@ class SettingsFrame(tk.Toplevel):
         scaleModeCombo = ttk.Combobox(slideFrame, values=choices["scale_mode"], textvariable=self.inputScaleMode)
         scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
 
-        transitionFrame = tk.LabelFrame(configFrame,  text="Transition")
+        self.inputPadColor.set(slideshow_config["pad_color"])
+        padColorLabel = tk.Label(slideFrame, text="Padding Background Color")
+        padColorLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
+        padColorEntry = tk.Entry(slideFrame, textvariable=self.inputPadColor)
+        padColorEntry.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
+
+        transitionFrame = tk.LabelFrame(configFrame, text="Transition")
         transitionFrame.grid(row=7, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
         self.inputTransitionDuration.set(slideshow_config["fade_duration"])
@@ -207,7 +214,7 @@ class SettingsFrame(tk.Toplevel):
         transitionCellsLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
         transitionCellsEntry = tk.Entry(transitionFrame, textvariable=self.inputTransitionCells)
         transitionCellsEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
-        
+
         scrollFrame.addFrame(configFrame, tk.NW)
 
     def getConfig(self):
@@ -228,6 +235,7 @@ class SettingsFrame(tk.Toplevel):
             "zoom_direction_y": self.inputZoomDirectionY.get(),
             "zoom_direction_z": self.inputZoomDirectionZ.get(),
             "scale_mode": self.inputScaleMode.get(),
+            "pad_color": self.inputPadColor.get(),
             "loopable": self.inputLoopable.get(),
             "overwrite": self.inputOverwrite.get(),
             "generate_temp": self.inputGenerateTemp.get(),

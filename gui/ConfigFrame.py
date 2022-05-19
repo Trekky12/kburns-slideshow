@@ -13,7 +13,7 @@ logger = logging.getLogger("kburns-slideshow")
 class ConfigFrame(tk.Toplevel):
     def __init__(self, parent, **options):
         super().__init__()
-        
+
         self.inputffmpeg = tk.StringVar()
         self.inputffprobe = tk.StringVar()
         self.inputAubio = tk.StringVar()
@@ -36,6 +36,7 @@ class ConfigFrame(tk.Toplevel):
         self.inputZoomDirectionY = tk.StringVar()
         self.inputZoomDirectionZ = tk.StringVar()
         self.inputScaleMode = tk.StringVar()
+        self.inputPadColor = tk.StringVar()
 
         self.inputTransitionDuration = tk.StringVar()
         self.inputTransition = tk.StringVar()
@@ -61,7 +62,7 @@ class ConfigFrame(tk.Toplevel):
 
         scrollFrame = ScrollFrame(self, 200, True)
         scrollFrame.grid(row=0, column=0, sticky=tk.NSEW)
-        
+
         configFrame = tk.Frame(scrollFrame.getCanvas())
 
         pathFrame = tk.LabelFrame(configFrame, text="Paths")
@@ -211,6 +212,12 @@ class ConfigFrame(tk.Toplevel):
         scaleModeCombo = ttk.Combobox(slideFrame, values=choices["scale_mode"], textvariable=self.inputScaleMode)
         scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
 
+        self.inputPadColor.set(self.config["pad_color"] if "pad_color" in self.config else "black")
+        padColorLabel = tk.Label(slideFrame, text="Padding Background Color")
+        padColorLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
+        padColorEntry = tk.Entry(slideFrame, textvariable=self.inputPadColor)
+        padColorEntry.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
+
         transitionFrame = tk.LabelFrame(configFrame, text="Transition")
         transitionFrame.grid(row=7, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
@@ -241,9 +248,8 @@ class ConfigFrame(tk.Toplevel):
 
         buttonSaveSlide = tk.Button(configFrame, text="Save", command=(lambda: self.saveConfig()))
         buttonSaveSlide.grid(row=8, column=0, sticky=tk.NW, padx=4, pady=4)
-        
+
         scrollFrame.addFrame(configFrame, tk.NW)
-        
 
     def getConfig(self):
         return {
@@ -269,6 +275,7 @@ class ConfigFrame(tk.Toplevel):
             "zoom_direction_y": self.inputZoomDirectionY.get(),
             "zoom_direction_z": self.inputZoomDirectionZ.get(),
             "scale_mode": self.inputScaleMode.get(),
+            "pad_color": self.inputPadColor.get(),
             "loopable": self.inputLoopable.get(),
             "overwrite": self.inputOverwrite.get(),
             "generate_temp": self.inputGenerateTemp.get(),
