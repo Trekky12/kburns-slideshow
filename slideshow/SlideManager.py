@@ -547,7 +547,7 @@ class SlideManager:
         subtitles = ""
         # Burn subtitles to last element
         if burnSubtitles and self.hasSubtitles():
-            subtitles = ",subtitles=%s" % (srtFilename)
+            subtitles = ",subtitles='%s'" % (srtFilename.replace('\\', '\\\\').replace(':', '\\:'))
 
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" % ("".join(videos), len(videos), subtitles))
 
