@@ -106,7 +106,8 @@ $ python3 kbvs.py
 ## Notices 
 When using the overlay text you need to be aware of the font specific settings. 
 
-To use font names the FFmpeg build must be built with `--enable-libfontconfig`. This can be checked by calling `ffmpeg` and look for this attribute. but unfortunately the default font directory is not recognized [more information](https://stackoverflow.com/a/65027999).
+To use font names the FFmpeg build must be built with `--enable-libfontconfig`. This can be checked by calling `ffmpeg` and look for this attribute.
+
 Otherwise the full path to the font needs to be specified with the parameter `font_file`.
 
 ## Transitions
