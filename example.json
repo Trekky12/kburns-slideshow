@@ -29,7 +29,7 @@
             "slide_duration": 5,
             "overlay_text":{
                 "title": "Title 1",
-                "font": "Bauhaus 93",
+                "font_file": "C:/Windows/Fonts/BAUHS93.TTF",
                 "font_size": 200,
                 "duration": 2,
                 "transition_x": "left-to-center",
@@ -52,7 +52,7 @@
             "file": "data\\2.mp4",
             "overlay_text":{
                 "title": "Title 2",
-                "font": "Bauhaus 93",
+                "font_file": "C:/Windows/Fonts/BAUHS93.TTF",
                 "font_size": 200,
                 "duration": 2,
                 "transition_x": "center",

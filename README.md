@@ -8,7 +8,7 @@ kburns-slideshow allows the creation of video slideshows from images with kburns
 ## Prerequisites
 
 kburns-slideshow is a python application and needs Python 3 installed.
-The videos are generated with [FFmpeg](https://ffmpeg.org/) which is needed in Version 3 or 4. 
+The videos are generated with [FFmpeg](https://ffmpeg.org/) which is needed with the minimium Version 3. 
 FFprobe (comes with FFmpeg) is used to extract the duration, width and height of input videos.
 
 To sync the slide changes to the background music the music onsets are extracted with [aubio](https://aubio.org/).
@@ -27,10 +27,10 @@ pip install -r requirements.txt
   * when there should be only support for `wav` files
     * download and extract [aubio 0.4.6](https://aubio.org/download) for windows ([win64](https://aubio.org/bin/0.4.6/aubio-0.4.6-win64.zip)/[win32](https://aubio.org/bin/0.4.6/aubio-0.4.6-win32.zip)) 
   * when there should be a support for various audio files
-    * download [aubio 0.4.6 with ffmpeg](https://aubio.org/download) for windows ([win64](https://aubio.org/bin/0.4.6/aubio-0.4.6-win64-ffmpeg.zip)/[win32](https://aubio.org/bin/0.4.6/aubio-0.4.6-win32-ffmpeg.zip)) and the corresponding FFmpeg 3.3.3 shared build([win64](https://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-3.3.3-win64-shared.zip)/[win32](https://ffmpeg.zeranoe.com/builds/win32/shared/ffmpeg-3.3.3-win32-shared.zip))
+    * download [aubio 0.4.6 with ffmpeg](https://aubio.org/download) for windows ([win64](https://aubio.org/bin/0.4.6/aubio-0.4.6-win64-ffmpeg.zip)/[win32](https://aubio.org/bin/0.4.6/aubio-0.4.6-win32-ffmpeg.zip)) and the corresponding FFmpeg 3.3.3 shared build([win64](https://archive.org/download/zeranoe/win64/shared/ffmpeg-3.3.3-win64-shared.zip)/[win32](https://archive.org/download/zeranoe/win32/shared/ffmpeg-3.3.3-win32-shared.zip))
     * extract aubio and extract the ffmpeg shared dlls from the `bin` folder of ffmpeg to the `bin` folder of aubio
-* download and extract [FFmpeg 4.2.1](https://ffmpeg.zeranoe.com/builds/)
-* adjusts the paths to FFmpeg 4.2.1 (`bin/ffmpeg.exe`, `bin/ffprobe.exe`) and aubio (`bin/aubioonset.exe`) in `config.json`
+* download and extract the latest version of [FFmpeg](https://www.gyan.dev/ffmpeg/builds/)
+* adjusts the paths to FFmpeg (`bin/ffmpeg.exe`, `bin/ffprobe.exe`) and aubio (`bin/aubioonset.exe`) in `config.json`
 
 #### Linux
 * install Python3
@@ -106,11 +106,9 @@ $ python3 kbvs.py
 ## Notices 
 When using the overlay text you need to be aware of the font specific settings. 
 
-On Windows FFmpeg 3 is build with `--enable-libfontconfig` but unfortunately the default font directory is not recognized.
-You either need to create a custom `fonts.conf`, which is described [here](https://ffmpeg.zeranoe.com/forum/viewtopic.php?f=7&t=2554#p8531) 
-or you can use the path to the font with the parameter `font_file`.
+To use font names the FFmpeg build must be built with `--enable-libfontconfig`. This can be checked by calling `ffmpeg` and look for this attribute.
 
-With FFmpeg 4 the default font directory is recognized and the parameter `font` can be used. The font file is then automatically found with the help of fontconfig.
+Otherwise the full path to the font needs to be specified with the parameter `font_file`.
 
 ## Transitions
 It is easy possible to create custom transitions. Just place a python file in the following format in the folder [transitions](/transitions):
