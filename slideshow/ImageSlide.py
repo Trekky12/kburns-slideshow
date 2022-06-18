@@ -11,7 +11,7 @@ class ImageSlide(Slide):
                  duration, slide_duration_min, fade_duration=1,
                  zoom_direction_x="random", zoom_direction_y="random", zoom_direction_z="random",
                  scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None,
-                 overlay_color=None, transition="random", pad_color="black"):
+                 overlay_color=None, transition="random", pad_color="black", blurred_padding=False):
         self.zoom_rate = zoom_rate
         self.slide_duration_min = slide_duration_min
         if slide_duration_min > duration:
@@ -19,7 +19,7 @@ class ImageSlide(Slide):
 
         super().__init__(ffmpeg_version, file, output_width, output_height,
                          duration, fade_duration, fps, title, overlay_text, overlay_color,
-                         transition)
+                         transition, pad_color, blurred_padding)
 
         im = Image.open(self.file)
 
@@ -59,8 +59,6 @@ class ImageSlide(Slide):
         self.setZoomDirectionY(zoom_direction_y)
         self.setZoomDirectionZ(zoom_direction_z)
 
-        self.pad_color = pad_color
-
     def setScaleMode(self, scale_mode):
         if scale_mode == "auto":
             self.scale = "pad" if abs(
@@ -90,10 +88,7 @@ class ImageSlide(Slide):
         else:
             self.direction_z = zoom_direction
 
-    def setPadColor(self, pad_color):
-        self.pad_color = pad_color
-
-    def getFilter(self):
+    def getFilter(self, index=0):
         slide_filters = ["format=pix_fmts=yuva420p"]
 
         # Crop to make video divisible
@@ -103,7 +98,8 @@ class ImageSlide(Slide):
         if self.scale == "pad" or self.scale == "pan":
             width, height = [self.width, int(self.width / self.output_ratio)] if self.ratio > self.output_ratio else [
                 int(self.height * self.output_ratio), self.height]
-            slide_filters.append("pad=w=%s:h=%s:x='(ow-iw)/2':y='(oh-ih)/2':color=%s" % (width, height, self.pad_color))
+            pad_c = self.pad_color if self.blurred_padding is False else "#00000000"
+            slide_filters.append("pad=w=%s:h=%s:x='(ow-iw)/2':y='(oh-ih)/2':color=%s" % (width, height, pad_c))
 
         # Scale to fit image in output and crop
         if self.scale == "crop_center":
@@ -211,8 +207,34 @@ class ImageSlide(Slide):
         slide_filters.append("scale=%sx%s,zoompan=z='%s':x='%s':y='%s':fps=%s:d=%s*%s:s=%sx%s" % (
             supersample_width, supersample_height, z, x, y, self.fps, self.fps, self.duration, width, height))
 
-        # return the filters for rendering
-        return slide_filters
+        filters = []
+
+        # blurred background on padded images
+        if self.scale == "pad" and self.blurred_padding:
+            filters.append("split=2 [slide_%s][slide_%s-1]" % (index, index))
+            filters.append("[slide_%s]scale=%sx%s,"
+                           "setsar=sar=1/1,"
+                           "format=rgba,"
+                           "boxblur=50:2,"
+                           "setsar=sar=1/1,"
+                           "fps=%s"
+                           "[slide_%s_blurred]"
+                           % (
+                               index,
+                               self.output_width,
+                               self.output_height,
+                               self.fps,
+                               index)
+                           )
+            filters.append("[slide_%s-1]" % (index) + ", ".join(slide_filters) + "[slide_%s_raw]" % (index))
+            filters.append("[slide_%s_blurred][slide_%s_raw]"
+                           "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=rgb"
+                           % (index, index)
+                           )
+
+            return "; ".join(filters)
+        else:
+            return ", ".join(slide_filters)
 
     def getZoomDirectionX(self):
         return self.direction_x
@@ -246,8 +268,5 @@ class ImageSlide(Slide):
 
         if self.scale != config["scale_mode"]:
             object["scale_mode"] = self.scale
-
-        if self.pad_color != config["pad_color"]:
-            object["pad_color"] = self.pad_color
 
         return object

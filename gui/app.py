@@ -9,7 +9,7 @@ import re
 import threading
 import subprocess
 import tkinter as tk
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk, ImageDraw, ImageFilter
 from tkinter.filedialog import askopenfilename, askopenfilenames, asksaveasfilename
 from tkinter import messagebox
 from tkinter import ttk
@@ -166,6 +166,7 @@ class App(tk.Tk):
         self.inputZoomDirectionZ = tk.StringVar()
         self.inputScaleMode = tk.StringVar()
         self.inputPadColor = tk.StringVar()
+        self.inputBlurredPadding = tk.BooleanVar()
 
         self.inputforceNoAudio = tk.BooleanVar()
         self.inputvideoStart = tk.StringVar()
@@ -192,6 +193,7 @@ class App(tk.Tk):
         self.inputOverlayColorOpacity = tk.StringVar()
 
         self.overlayTitleEntry = None
+        self.padColorEntry = None
 
     def hasSlides(self):
         return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
@@ -250,7 +252,7 @@ class App(tk.Tk):
     # see https://stackoverflow.com/a/39059073
     # see https://stackoverflow.com/a/51406895
 
-    def checkEntryModification(self, event):
+    def checkEntryModification(self, event=None):
         self.slide_changed = True
 
         slide = self.sm.getSlides()[self.slide_selected]
@@ -260,8 +262,9 @@ class App(tk.Tk):
         zd_z = self.inputZoomDirectionZ.get() if isinstance(slide, ImageSlide) else None
         zr = self.inputZoomRate.get() if isinstance(slide, ImageSlide) else None
         sc = self.inputScaleMode.get() if isinstance(slide, ImageSlide) else None
-        pad_c = self.inputPadColor.get() if isinstance(slide, ImageSlide) else None
-        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c)
+        pad_c = self.inputPadColor.get()
+        b_pad = self.inputBlurredPadding.get()
+        photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c, b_pad)
 
         if photo is not None:
             self.imageLabel.configure(image=photo)
@@ -269,6 +272,11 @@ class App(tk.Tk):
 
         if self.overlayTitleEntry is not None:
             self.inputOverlayTextTitle.set(self.overlayTitleEntry.get('1.0', 'end-1c'))
+
+        if self.inputBlurredPadding.get() is True:
+            self.padColorEntry.config(state='disabled')
+        else:
+            self.padColorEntry.config(state='normal')
 
     def saveSlide(self):
         if self.slide_changed:
@@ -294,7 +302,6 @@ class App(tk.Tk):
                 slide.setZoomDirectionY(self.inputZoomDirectionY.get())
                 slide.setZoomDirectionZ(self.inputZoomDirectionZ.get())
                 slide.setScaleMode(self.inputScaleMode.get())
-                slide.setPadColor(self.inputPadColor.get())
 
             if isinstance(slide, VideoSlide):
                 slide.setForceNoAudio(self.inputforceNoAudio.get())
@@ -302,6 +309,9 @@ class App(tk.Tk):
                 slide.end = float(self.inputvideoEnd.get()) if (
                     float(self.inputvideoEnd.get()) > 0 and float(self.inputvideoEnd.get()) < slide.getDuration()) else None
                 slide.calculateDurationAfterTrimming()
+
+            slide.setPadColor(self.inputPadColor.get())
+            slide.setBlurredPadding(self.inputBlurredPadding.get())
 
             slide.title = self.inputSubtitle.get() if len(self.inputSubtitle.get()) > 0 else None
 
@@ -632,14 +642,6 @@ class App(tk.Tk):
             scaleModeCombo.grid(row=6, column=1, sticky=tk.W, padx=4, pady=4)
             scaleModeCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
-            self.inputPadColor.set(slide.pad_color)
-            padColorLabel = tk.Label(imageframe, text="Padding Background Color")
-            padColorLabel.grid(row=7, column=0, sticky=tk.W, padx=4, pady=4)
-            padColorEntry = tk.Entry(imageframe, validate='all', validatecommand=(
-                vcmd, '%P'), textvariable=self.inputPadColor)
-            padColorEntry.grid(row=7, column=1, sticky=tk.W, padx=4, pady=4)
-            padColorEntry.bind("<KeyRelease>", self.checkEntryModification)
-
         if isinstance(slide, VideoSlide):
             videoframe = tk.LabelFrame(optionsFrame, text="Video Options")
             videoframe.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=5)
@@ -682,8 +684,32 @@ class App(tk.Tk):
             self.inputDuration.set(slide.video_duration)
             durationEntry.configure(state="disabled")
 
+        paddingFrame = tk.LabelFrame(optionsFrame, text="Padding Options")
+        paddingFrame.grid(row=4, column=0, sticky=tk.NSEW, padx=5, pady=5)
+
+        self.inputPadColor.set(slide.pad_color)
+        padColorLabel = tk.Label(paddingFrame, text="Padding Background Color")
+        padColorLabel.grid(row=0, column=0, sticky=tk.W, padx=4, pady=4)
+        self.padColorEntry = tk.Entry(paddingFrame, validate='all', validatecommand=(
+            vcmd, '%P'), textvariable=self.inputPadColor)
+        self.padColorEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
+        self.padColorEntry.bind("<KeyRelease>", self.checkEntryModification)
+
+        self.inputBlurredPadding.set(slide.blurred_padding)
+        blurredPaddingLabel = tk.Label(paddingFrame, text="Blurred padding (no color)")
+        blurredPaddingLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
+        blurredPaddingCheckBox = tk.Checkbutton(
+            paddingFrame, var=self.inputBlurredPadding, command=self.checkEntryModification)
+        blurredPaddingCheckBox.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
+        blurredPaddingCheckBox.bind("<ButtonRelease>", self.checkEntryModification)
+
+        if self.inputBlurredPadding.get() is True:
+            self.padColorEntry.config(state='disabled')
+        else:
+            self.padColorEntry.config(state='normal')
+
         subtitleFrame = tk.LabelFrame(optionsFrame, text="Subtitle")
-        subtitleFrame.grid(row=4, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        subtitleFrame.grid(row=5, column=0, sticky=tk.NSEW, padx=5, pady=5)
 
         self.inputSubtitle.set(slide.title if slide.title else "")
         subtitleLabel = tk.Label(subtitleFrame, text="Subtitle")
@@ -693,7 +719,7 @@ class App(tk.Tk):
         subtitleEntry.bind("<KeyRelease>", self.checkEntryModification)
 
         overlayFrameColor = tk.LabelFrame(optionsFrame, text="Color Overlay")
-        overlayFrameColor.grid(row=5, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        overlayFrameColor.grid(row=6, column=0, sticky=tk.NSEW, padx=5, pady=5)
 
         self.inputOverlayColorDuration.set(
             slide.overlay_color["duration"] if slide.overlay_color and "duration" in slide.overlay_color else "")
@@ -730,7 +756,7 @@ class App(tk.Tk):
         overlayColorOpacityEntry.bind("<KeyRelease>", self.checkEntryModification)
 
         overlayFrameText = tk.LabelFrame(optionsFrame, text="Text Overlay")
-        overlayFrameText.grid(row=6, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        overlayFrameText.grid(row=7, column=0, sticky=tk.NSEW, padx=5, pady=5)
 
         self.inputOverlayTextTitle.set(
             slide.overlay_text["title"] if slide.overlay_text and "title" in slide.overlay_text else "")
@@ -820,8 +846,9 @@ class App(tk.Tk):
         zd_z = slide.getZoomDirectionZ() if isinstance(slide, ImageSlide) else None
         zr = slide.zoom_rate if isinstance(slide, ImageSlide) else None
         sc = slide.scale if isinstance(slide, ImageSlide) else None
-        pad_c = slide.pad_color if isinstance(slide, ImageSlide) else None
-        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c)
+        pad_c = slide.pad_color
+        b_pad = slide.blurred_padding
+        photo = self.getPreviewImage(self.buttons[button_id].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c, b_pad)
 
         if photo is not None:
             self.imageLabel = tk.Label(imageframe, image=photo)
@@ -832,7 +859,7 @@ class App(tk.Tk):
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
 
     def getPreviewImage(self, img_path, zoom_direction_x=None, zoom_direction_y=None, zoom_direction_z=None,
-                        zoom_rate=None, scale=None, pad_color='black'):
+                        zoom_rate=None, scale=None, pad_color='black', blurred_padding=False):
         output_ratio = float(self.slideshow_config["output_width"]) / float(self.slideshow_config["output_height"])
         thumb_width = 250
         thumb_height = int(thumb_width / output_ratio)
@@ -856,12 +883,21 @@ class App(tk.Tk):
         slideImage.thumbnail((slidethumb_width, slidethumb_height))
 
         try:
-            img = Image.new('RGB', (thumb_width, thumb_height), color=pad_color)
+            img = Image.new('RGBA', (thumb_width, thumb_height), color=pad_color)
         except ValueError:
             logger.debug("Error creating preview image, wrong color name")
             return None
+
+        if blurred_padding:
+            blurredImage = Image.open(img_path)
+            blurredImage = blurredImage.resize((thumb_width, thumb_height))
+            blurredImage = blurredImage.filter(ImageFilter.BoxBlur(20))
+            img.paste(blurredImage)
+
         thumb_x = int((thumb_width - slidethumb_width) / 2)
         thumb_y = int((thumb_height - slidethumb_height) / 2)
+        print(thumb_x)
+        print(thumb_y)
         img.paste(slideImage, (thumb_x, thumb_y))
 
         # transition preview

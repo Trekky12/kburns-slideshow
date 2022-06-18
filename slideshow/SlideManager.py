@@ -60,6 +60,7 @@ class SlideManager:
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         self.config["sync_titles_to_slides"] = config["sync_titles_to_slides"] if "sync_titles_to_slides" in config else False
         self.config["pad_color"] = config["pad_color"] if "pad_color" in config else "black"
+        self.config["blurred_padding"] = config["blurred_padding"] if "blurred_padding" in config else False
 
         logger.debug("Init SlideManager")
         for file in input_files:
@@ -167,17 +168,21 @@ class SlideManager:
             if isinstance(file, dict) and "end" in file:
                 video_end = file["end"]
 
+            blurred_padding = False
+            if isinstance(file, dict) and "blurred_padding" in file:
+                blurred_padding = file["blurred_padding"]
+
             extension = filename.split(".")[-1]
 
             if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
                 slide = VideoSlide(self.ffmpeg_version, filename, self.config["ffprobe"], output_width, output_height,
-                                   fade_duration, title, fps, overlay_text, overlay_color, transition, force_no_audio,
-                                   video_start, video_end)
+                                   fade_duration, title, fps, overlay_text, overlay_color, transition, pad_color,
+                                   blurred_padding, force_no_audio, video_start, video_end)
             if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                 slide = ImageSlide(self.ffmpeg_version, filename, output_width, output_height, slide_duration,
                                    slide_duration_min, fade_duration, zoom_direction_x, zoom_direction_y, zoom_direction_z,
                                    scale_mode, zoom_rate, fps,
-                                   title, overlay_text, overlay_color, transition, pad_color)
+                                   title, overlay_text, overlay_color, transition, pad_color, blurred_padding)
 
         if slide is not None:
             if position is not None:
@@ -332,7 +337,8 @@ class SlideManager:
 
         for i, slide in enumerate(self.getSlides()):
 
-            filters = slide.getFilter()
+            filters = []
+            filters.append(slide.getFilter(i))
 
             # generate temporary video of zoom/pan effect
             if self.config["generate_temp"] and isinstance(slide, ImageSlide):
@@ -456,6 +462,7 @@ class SlideManager:
                     self.queue.addItem([file], tempfilters, "%s_%s" % (i, step))
             else:
                 filters.append("split=%s" % (len(splits)))
+
                 filter_chains.append("[%s:v]" % (i) + ", ".join(filters) + "".join(["[v%sout-%s]" % (i, s) for s in splits]))
 
                 # prevent buffer overflow with fifo:
