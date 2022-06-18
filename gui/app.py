@@ -845,7 +845,7 @@ class App(tk.Tk):
         zd_y = slide.getZoomDirectionY() if isinstance(slide, ImageSlide) else None
         zd_z = slide.getZoomDirectionZ() if isinstance(slide, ImageSlide) else None
         zr = slide.zoom_rate if isinstance(slide, ImageSlide) else None
-        sc = slide.scale if isinstance(slide, ImageSlide) else None
+        sc = slide.scale if isinstance(slide, ImageSlide) else "pad"
         pad_c = slide.pad_color
         b_pad = slide.blurred_padding
         photo = self.getPreviewImage(self.buttons[button_id].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c, b_pad)
@@ -896,8 +896,6 @@ class App(tk.Tk):
 
         thumb_x = int((thumb_width - slidethumb_width) / 2)
         thumb_y = int((thumb_height - slidethumb_height) / 2)
-        print(thumb_x)
-        print(thumb_y)
         img.paste(slideImage, (thumb_x, thumb_y))
 
         # transition preview
