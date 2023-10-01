@@ -794,7 +794,10 @@ class SlideManager:
         if not test:
             for idx, item in enumerate(self.queue.getQueue()):
                 print("Processing video %s/%s" % (idx, self.queue.getQueueLength()))
-                tempFile = self.queue.createTemporaryVideo(self.config["ffmpeg"], item)
+                tempFile = self.queue.createTemporaryVideo(self.config["ffmpeg"],
+                                                           item,
+                                                           self.config["output_temp_parameters"],
+                                                           self.config["output_temp_codec"])
 
                 if tempFile is None:
                     print("Error while creating the temporary video file!")
@@ -930,6 +933,8 @@ class SlideManager:
                 "overwrite": self.config["overwrite"],
                 "generate_temp": self.config["generate_temp"],
                 "delete_temp": self.config["delete_temp"],
+                "output_temp_parameters": self.config["output_temp_parameters"],
+                "output_temp_codec": self.config["output_temp_codec"],
                 "temp_file_folder": self.tempFileFolder,
                 "temp_file_prefix": self.tempFilePrefix,
                 # the slides duration is already synced to the audio

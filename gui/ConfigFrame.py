@@ -22,6 +22,8 @@ class ConfigFrame(tk.Toplevel):
         self.inputOverwrite = tk.BooleanVar()
         self.inputGenerateTemp = tk.BooleanVar()
         self.inputDeleteTemp = tk.BooleanVar()
+        self.inputOutputTempParameters = tk.StringVar()
+        self.inputOutputTempCodec = tk.StringVar()
         self.inputSyncToAudio = tk.BooleanVar()
 
         self.inputOutputWidth = tk.StringVar()
@@ -164,6 +166,18 @@ class ConfigFrame(tk.Toplevel):
         deleteTempCheckBox = tk.Checkbutton(tempFrame, var=self.inputDeleteTemp)
         deleteTempCheckBox.grid(row=2, column=3, sticky=tk.W, padx=4, pady=4)
 
+        self.inputOutputTempParameters.set(self.config["output_temp_parameters"])
+        tempParametersLabel = tk.Label(tempFrame, text="Parameters")
+        tempParametersLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
+        tempParametersEntry = tk.Entry(tempFrame, width=67, textvariable=self.inputOutputTempParameters)
+        tempParametersEntry.grid(row=3, column=1, columnspan=3, sticky=tk.W, padx=4, pady=4)
+
+        self.inputOutputTempCodec.set(self.config["output_temp_codec"])
+        tempCodecLabel = tk.Label(tempFrame, text="Codec")
+        tempCodecLabel.grid(row=4, column=0, sticky=tk.W, padx=4, pady=4)
+        tempCodecEntry = tk.Entry(tempFrame, textvariable=self.inputOutputTempCodec)
+        tempCodecEntry.grid(row=4, column=1, sticky=tk.W, padx=4, pady=4)
+
         slideFrame = tk.LabelFrame(configFrame, text="Image Slides")
         slideFrame.grid(row=3, column=0, sticky=tk.NSEW, padx=4, pady=4)
 
@@ -280,6 +294,8 @@ class ConfigFrame(tk.Toplevel):
             "overwrite": self.inputOverwrite.get(),
             "generate_temp": self.inputGenerateTemp.get(),
             "delete_temp": self.inputDeleteTemp.get(),
+            "output_temp_parameters": self.inputOutputTempParameters.get(),
+            "output_temp_codec": self.inputOutputTempCodec.get(),
             "temp_file_folder": self.inputTempFileFolder.get(),
             "temp_file_prefix": self.inputTempFilePrefix.get(),
             "sync_to_audio": self.inputSyncToAudio.get()

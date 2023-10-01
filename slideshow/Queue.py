@@ -42,7 +42,7 @@ class Queue:
     def getOutputName(self, item, extension="mp4"):
         return os.path.join(self.tempFileFolder, self.getFileName(item, extension))
 
-    def createTemporaryVideo(self, ffmpeg, item):
+    def createTemporaryVideo(self, ffmpeg, item, parameters, codec):
 
         if isinstance(item["filters"], list):
             filters = "%s" % (",".join(item["filters"]))
@@ -59,9 +59,11 @@ class Queue:
             "-filter_complex_script \"%s\"" % (temp_filter_script),
             # "-crf", "0" ,
             "-map [out]",
-            "-preset", "ultrafast",
-            "-tune", "stillimage",
-            "-c:v", "libx264",
+            # "-preset", "ultrafast",
+            # "-tune", "stillimage",
+            parameters,
+            # "-c:v", "libx264",
+            "-c:v %s" % codec,
             self.getOutputName(item)
         ]
 

@@ -1250,7 +1250,10 @@ class App(tk.Tk):
             print("Processing video %s/%s" % (idx + 1, queue_length))
             logger.info("Processing video %s/%s" % (idx + 1, queue_length))
             # logger.debug(item)
-            tempFile = self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"], item)
+            tempFile = self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"],
+                                                          item,
+                                                          self.slideshow_config["output_temp_parameters"],
+                                                          self.slideshow_config["output_temp_codec"])
 
             if tempFile is None:
                 print("Error while creating the temporary video file!")
