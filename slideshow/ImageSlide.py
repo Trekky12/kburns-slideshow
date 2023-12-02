@@ -11,7 +11,7 @@ class ImageSlide(Slide):
                  duration, slide_duration_min, fade_duration=1,
                  zoom_direction_x="random", zoom_direction_y="random", zoom_direction_z="random",
                  scale_mode="auto", zoom_rate=0.1, fps=60, title=None, overlay_text=None,
-                 overlay_color=None, transition="random"):
+                 overlay_color=None, transition="random", pad_color="black", blurred_padding=False):
         self.zoom_rate = zoom_rate
         self.slide_duration_min = slide_duration_min
         if slide_duration_min > duration:
@@ -19,7 +19,7 @@ class ImageSlide(Slide):
 
         super().__init__(ffmpeg_version, file, output_width, output_height,
                          duration, fade_duration, fps, title, overlay_text, overlay_color,
-                         transition)
+                         transition, pad_color, blurred_padding)
 
         im = Image.open(self.file)
 
@@ -88,7 +88,7 @@ class ImageSlide(Slide):
         else:
             self.direction_z = zoom_direction
 
-    def getFilter(self):
+    def getFilter(self, index=0):
         slide_filters = ["format=pix_fmts=yuva420p"]
 
         # Crop to make video divisible
@@ -98,7 +98,8 @@ class ImageSlide(Slide):
         if self.scale == "pad" or self.scale == "pan":
             width, height = [self.width, int(self.width / self.output_ratio)] if self.ratio > self.output_ratio else [
                 int(self.height * self.output_ratio), self.height]
-            slide_filters.append("pad=w=%s:h=%s:x='(ow-iw)/2':y='(oh-ih)/2'" % (width, height))
+            pad_c = self.pad_color if self.blurred_padding is False else "#00000000"
+            slide_filters.append("pad=w=%s:h=%s:x='(ow-iw)/2':y='(oh-ih)/2':color=%s" % (width, height, pad_c))
 
         # Scale to fit image in output and crop
         if self.scale == "crop_center":
@@ -206,7 +207,6 @@ class ImageSlide(Slide):
         slide_filters.append("scale=%sx%s,zoompan=z='%s':x='%s':y='%s':fps=%s:d=%s*%s:s=%sx%s" % (
             supersample_width, supersample_height, z, x, y, self.fps, self.fps, self.duration, width, height))
 
-        # return the filters for rendering
         return slide_filters
 
     def getZoomDirectionX(self):

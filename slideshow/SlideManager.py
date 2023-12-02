@@ -59,6 +59,9 @@ class SlideManager:
 
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         self.config["sync_titles_to_slides"] = config["sync_titles_to_slides"] if "sync_titles_to_slides" in config else False
+        self.config["pad_color"] = config["pad_color"] if "pad_color" in config else "black"
+        self.config["blurred_padding"] = config["blurred_padding"] if "blurred_padding" in config else False
+
         logger.debug("Init SlideManager")
         for file in input_files:
             if not type(file) is dict and os.path.isdir(file):
@@ -132,6 +135,10 @@ class SlideManager:
             if isinstance(file, dict) and "scale_mode" in file:
                 scale_mode = file["scale_mode"]
 
+            pad_color = self.config["pad_color"]
+            if isinstance(file, dict) and "pad_color" in file:
+                pad_color = file["pad_color"]
+
             title = None
             if isinstance(file, dict) and "title" in file:
                 title = file["title"]
@@ -161,17 +168,21 @@ class SlideManager:
             if isinstance(file, dict) and "end" in file:
                 video_end = file["end"]
 
+            blurred_padding = False
+            if isinstance(file, dict) and "blurred_padding" in file:
+                blurred_padding = file["blurred_padding"]
+
             extension = filename.split(".")[-1]
 
             if extension.lower() in [e.lower() for e in self.config["VIDEO_EXTENSIONS"]]:
                 slide = VideoSlide(self.ffmpeg_version, filename, self.config["ffprobe"], output_width, output_height,
-                                   fade_duration, title, fps, overlay_text, overlay_color, transition, force_no_audio,
-                                   video_start, video_end)
+                                   fade_duration, title, fps, overlay_text, overlay_color, transition, pad_color,
+                                   blurred_padding, force_no_audio, video_start, video_end)
             if extension.lower() in [e.lower() for e in self.config["IMAGE_EXTENSIONS"]]:
                 slide = ImageSlide(self.ffmpeg_version, filename, output_width, output_height, slide_duration,
                                    slide_duration_min, fade_duration, zoom_direction_x, zoom_direction_y, zoom_direction_z,
                                    scale_mode, zoom_rate, fps,
-                                   title, overlay_text, overlay_color, transition)
+                                   title, overlay_text, overlay_color, transition, pad_color, blurred_padding)
 
         if slide is not None:
             if position is not None:
@@ -236,15 +247,16 @@ class SlideManager:
         if idx == len(self.getSlides()) - 1:
             return 0
 
-        # is the next slide long enough to have a fade-in and a fade-out?
-        if idx + 1 < len(self.getSlides()):
-            if not self.isSlideDurationGreaterThanFadeDuration(idx + 1, 2):
-                return 0
+        slide = self.getSlides()[idx]
+        if slide.getFadeDuration() > 0:
+            # is the next slide long enough to have a fade-in and a fade-out?
+            if idx + 1 < len(self.getSlides()):
+                if not self.isSlideDurationGreaterThanFadeDuration(idx + 1, 2):
+                    return 0
 
-        # is current slide long enough to have a fade-in and fade-out?
-        if self.isSlideDurationGreaterThanFadeDuration(idx, 2):
-            slide = self.getSlides()[idx]
-            return slide.fade_duration * self.config["fps"] if frames else slide.fade_duration
+            # is current slide long enough to have a fade-in and fade-out?
+            if self.isSlideDurationGreaterThanFadeDuration(idx, 2):
+                return slide.getFadeDuration() * self.config["fps"] if frames else slide.getFadeDuration()
 
         return 0
 
@@ -258,7 +270,7 @@ class SlideManager:
 
         slide = self.getSlides()[idx]
         # is the duration of the slide long enough to have a fade-in and fade-out
-        if slide.getDuration() >= slide.fade_duration * multiplier:
+        if slide.getDuration() >= slide.getFadeDuration() * multiplier:
             return True
 
         return False
@@ -326,7 +338,36 @@ class SlideManager:
 
         for i, slide in enumerate(self.getSlides()):
 
-            filters = slide.getFilter()
+            filters = []
+            slide_filters = slide.getFilter(i)
+
+            # blurred background on padded images
+            if slide.blurred_padding:
+                blur_filters = []
+                blur_filters.append("split=2 [slide_%s][slide_%s-1]" % (i, i))
+                blur_filters.append("[slide_%s]scale=%sx%s,"
+                                    "setsar=sar=1/1,"
+                                    "format=rgba,"
+                                    "boxblur=50:2,"
+                                    "setsar=sar=1/1,"
+                                    "fps=%s"
+                                    "[slide_%s_blurred]"
+                                    % (
+                                        i,
+                                        slide.output_width,
+                                        slide.output_height,
+                                        slide.fps,
+                                        i)
+                                    )
+                blur_filters.append("[slide_%s-1]" % (i) + ", ".join(slide_filters) + "[slide_%s_raw]" % (i))
+                blur_filters.append("[slide_%s_blurred][slide_%s_raw]"
+                                    "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=rgb"
+                                    % (i, i)
+                                    )
+
+                filters.append("; ".join(blur_filters))
+            else:
+                filters.append(", ".join(slide_filters))
 
             # generate temporary video of zoom/pan effect
             if self.config["generate_temp"] and isinstance(slide, ImageSlide):
@@ -450,6 +491,7 @@ class SlideManager:
                     self.queue.addItem([file], tempfilters, "%s_%s" % (i, step))
             else:
                 filters.append("split=%s" % (len(splits)))
+
                 filter_chains.append("[%s:v]" % (i) + ", ".join(filters) + "".join(["[v%sout-%s]" % (i, s) for s in splits]))
 
                 # prevent buffer overflow with fifo:
@@ -547,7 +589,7 @@ class SlideManager:
         subtitles = ""
         # Burn subtitles to last element
         if burnSubtitles and self.hasSubtitles():
-            subtitles = ",subtitles=%s" % (srtFilename)
+            subtitles = ",subtitles='%s'" % (srtFilename.replace('\\', '\\\\').replace(':', '\\:'))
 
         filter_chains.append("%s concat=n=%s:v=1:a=0%s,format=yuv420p[out]" % ("".join(videos), len(videos), subtitles))
 
@@ -567,7 +609,13 @@ class SlideManager:
         if idx < 0 or idx == len(self.getSlides()) - 1:
             slide = self.getSlides()[idx]
             return slide.getDuration()
-        return self.getSlideFadeOutDuration(idx, False)
+        slide_fade_duration = self.getSlideFadeOutDuration(idx, False)
+
+        # minimum fade out duration of music
+        if slide_fade_duration == 0:
+            return 0.5
+
+        return slide_fade_duration
 
     def getVideoAudioDuration(self):
         return sum([slide.getDuration() for slide in self.getVideos() if slide.has_audio])
@@ -596,7 +644,7 @@ class SlideManager:
                     filters.append(audio_filter)
 
                 # Fade music in filter
-                if slide.fade_duration > 0:
+                if slide.getFadeDuration() > 0:
                     filters.append("afade=t=in:st=0:d=%s" % (self.getSlideFadeOutDuration(i - 1, False)))
                     filters.append("afade=t=out:st=%s:d=%s" % (self.getSlideFadeOutPosition(i, False),
                                                                self.getSlideFadeOutDuration(i, False)))
@@ -630,8 +678,9 @@ class SlideManager:
                                                 "fade_out": self.getMusicFadeOutDuration(i)})
                     section_start_slide = None
 
-                # is it a image but the previous one was a video => start new section
-                if isinstance(slide, ImageSlide) and section_start_slide is None:
+                # is it a slide without audio (image or video with no audio) but the previous one was a video with audio
+                # => start new section
+                if section_start_slide is None and not slide.has_audio:
                     section_start_slide = i
 
             # the last section is ending with an image => end of section is end generated video
@@ -705,8 +754,8 @@ class SlideManager:
                 # and skip timestamps until the minimum duration is reached
                 no_result = False
                 while ((slide_start >= (timestamps[timestamp_idx])
-                       or (timestamps[timestamp_idx] - slide_start))
-                       < slide.slide_duration_min):
+                       or (timestamps[timestamp_idx] - slide_start)
+                       < slide.slide_duration_min)):
                     # is the music long enough?
                     if (timestamp_idx + 1) < len(timestamps):
                         timestamp_idx = timestamp_idx + 1
@@ -781,7 +830,10 @@ class SlideManager:
         if not test:
             for idx, item in enumerate(self.queue.getQueue()):
                 print("Processing video %s/%s" % (idx, self.queue.getQueueLength()))
-                tempFile = self.queue.createTemporaryVideo(self.config["ffmpeg"], item)
+                tempFile = self.queue.createTemporaryVideo(self.config["ffmpeg"],
+                                                           item,
+                                                           self.config["output_temp_parameters"],
+                                                           self.config["output_temp_codec"])
 
                 if tempFile is None:
                     print("Error while creating the temporary video file!")
@@ -912,10 +964,13 @@ class SlideManager:
                 "zoom_direction_y": self.config["zoom_direction_y"],
                 "zoom_direction_z": self.config["zoom_direction_z"],
                 "scale_mode": self.config["scale_mode"],
+                "pad_color": self.config["pad_color"],
                 "loopable": self.config["loopable"],
                 "overwrite": self.config["overwrite"],
                 "generate_temp": self.config["generate_temp"],
                 "delete_temp": self.config["delete_temp"],
+                "output_temp_parameters": self.config["output_temp_parameters"],
+                "output_temp_codec": self.config["output_temp_codec"],
                 "temp_file_folder": self.tempFileFolder,
                 "temp_file_prefix": self.tempFilePrefix,
                 # the slides duration is already synced to the audio

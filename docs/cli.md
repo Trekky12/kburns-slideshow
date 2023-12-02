@@ -107,7 +107,7 @@ Additionally it is possible to add a text `overlay`:
             "file": "1.jpg",
             "overlay_text": {
                 "title": "Intro Text",
-                "font": "Bauhaus 93",
+                "font_file": "C:/Windows/Fonts/BAUHS93.TTF",
                 "font_size": 200,
                 "duration": 2,
                 "offset": 0,

@@ -9,7 +9,7 @@ class Slide:
 
     def __init__(self, ffmpeg_version, file, output_width, output_height, duration,
                  fade_duration=1, fps=60, title=None, overlay_text=None, overlay_color=None,
-                 transition="random"):
+                 transition="random", pad_color="black", blurred_padding=False):
         self.ffmpeg_version = ffmpeg_version
         self.file = file
         self.has_audio = False
@@ -36,6 +36,9 @@ class Slide:
         # round down to last full frame
         self.frames = 0
         self.setDuration(duration)
+
+        self.pad_color = pad_color
+        self.blurred_padding = blurred_padding
 
     def getDuration(self):
         return round(self.frames / self.fps, 3)
@@ -64,7 +67,7 @@ class Slide:
     def getFrames(self):
         return self.frames
 
-    def getFilter(self):
+    def getFilter(self, index):
         return
 
     def getObject(self, config):
@@ -90,7 +93,22 @@ class Slide:
         if self.transition != config["transition"]:
             object["transition"] = self.transition
 
+        if self.pad_color != config["pad_color"]:
+            object["pad_color"] = self.pad_color
+
+        if self.blurred_padding != config["blurred_padding"]:
+            object["blurred_padding"] = self.blurred_padding
+
         return object
 
     def getTransitions(self):
         return [package_name for importer, package_name, _ in pkgutil.iter_modules([os.path.join(os.getcwd(), "transitions")])]
+
+    def setPadColor(self, pad_color):
+        self.pad_color = pad_color
+
+    def setBlurredPadding(self, blurred_padding):
+        self.blurred_padding = blurred_padding
+
+    def getFadeDuration(self):
+        return self.fade_duration if self.transition is not None else 0
