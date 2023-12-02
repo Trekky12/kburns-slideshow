@@ -64,7 +64,7 @@ class VideoSlide(Slide):
 
     def getFilter(self, index):
         width, height = [self.output_width, -1]
-        if self.ratio < self.output_ratio:
+        if self.ratio <= self.output_ratio:
             width, height = [-1, self.output_height]
 
         video_filters = []
