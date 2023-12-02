@@ -965,9 +965,9 @@ class App(tk.Tk):
 
                     if zoom_direction_y == "top":
                         x0_1 = thumb_x
-                        y0_1 = height - thumb_y
+                        y0_1 = height - thumb_y - img_h
                         x0_2 = thumb_x + img_w
-                        y0_2 = height - thumb_y - img_h
+                        y0_2 = height - thumb_y
                     elif zoom_direction_y == "bottom":
                         x0_1 = thumb_x
                         y0_1 = thumb_y
