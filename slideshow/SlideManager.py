@@ -609,7 +609,13 @@ class SlideManager:
         if idx < 0 or idx == len(self.getSlides()) - 1:
             slide = self.getSlides()[idx]
             return slide.getDuration()
-        return self.getSlideFadeOutDuration(idx, False)
+        slide_fade_duration = self.getSlideFadeOutDuration(idx, False)
+
+        # minimum fade out duration of music
+        if slide_fade_duration == 0:
+            return 0.5 
+        
+        return slide_fade_duration
 
     def getVideoAudioDuration(self):
         return sum([slide.getDuration() for slide in self.getVideos() if slide.has_audio])
@@ -672,8 +678,9 @@ class SlideManager:
                                                 "fade_out": self.getMusicFadeOutDuration(i)})
                     section_start_slide = None
 
-                # is it a image but the previous one was a video => start new section
-                if isinstance(slide, ImageSlide) and section_start_slide is None:
+                # is it a slide without audio (image or video with no audio) but the previous one was a video with audio
+                # => start new section
+                if section_start_slide is None and not slide.has_audio:
                     section_start_slide = i
 
             # the last section is ending with an image => end of section is end generated video

@@ -395,6 +395,10 @@ class App(tk.Tk):
             duration = self.sm.getTotalDuration()
             self.videoDurationValue.set(self.formatDuration(duration))
 
+            # Recalculate audio duration
+            duration = self.sm.getAudioDuration() + self.sm.getVideoAudioDuration()
+            self.audioDurationValue.set(self.formatDuration(duration))
+
     # see https://stackoverflow.com/a/46670374
     def validateDigit(self, P):
         if not P:
