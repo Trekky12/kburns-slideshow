@@ -746,8 +746,8 @@ class SlideManager:
                 # and skip timestamps until the minimum duration is reached
                 no_result = False
                 while ((slide_start >= (timestamps[timestamp_idx])
-                       or (timestamps[timestamp_idx] - slide_start))
-                       < slide.slide_duration_min):
+                       or (timestamps[timestamp_idx] - slide_start)
+                       < slide.slide_duration_min)):
                     # is the music long enough?
                     if (timestamp_idx + 1) < len(timestamps):
                         timestamp_idx = timestamp_idx + 1
