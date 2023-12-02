@@ -257,11 +257,38 @@ class App(tk.Tk):
 
         slide = self.sm.getSlides()[self.slide_selected]
 
-        zd_x = self.inputZoomDirectionX.get() if isinstance(slide, ImageSlide) else None
-        zd_y = self.inputZoomDirectionY.get() if isinstance(slide, ImageSlide) else None
-        zd_z = self.inputZoomDirectionZ.get() if isinstance(slide, ImageSlide) else None
-        zr = self.inputZoomRate.get() if isinstance(slide, ImageSlide) else None
-        sc = self.inputScaleMode.get() if isinstance(slide, ImageSlide) else None
+        zd_x = None
+        zd_y = None
+        zd_z = None
+        zr = None
+        sc = "pad"
+        if isinstance(slide, ImageSlide):
+            zd_x = self.inputZoomDirectionX.get()
+            if zd_x == "random":
+                slide.setZoomDirectionX("random")
+                zd_x = slide.direction_x
+                self.inputZoomDirectionX.set(zd_x)
+
+            zd_y = self.inputZoomDirectionY.get()
+            if zd_y == "random":
+                slide.setZoomDirectionY("random")
+                zd_y = slide.direction_y
+                self.inputZoomDirectionY.set(zd_y)
+
+            zd_z = self.inputZoomDirectionZ.get()
+            if zd_z == "random":
+                slide.setZoomDirectionZ("random")
+                zd_z = slide.direction_z
+                self.inputZoomDirectionZ.set(zd_z)
+
+            zr = self.inputZoomRate.get()
+
+            sc = self.inputScaleMode.get()
+            if sc == "auto":
+                slide.setScaleMode("auto")
+                sc = slide.scale
+                self.inputScaleMode.set(sc)
+
         pad_c = self.inputPadColor.get()
         b_pad = self.inputBlurredPadding.get()
         photo = self.getPreviewImage(self.buttons[self.slide_selected].image_path, zd_x, zd_y, zd_z, zr, sc, pad_c, b_pad)
