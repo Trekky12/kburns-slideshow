@@ -67,10 +67,10 @@ class VideoSlide(Slide):
         if self.ratio < self.output_ratio:
             width, height = [-1, self.output_height]
 
-        filters = []
-        filters.append("scale=w=%s:h=%s" % (width, height))
-        filters.append("fps=%s" % (self.fps))
-        filters.append("pad=%s:%s:'(ow-iw)/2':'(oh-ih)/2':color=%s" % (self.output_width, self.output_height, self.pad_color))
+        video_filters = []
+        video_filters.append("scale=w=%s:h=%s" % (width, height))
+        video_filters.append("fps=%s" % (self.fps))
+        video_filters.append("pad=%s:%s:'(ow-iw)/2':'(oh-ih)/2':color=%s" % (self.output_width, self.output_height, self.pad_color))
 
         if self.is_trimmed:
             trim = []
@@ -79,9 +79,9 @@ class VideoSlide(Slide):
             if self.end is not None:
                 trim.append("end=%s" % (self.end))
 
-            filters.append("trim=%s,setpts=PTS-STARTPTS" % (":".join(trim)))
+            video_filters.append("trim=%s,setpts=PTS-STARTPTS" % (":".join(trim)))
 
-        return ",".join(filters)
+        return video_filters
 
     def getAudioFilter(self):
         if self.is_trimmed:

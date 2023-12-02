@@ -338,7 +338,35 @@ class SlideManager:
         for i, slide in enumerate(self.getSlides()):
 
             filters = []
-            filters.append(slide.getFilter(i))
+            slide_filters = slide.getFilter(i)
+
+            # blurred background on padded images
+            if slide.blurred_padding:
+                blur_filters = []
+                blur_filters.append("split=2 [slide_%s][slide_%s-1]" % (i, i))
+                blur_filters.append("[slide_%s]scale=%sx%s,"
+                            "setsar=sar=1/1,"
+                            "format=rgba,"
+                            "boxblur=50:2,"
+                            "setsar=sar=1/1,"
+                            "fps=%s"
+                            "[slide_%s_blurred]"
+                            % (
+                                i,
+                                slide.output_width,
+                                slide.output_height,
+                                slide.fps,
+                                i)
+                            )
+                blur_filters.append("[slide_%s-1]" % (i) + ", ".join(slide_filters) + "[slide_%s_raw]" % (i))
+                blur_filters.append("[slide_%s_blurred][slide_%s_raw]"
+                            "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=rgb"
+                            % (i, i)
+                            )
+
+                filters.append("; ".join(blur_filters))
+            else:
+                filters.append(", ".join(slide_filters))
 
             # generate temporary video of zoom/pan effect
             if self.config["generate_temp"] and isinstance(slide, ImageSlide):

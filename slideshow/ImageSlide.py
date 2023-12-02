@@ -207,34 +207,7 @@ class ImageSlide(Slide):
         slide_filters.append("scale=%sx%s,zoompan=z='%s':x='%s':y='%s':fps=%s:d=%s*%s:s=%sx%s" % (
             supersample_width, supersample_height, z, x, y, self.fps, self.fps, self.duration, width, height))
 
-        filters = []
-
-        # blurred background on padded images
-        if self.scale == "pad" and self.blurred_padding:
-            filters.append("split=2 [slide_%s][slide_%s-1]" % (index, index))
-            filters.append("[slide_%s]scale=%sx%s,"
-                           "setsar=sar=1/1,"
-                           "format=rgba,"
-                           "boxblur=50:2,"
-                           "setsar=sar=1/1,"
-                           "fps=%s"
-                           "[slide_%s_blurred]"
-                           % (
-                               index,
-                               self.output_width,
-                               self.output_height,
-                               self.fps,
-                               index)
-                           )
-            filters.append("[slide_%s-1]" % (index) + ", ".join(slide_filters) + "[slide_%s_raw]" % (index))
-            filters.append("[slide_%s_blurred][slide_%s_raw]"
-                           "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=rgb"
-                           % (index, index)
-                           )
-
-            return "; ".join(filters)
-        else:
-            return ", ".join(slide_filters)
+        return slide_filters
 
     def getZoomDirectionX(self):
         return self.direction_x
