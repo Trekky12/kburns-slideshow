@@ -71,7 +71,8 @@ class VideoSlide(Slide):
         video_filters = []
         video_filters.append("scale=w=%s:h=%s" % (width, height))
         video_filters.append("fps=%s" % (self.fps))
-        video_filters.append("pad=%s:%s:'(ow-iw)/2':'(oh-ih)/2':color=%s" % (self.output_width, self.output_height, self.pad_color))
+        video_filters.append("pad=%s:%s:'(ow-iw)/2':'(oh-ih)/2':color=%s"
+                             % (self.output_width, self.output_height, self.pad_color))
 
         if self.is_trimmed:
             trim = []

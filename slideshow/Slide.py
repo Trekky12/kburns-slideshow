@@ -111,4 +111,4 @@ class Slide:
         self.blurred_padding = blurred_padding
 
     def getFadeDuration(self):
-        return self.fade_duration if self.transition != None else 0
+        return self.fade_duration if self.transition is not None else 0

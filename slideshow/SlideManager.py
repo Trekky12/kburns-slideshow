@@ -246,7 +246,7 @@ class SlideManager:
         # last slide has no fade-out
         if idx == len(self.getSlides()) - 1:
             return 0
-        
+
         slide = self.getSlides()[idx]
         if slide.getFadeDuration() > 0:
             # is the next slide long enough to have a fade-in and a fade-out?
@@ -346,24 +346,24 @@ class SlideManager:
                 blur_filters = []
                 blur_filters.append("split=2 [slide_%s][slide_%s-1]" % (i, i))
                 blur_filters.append("[slide_%s]scale=%sx%s,"
-                            "setsar=sar=1/1,"
-                            "format=rgba,"
-                            "boxblur=50:2,"
-                            "setsar=sar=1/1,"
-                            "fps=%s"
-                            "[slide_%s_blurred]"
-                            % (
-                                i,
-                                slide.output_width,
-                                slide.output_height,
-                                slide.fps,
-                                i)
-                            )
+                                    "setsar=sar=1/1,"
+                                    "format=rgba,"
+                                    "boxblur=50:2,"
+                                    "setsar=sar=1/1,"
+                                    "fps=%s"
+                                    "[slide_%s_blurred]"
+                                    % (
+                                        i,
+                                        slide.output_width,
+                                        slide.output_height,
+                                        slide.fps,
+                                        i)
+                                    )
                 blur_filters.append("[slide_%s-1]" % (i) + ", ".join(slide_filters) + "[slide_%s_raw]" % (i))
                 blur_filters.append("[slide_%s_blurred][slide_%s_raw]"
-                            "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=rgb"
-                            % (i, i)
-                            )
+                                    "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2:format=rgb"
+                                    % (i, i)
+                                    )
 
                 filters.append("; ".join(blur_filters))
             else:
@@ -613,8 +613,8 @@ class SlideManager:
 
         # minimum fade out duration of music
         if slide_fade_duration == 0:
-            return 0.5 
-        
+            return 0.5
+
         return slide_fade_duration
 
     def getVideoAudioDuration(self):
