@@ -333,8 +333,7 @@ class App(tk.Tk):
             if isinstance(slide, VideoSlide):
                 slide.setForceNoAudio(self.inputforceNoAudio.get())
                 slide.start = float(self.inputvideoStart.get()) if float(self.inputvideoStart.get()) > 0 else None
-                slide.end = float(self.inputvideoEnd.get()) if (
-                    float(self.inputvideoEnd.get()) > 0 and float(self.inputvideoEnd.get()) < slide.getDuration()) else None
+                slide.end = float(self.inputvideoEnd.get()) if float(self.inputvideoEnd.get()) > 0 else None
                 slide.calculateDurationAfterTrimming()
 
             slide.setPadColor(self.inputPadColor.get())

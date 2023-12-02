@@ -39,7 +39,7 @@ class VideoSlide(Slide):
 
         self.is_trimmed = False
         self.start = video_start if video_start is not None else None
-        self.end = video_end if video_end is not None and video_end < self.duration else None
+        self.end = video_end if video_end is not None and video_end < self.video_duration else None
         self.calculateDurationAfterTrimming()
 
     def calculateDurationAfterTrimming(self):
@@ -48,12 +48,13 @@ class VideoSlide(Slide):
 
             # calculate new duration
             start = self.start if self.start is not None else 0
-            end = self.end if self.end is not None else self.duration
+            end = self.end if self.end is not None else self.video_duration
             duration = end - start
 
             self.setDuration(duration)
         else:
             self.is_trimmed = False
+            self.setDuration(self.video_duration)
 
     def setForceNoAudio(self, force_no_audio):
         self.force_no_audio = force_no_audio
