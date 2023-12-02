@@ -109,3 +109,6 @@ class Slide:
 
     def setBlurredPadding(self, blurred_padding):
         self.blurred_padding = blurred_padding
+
+    def getFadeDuration(self):
+        return self.fade_duration if self.transition != None else 0

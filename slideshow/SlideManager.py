@@ -246,16 +246,17 @@ class SlideManager:
         # last slide has no fade-out
         if idx == len(self.getSlides()) - 1:
             return 0
+        
+        slide = self.getSlides()[idx]
+        if slide.getFadeDuration() > 0:
+            # is the next slide long enough to have a fade-in and a fade-out?
+            if idx + 1 < len(self.getSlides()):
+                if not self.isSlideDurationGreaterThanFadeDuration(idx + 1, 2):
+                    return 0
 
-        # is the next slide long enough to have a fade-in and a fade-out?
-        if idx + 1 < len(self.getSlides()):
-            if not self.isSlideDurationGreaterThanFadeDuration(idx + 1, 2):
-                return 0
-
-        # is current slide long enough to have a fade-in and fade-out?
-        if self.isSlideDurationGreaterThanFadeDuration(idx, 2):
-            slide = self.getSlides()[idx]
-            return slide.fade_duration * self.config["fps"] if frames else slide.fade_duration
+            # is current slide long enough to have a fade-in and fade-out?
+            if self.isSlideDurationGreaterThanFadeDuration(idx, 2):
+                return slide.getFadeDuration() * self.config["fps"] if frames else slide.getFadeDuration()
 
         return 0
 
@@ -269,7 +270,7 @@ class SlideManager:
 
         slide = self.getSlides()[idx]
         # is the duration of the slide long enough to have a fade-in and fade-out
-        if slide.getDuration() >= slide.fade_duration * multiplier:
+        if slide.getDuration() >= slide.getFadeDuration() * multiplier:
             return True
 
         return False
@@ -637,7 +638,7 @@ class SlideManager:
                     filters.append(audio_filter)
 
                 # Fade music in filter
-                if slide.fade_duration > 0:
+                if slide.getFadeDuration() > 0:
                     filters.append("afade=t=in:st=0:d=%s" % (self.getSlideFadeOutDuration(i - 1, False)))
                     filters.append("afade=t=out:st=%s:d=%s" % (self.getSlideFadeOutPosition(i, False),
                                                                self.getSlideFadeOutDuration(i, False)))
