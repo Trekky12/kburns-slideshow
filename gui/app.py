@@ -883,6 +883,8 @@ class App(tk.Tk):
         slideImage.thumbnail((slidethumb_width, slidethumb_height))
 
         try:
+            if pad_color == "#00000000":
+                pad_color = "#000000FF"
             img = Image.new('RGBA', (thumb_width, thumb_height), color=pad_color)
         except ValueError:
             logger.debug("Error creating preview image, wrong color name")
