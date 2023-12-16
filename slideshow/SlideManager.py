@@ -711,7 +711,7 @@ class SlideManager:
 
         # video audio and background sections should be merged
         if len(audio_tracks) > 0:
-            filter_chains.append("%s amix=inputs=%s[aout]" % ("".join(audio_tracks), len(audio_tracks)))
+            filter_chains.append("%s amix=inputs=%s:normalize=0[aout]" % ("".join(audio_tracks), len(audio_tracks)))
         else:
             logger.debug("no audio track")
 
