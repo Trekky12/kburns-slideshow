@@ -26,7 +26,7 @@ class ScrollFrame(tk.Frame):
         # create horizontal scrollbar
         hsbar = tk.Scrollbar(self, orient=tk.HORIZONTAL, command=self.canvas.xview)
         hsbar.grid(row=1, column=0, sticky=tk.EW)
-        self.canvas.configure(xscrollcommand=hsbar.set)
+        self.canvas.configure(xscrollcommand=hsbar.set, xscrollincrement=1)
 
     def addFrame(self, frame, anchor=tk.NW):
         self.frame = frame
