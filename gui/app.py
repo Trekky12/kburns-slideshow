@@ -198,10 +198,10 @@ class App(tk.Tk):
         self.bindings()
 
     def centerSlidesAroundSelected(self):
-        if ((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx() +
-             self.buttons[self.slide_selected].winfo_width()) / self.winfo_width() > 0.8):
-            diff = int((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx() +
-                        self.buttons[self.slide_selected].winfo_width()) - 0.8*self.winfo_width())
+        if ((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()
+             + self.buttons[self.slide_selected].winfo_width()) / self.winfo_width() > 0.8):
+            diff = int((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()
+                        + self.buttons[self.slide_selected].winfo_width()) - 0.8 * self.winfo_width())
             self.frameSlides.canvas.xview("scroll", "+" + str(diff), "units")
         if ((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()) / self.winfo_width() < 0):
             diff = int((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()) - 0.2 * self.winfo_width())
@@ -209,7 +209,7 @@ class App(tk.Tk):
 
     def moveRight(self):
         if self.slide_selected < len(self.buttons) - 1:
-            self.buttons.insert(self.slide_selected+1, self.buttons.pop(self.slide_selected))
+            self.buttons.insert(self.slide_selected + 1, self.buttons.pop(self.slide_selected))
             self.sm.moveSlide(self.slide_selected, self.slide_selected + 1)
             self.slide_selected += 1
             # rearrange buttons in grid
@@ -219,7 +219,7 @@ class App(tk.Tk):
 
     def moveLeft(self):
         if self.slide_selected > 0:
-            self.buttons.insert(self.slide_selected-1, self.buttons.pop(self.slide_selected))
+            self.buttons.insert(self.slide_selected - 1, self.buttons.pop(self.slide_selected))
             self.sm.moveSlide(self.slide_selected, self.slide_selected - 1)
             self.slide_selected -= 1
             # rearrange buttons in grid

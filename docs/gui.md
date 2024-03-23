@@ -88,10 +88,16 @@ A slide or audio file can be removed from the slideshow by clicking the `Delete`
 
 ### Move slide/audio file
 
-When dragging a image or a audio file the position in the slideshow can be changed.
+When selecting the checkbox "Move slides/audio" dragging of image or audio files to change the position in the slideshow gets enabled.
 
 <img src="screenshots/13_move_slide.png" width="400px">
 <img src="screenshots/14_slide_moved.png" width="400px">
+
+Additionally the slides can be moved to the right with the keyboard shortcut "s" and to the left with the keyboard shortcut "a" (thanks to [@ch00f](https://github.com/Trekky12/kburns-slideshow/pull/17)).
+
+### Select slide
+
+The next slide can be selected with the keyboard shortcut "right arrow" and the previous slide with the keyboard shortcut "left arrow" (thanks to [@ch00f](https://github.com/Trekky12/kburns-slideshow/pull/17)).
 
 ## Create Video
 
