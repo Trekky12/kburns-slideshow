@@ -36,6 +36,7 @@ SUNKABLE_BUTTON = 'SunkableButton.TButton'
 
 
 class App(tk.Tk):
+
     def __init__(self, title="", *args, **kwargs):
         super().__init__()
 
@@ -194,6 +195,53 @@ class App(tk.Tk):
 
         self.overlayTitleEntry = None
         self.padColorEntry = None
+        self.bindings()
+
+    def centerSlidesAroundSelected(self):
+        if ((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx() +
+             self.buttons[self.slide_selected].winfo_width()) / self.winfo_width() > 0.8):
+            diff = int((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx() +
+                        self.buttons[self.slide_selected].winfo_width()) - 0.8*self.winfo_width())
+            self.frameSlides.canvas.xview("scroll", "+" + str(diff), "units")
+        if ((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()) / self.winfo_width() < 0):
+            diff = int((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()) - 0.2 * self.winfo_width())
+            self.frameSlides.canvas.xview("scroll", str(diff), "units")
+
+    def moveRight(self):
+        if self.slide_selected < len(self.buttons) - 1:
+            self.buttons.insert(self.slide_selected+1, self.buttons.pop(self.slide_selected))
+            self.sm.moveSlide(self.slide_selected, self.slide_selected + 1)
+            self.slide_selected += 1
+            # rearrange buttons in grid
+            for i, btn in enumerate(self.buttons):
+                btn.grid(column=i)
+            self.centerSlidesAroundSelected()
+
+    def moveLeft(self):
+        if self.slide_selected > 0:
+            self.buttons.insert(self.slide_selected-1, self.buttons.pop(self.slide_selected))
+            self.sm.moveSlide(self.slide_selected, self.slide_selected - 1)
+            self.slide_selected -= 1
+            # rearrange buttons in grid
+            for i, btn in enumerate(self.buttons):
+                btn.grid(column=i)
+            self.centerSlidesAroundSelected()
+
+    def selectRight(self):
+        if self.slide_selected < len(self.buttons) - 1:
+            self.onSlideClicked(self.slide_selected + 1)
+            self.centerSlidesAroundSelected()
+
+    def selectLeft(self):
+        if self.slide_selected > 0:
+            self.onSlideClicked(self.slide_selected - 1)
+            self.centerSlidesAroundSelected()
+
+    def bindings(self):
+        self.bind("<Right>", lambda event: self.selectRight())
+        self.bind("<Left>", lambda event: self.selectLeft())
+        self.bind("s", lambda event: self.moveRight())
+        self.bind("a", lambda event: self.moveLeft())
 
     def hasSlides(self):
         return self.sm and (len(self.sm.getSlides()) > 0 or len(self.sm.getBackgroundTracks()) > 0)
@@ -558,7 +606,7 @@ class App(tk.Tk):
 
     def onSlideClicked(self, button_id):
         for btn in self.buttons:
-            btn.state(['!pressed', '!disabled'])
+            btn.state(['!pressed', '!disabled', '!focus'])
 
         for btn in self.buttonsAudio:
             btn.state(['!pressed', '!disabled'])
