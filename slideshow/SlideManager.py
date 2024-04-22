@@ -53,7 +53,9 @@ class SlideManager:
                                                              stdin=subprocess.PIPE,
                                                              startupinfo=si).decode()
             m = re.search('^ffmpeg version (([0-9])[0-9.]*)', ffmpeg_version_extract)
-            self.ffmpeg_version = int(m.group(2)) if m else 4
+            self.ffmpeg_version = [int(comp) for comp in m.group(1).split('.')]
+            if len(self.ffmpeg_version) < 2:
+                self.ffmpeg_version.append(0)
         except Exception as e:
             raise Exception("FFmpeg not found", config["ffmpeg"], str(e))
 
@@ -387,7 +389,7 @@ class SlideManager:
 
                 # on FFmpeg 4 the maximum thickness was changed from 'max' to 'fill'
                 # see https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/b3cb9bd43fa33a8aaf7a63e43f8418975b3bf0de
-                fill_mode = "max" if self.ffmpeg_version < 4 else "fill"
+                fill_mode = "max" if self.ffmpeg_version[0] < 4 else "fill"
                 filters.append("drawbox=w=iw:h=ih:color=%s@%s:t=%s:enable='between(t,%s,%s)'"
                                % (color, opacity, fill_mode, color_offset, color_offset + color_duration))
 
@@ -711,7 +713,11 @@ class SlideManager:
 
         # video audio and background sections should be merged
         if len(audio_tracks) > 0:
-            filter_chains.append("%s amix=inputs=%s:normalize=0[aout]" % ("".join(audio_tracks), len(audio_tracks)))
+            # Attention: amix normalize was introduced in 4.4:
+            # https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/57651493923ea4bc76453aa18fb0ecad7926720d
+            # https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/95b854dd0630183d4130ad27097796ef167eb96b
+            normalize = ":normalize=0" if self.ffmpeg_version[0] >= 4 and self.ffmpeg_version[1] >= 4 else ""
+            filter_chains.append("%s amix=inputs=%s%s[aout]" % ("".join(audio_tracks), len(audio_tracks), normalize))
         else:
             logger.debug("no audio track")
 

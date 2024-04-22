@@ -180,7 +180,7 @@ class ImageSlide(Slide):
 
         # with FFmpeg 4 the zoompan filter variables 'on' starts at 0 (previously started at 1)
         # https://trac.ffmpeg.org/ticket/7242
-        start_frame = 1 if self.ffmpeg_version < 4 else 0
+        start_frame = 1 if self.ffmpeg_version[0] < 4 else 0
         if self.direction_z == "in":
             z = "if(eq(on,%s),%s,zoom+%s)" % (start_frame, z_initial, z_step)
         elif self.direction_z == "out":
