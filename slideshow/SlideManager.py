@@ -650,8 +650,8 @@ class SlideManager:
                     filters.append("afade=t=in:st=0:d=%s" % (self.getSlideFadeOutDuration(i - 1, False)))
                     filters.append("afade=t=out:st=%s:d=%s" % (self.getSlideFadeOutPosition(i, False),
                                                                self.getSlideFadeOutDuration(i, False)))
-                filters.append("adelay=%s|%s" % (int(self.getOffset(i, False) * 1000),
-                                                 int(self.getOffset(i, False) * 1000)))
+                # filters.append("adelay=%s|%s" % (int(self.getOffset(i, False) * 1000),
+                #                                 int(self.getOffset(i, False) * 1000)))
 
                 input_number = i
                 # append video with sound to input list
@@ -660,7 +660,18 @@ class SlideManager:
                     self.tempInputFiles.append(slide.file)
                     offset = offset + 1
 
-                filter_chains.append("[%s:a] %s [a%s]" % (input_number, ",".join(filters), i))
+                filter_chains.append("[%s:a] %s [a%s_original];"
+                                     "aevalsrc=0|0:d=%s[a%s_silence];"
+                                     "[a%s_silence][a%s_original]concat=n=2:v=0:a=1[a%s]"
+                                     % (input_number,
+                                        ",".join(filters),
+                                        i,
+                                        (int(self.getOffset(i, False))),
+                                        i,
+                                        i,
+                                        i,
+                                        i)
+                                     )
 
         # background-tracks
         music_input_offset = len(self.getSlides()) if not self.config["generate_temp"] else len(self.tempInputFiles)
