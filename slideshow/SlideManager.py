@@ -607,10 +607,6 @@ class SlideManager:
         return len(self.background_tracks) > 0 or len([video for video in self.getVideos() if video.has_audio]) > 0
 
     def getMusicFadeOutDuration(self, idx):
-        # first and last slide should fade the total music in/out
-        if idx < 0 or idx == len(self.getSlides()) - 1:
-            slide = self.getSlides()[idx]
-            return slide.getDuration()
         slide_fade_duration = self.getSlideFadeOutDuration(idx, False)
 
         # minimum fade out duration of music
@@ -680,15 +676,18 @@ class SlideManager:
         if len(background_audio) > 0:
             # extract background audio sections between videos
             background_sections = []
+
             # is it starting with a video or an image?
-            section_start_slide = None if isinstance(self.getSlides()[0], VideoSlide) and slide.has_audio else 0
+            first_slide = self.getSlides()[0]
+            section_start_slide = None if isinstance(first_slide, VideoSlide) and first_slide.has_audio else 0
+
             for i, slide in enumerate(self.getSlides()):
                 # is it a video and we have a start value => end of this section
                 if isinstance(slide, VideoSlide) and slide.has_audio and section_start_slide is not None:
                     background_sections.append({"start": self.getOffset(section_start_slide, False),
                                                 "fade_in": self.getMusicFadeOutDuration(section_start_slide - 1),
                                                 "end": self.getOffset(i, False),
-                                                "fade_out": self.getMusicFadeOutDuration(i)})
+                                                "fade_out": self.getMusicFadeOutDuration(i - 1)})
                     section_start_slide = None
 
                 # is it a slide without audio (image or video with no audio) but the previous one was a video with audio
