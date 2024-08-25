@@ -740,7 +740,7 @@ class SlideManager:
                                             i,
                                             i)
                                          )
-                    
+
                     section_duration = section["end"] - section["start"]
                     audio_track_progress = audio_track_progress + section_duration
             else:
