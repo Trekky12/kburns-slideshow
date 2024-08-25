@@ -712,10 +712,37 @@ class SlideManager:
                     ["[b%s]" % (i) for i, section in enumerate(background_sections)])))
 
                 # fade background sections in/out
+                audio_track_progress = 0
                 for i, section in enumerate(background_sections):
-                    audio_tracks.append("[b%sf]" % (i))
-                    filter_chains.append("[b%s]afade=t=in:st=%s:d=%s,afade=t=out:st=%s:d=%s[b%sf]" % (
-                        i, section["start"], section["fade_in"], section["end"], section["fade_out"], i))
+                    audio_tracks.append("[background_audio_section%s]" % (i))
+
+                    filter_chains.append("[b%s]"
+                                         "atrim=start=%s,"
+                                         "asetpts=PTS-STARTPTS,"
+                                         "afade=t=in:st=0:d=%s,"
+                                         "afade=t=out:st=%s:d=%s"
+                                         "[background_audio_section%s_fade];"
+                                         "aevalsrc=0|0:d=%s"
+                                         "[background_audio_section%s_silence];"
+                                         "[background_audio_section%s_silence]"
+                                         "[background_audio_section%s_fade]"
+                                         "concat=n=2:v=0:a=1"
+                                         "[background_audio_section%s]"
+                                         % (i,
+                                            audio_track_progress,
+                                            section["fade_in"],
+                                            section["end"] - section["start"],
+                                            section["fade_out"],
+                                            i,
+                                            section["start"],
+                                            i,
+                                            i,
+                                            i,
+                                            i)
+                                         )
+                    
+                    section_duration = section["end"] - section["start"]
+                    audio_track_progress = audio_track_progress + section_duration
             else:
                 logger.debug("no background section")
         else:
