@@ -64,7 +64,7 @@ class Queue:
             parameters,
             # "-c:v", "libx264",
             "-c:v %s" % codec,
-            self.getOutputName(item)
+            "\"%s\"" % self.getOutputName(item)
         ]
 
         # re-use existing temp file
