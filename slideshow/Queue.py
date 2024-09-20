@@ -51,7 +51,7 @@ class Queue:
             filters = item["filters"]
 
         temp_filter_script = self.getOutputName(item, "txt")
-        with open('%s' % (temp_filter_script), 'w') as file:
+        with open('%s' % (temp_filter_script), 'w', newline='\n') as file:
             file.write("%s [out]" % (filters))
 
         cmd = [
