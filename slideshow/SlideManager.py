@@ -502,15 +502,17 @@ class SlideManager:
                 # https://superuser.com/a/1148850
                 # https://stackoverflow.com/a/40746988
                 # https://stackoverflow.com/a/51978577
+
+                fifo = "fifo," if self.ffmpeg_version[0] < 7 else ""
                 if "start" in splits:
-                    filter_chains.append("[v%sout-start]fifo,trim=start_frame=%s:end_frame=%s,"
-                                         "setpts=PTS-STARTPTS[v%sstart]" % (i, 0, fade_in_end, i))
+                    filter_chains.append("[v%sout-start]%strim=start_frame=%s:end_frame=%s,"
+                                         "setpts=PTS-STARTPTS[v%sstart]" % (i, fifo, 0, fade_in_end, i))
                 if "main" in splits:
-                    filter_chains.append("[v%sout-main]fifo,trim=start_frame=%s:end_frame=%s,"
-                                         "setpts=PTS-STARTPTS[v%smain]" % (i, fade_in_end, fade_out_start, i))
+                    filter_chains.append("[v%sout-main]%strim=start_frame=%s:end_frame=%s,"
+                                         "setpts=PTS-STARTPTS[v%smain]" % (i, fifo, fade_in_end, fade_out_start, i))
                 if "end" in splits:
-                    filter_chains.append("[v%sout-end]fifo,trim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS[v%send]" % (
-                        i, fade_out_start, slide.getFrames(), i))
+                    filter_chains.append("[v%sout-end]%strim=start_frame=%s:end_frame=%s,setpts=PTS-STARTPTS[v%send]" % (
+                        i, fifo, fade_out_start, slide.getFrames(), i))
 
         # Concat videos
         videos = []
