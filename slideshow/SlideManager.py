@@ -755,7 +755,8 @@ class SlideManager:
             # Attention: amix normalize was introduced in 4.4:
             # https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/57651493923ea4bc76453aa18fb0ecad7926720d
             # https://git.ffmpeg.org/gitweb/ffmpeg.git/commit/95b854dd0630183d4130ad27097796ef167eb96b
-            normalize = ":normalize=0" if self.ffmpeg_version[0] >= 4 and self.ffmpeg_version[1] >= 4 else ""
+            has_normalize = self.ffmpeg_version[0] > 4 or (self.ffmpeg_version[0] == 4 and self.ffmpeg_version[1] >= 4)
+            normalize = ":normalize=0" if has_normalize else ""
             filter_chains.append("%s amix=inputs=%s%s[aout]" % ("".join(audio_tracks), len(audio_tracks), normalize))
         else:
             logger.debug("no audio track")
