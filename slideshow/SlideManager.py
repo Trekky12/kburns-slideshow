@@ -33,8 +33,6 @@ class SlideManager:
 
         self.tempFilePrefix = config["temp_file_prefix"] if "temp_file_prefix" in config else "temp-kburns-"
         self.tempFileFullPrefix = os.path.join(self.tempFileFolder, self.tempFilePrefix)
-        self.queue = Queue(self.tempFileFolder, self.tempFilePrefix)
-
         self.tempInputFiles = []
 
         self.reduceVariable = 10
@@ -58,6 +56,8 @@ class SlideManager:
                 self.ffmpeg_version.append(0)
         except Exception as e:
             raise Exception("FFmpeg not found", config["ffmpeg"], str(e))
+
+        self.queue = Queue(self.ffmpeg_version, self.tempFileFolder, self.tempFilePrefix)
 
         self.config["is_synced_to_audio"] = config["is_synced_to_audio"] if "is_synced_to_audio" in config else False
         self.config["sync_titles_to_slides"] = config["sync_titles_to_slides"] if "sync_titles_to_slides" in config else False
@@ -939,7 +939,9 @@ class SlideManager:
                # subtitles (only mkv)
                "-i %s" % (srtFilename) if self.hasSubtitles() and not burnSubtitles else "",
                # filters
-               "-filter_complex_script \"%s\"" % (temp_filter_script),
+               "-filter_complex_script \"%s\"" % (temp_filter_script)
+               if self.ffmpeg_version[0] < 7
+               else "-/filter_complex \"%s\"" % (temp_filter_script),
                # define duration
                # if video should be loopable, skip the start fade-in (-ss) and the end fade-out
                # (video is stopped after the fade-in of the last image which is the same as the first-image)

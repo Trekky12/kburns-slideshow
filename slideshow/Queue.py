@@ -9,9 +9,10 @@ logger = logging.getLogger("kburns-slideshow")
 
 class Queue:
 
-    def __init__(self, tempFileFolder, tempFilePrefix):
+    def __init__(self, ffmpeg_version, tempFileFolder, tempFilePrefix):
         self.tempFileFolder = tempFileFolder
         self.tempFilePrefix = tempFilePrefix
+        self.ffmpeg_version = ffmpeg_version
         self.init()
 
     def init(self):
@@ -56,7 +57,9 @@ class Queue:
         cmd = [
             ffmpeg, "-y", "-hide_banner", "-stats", "-v", "warning",
             " ".join(["-i \"%s\" " % (i) for i in item["inputs"]]),
-            "-filter_complex_script \"%s\"" % (temp_filter_script),
+            "-filter_complex_script \"%s\"" % (temp_filter_script)
+            if self.ffmpeg_version[0] < 7
+            else "-/filter_complex \"%s\"" % (temp_filter_script),
             # "-crf", "0" ,
             "-map [out]",
             # "-preset", "ultrafast",
