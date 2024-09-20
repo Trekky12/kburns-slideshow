@@ -3,7 +3,7 @@
     "ffprobe": "ffprobe.exe",
     "aubio": "aubioonset.exe",
 
-    "IMAGE_EXTENSIONS": ["jpg", "jpeg", "png"],
+    "IMAGE_EXTENSIONS": ["jpg", "jpeg", "png", "heic"],
     "VIDEO_EXTENSIONS": ["mp4", "mpg", "avi"],
     "AUDIO_EXTENSIONS": ["mp3", "ogg", "flac"],
 

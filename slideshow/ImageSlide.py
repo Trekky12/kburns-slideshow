@@ -3,6 +3,8 @@
 from .Slide import Slide
 from PIL import Image, ExifTags
 import random
+import pillow_heif
+import os
 
 
 class ImageSlide(Slide):
@@ -21,7 +23,15 @@ class ImageSlide(Slide):
                          duration, fade_duration, fps, title, overlay_text, overlay_color,
                          transition, pad_color, blurred_padding)
 
+        pillow_heif.register_heif_opener()
         im = Image.open(self.file)
+
+        if pillow_heif.is_supported(self.file):
+            file_name, file_ext = os.path.splitext(self.file)
+            new_file_name = f"{file_name}_converted.jpg"
+            icc_profile = im.info.get('icc_profile')
+            im.save(new_file_name, "JPEG", quality=100, icc_profile=icc_profile)
+            self.file = new_file_name
 
         '''
         iPhone images are rotated, so rotate them according to the EXIF information
