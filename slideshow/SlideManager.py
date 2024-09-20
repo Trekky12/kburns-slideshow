@@ -923,7 +923,7 @@ class SlideManager:
         audio_filters = self.getAudioFilterChains()
 
         temp_filter_script = os.path.join(self.tempFileFolder, "temp-kburns-video-script.txt")
-        with open('%s' % (temp_filter_script), 'w') as file:
+        with open('%s' % (temp_filter_script), 'w', newline='\n') as file:
             file.write(";\n".join(video_filters + audio_filters))
 
         return burnSubtitles, srtInput, srtFilename, inputs, temp_filter_script
