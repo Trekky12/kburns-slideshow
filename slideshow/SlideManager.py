@@ -878,7 +878,8 @@ class SlideManager:
                 tempFile = self.queue.createTemporaryVideo(self.config["ffmpeg"],
                                                            item,
                                                            self.config["output_temp_parameters"],
-                                                           self.config["output_temp_codec"])
+                                                           self.config["output_temp_codec"],
+                                                           self.config["fps"])
 
                 if tempFile is None:
                     print("Error while creating the temporary video file!")
@@ -948,6 +949,7 @@ class SlideManager:
                "-ss %s -t %s" % (self.getSlideFadeOutDuration(0) / self.config["fps"], self.getOffset(-1, False))
                if self.config["loopable"] else "-t %s" % (self.getTotalDuration()),
                # "-t %s" % (self.getTotalDuration()),
+               "-r %s" % self.config["fps"],
                # define output
                "-map", "[out]:v",
                "-c:v %s" % (self.config["output_codec"]) if self.config["output_codec"] else "",

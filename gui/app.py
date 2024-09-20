@@ -1333,7 +1333,8 @@ class App(tk.Tk):
             tempFile = self.sm.queue.createTemporaryVideo(self.slideshow_config["ffmpeg"],
                                                           item,
                                                           self.slideshow_config["output_temp_parameters"],
-                                                          self.slideshow_config["output_temp_codec"])
+                                                          self.slideshow_config["output_temp_codec"],
+                                                          self.slideshow_config["fps"])
 
             if tempFile is None:
                 print("Error while creating the temporary video file!")
