@@ -28,16 +28,28 @@ class ScrollFrame(tk.Frame):
         hsbar.grid(row=1, column=0, sticky=tk.EW)
         self.canvas.configure(xscrollcommand=hsbar.set, xscrollincrement=1)
 
+        # When the canvas resizes, force the child window to match its width
+        self.canvas.bind("<Configure>", self._on_canvas_configure)
+
     def addFrame(self, frame, anchor=tk.NW):
         self.frame = frame
         # create canvas window for the frame
         self.canvas_frame = self.canvas.create_window((0, 0), window=frame, anchor=anchor)
 
         # update idletasks so that bounding box info is available
-        frame.update_idletasks()
+        # frame.update_idletasks()
 
-        # update scrollregion to match frame content
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+        # Whenever the embedded frame changes size, update scrollregion
+        frame.bind("<Configure>", self._on_frame_configure)
+
+    def _on_canvas_configure(self, event):
+        # Make embedded frame always as wide as the canvas
+        if hasattr(self, "canvas_frame"):
+            self.canvas.itemconfig(self.canvas_frame, width=event.width)
+
+    def _on_frame_configure(self, event):
+        # Update scrollregion so scrolling covers the whole inner frame
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def getCanvas(self):
         return self.canvas
