@@ -1062,14 +1062,14 @@ class App(tk.Tk):
 
                     if zoom_direction_x == "left":
                         x0_1 = width - thumb_x - img_w
-                        y0_1 = height - thumb_y
+                        y0_1 = height - thumb_y - img_h
                         x0_2 = width - thumb_x
-                        y0_2 = height - thumb_y - img_h
+                        y0_2 = height - thumb_y
                     elif zoom_direction_x == "right":
                         x0_1 = thumb_x
-                        y0_1 = height - thumb_y
+                        y0_1 = height - thumb_y - img_h
                         x0_2 = thumb_x + img_w
-                        y0_2 = height - thumb_y - img_h
+                        y0_2 = height - thumb_y
                     elif zoom_direction_x == "center":
                         x0_1 = (width - thumb_x - img_w) / 2
                         y0_1 = thumb_y
