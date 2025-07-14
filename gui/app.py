@@ -2,7 +2,7 @@
 # https://stackoverflow.com/q/49873626
 
 
-from slideshow.SlideManager import ImageSlide, VideoSlide
+from slideshow.SlideManager import ImageSlide, VideoSlide, AudioFile
 from slideshow.SlideManager import SlideManager
 import sys
 import re
@@ -192,6 +192,9 @@ class App(tk.Tk):
         self.inputOverlayColorDuration = tk.StringVar()
         self.inputOverlayColorOffset = tk.StringVar()
         self.inputOverlayColorOpacity = tk.StringVar()
+
+        self.inputAudioStart = tk.StringVar()
+        self.inputAudioEnd = tk.StringVar()
 
         self.overlayTitleEntry = None
         self.padColorEntry = None
@@ -470,6 +473,7 @@ class App(tk.Tk):
         self.slide_selected = None
         self.audio_selected = None
         self.slide_changed = False
+        self.audio_changed = False
         self.sm = None
         self.loadConfig()
 
@@ -609,12 +613,15 @@ class App(tk.Tk):
             btn.state(['!pressed', '!disabled', '!focus'])
 
         for btn in self.buttonsAudio:
-            btn.state(['!pressed', '!disabled'])
+            btn.state(['!pressed', '!disabled', '!focus'])
 
         self.buttons[button_id].state(['pressed', 'disabled'])
 
-        # save previous slide
+        # save previous slide/audio
         self.saveSlide()
+        self.saveAudio()
+
+        self.audio_selected = None
 
         self.slide_selected = button_id
         slide = self.sm.getSlides()[button_id]
@@ -1165,6 +1172,8 @@ class App(tk.Tk):
         duration = self.sm.getAudioDuration() + self.sm.getVideoAudioDuration()
         self.audioDurationValue.set(self.formatDuration(duration))
 
+        self.audio_selected = None
+
     def buttonDragStart(self, event):
         widget = event.widget
         widget._drag_start_x = event.x
@@ -1230,12 +1239,18 @@ class App(tk.Tk):
     def onAudioClicked(self, button_id):
 
         for btn in self.buttons:
-            btn.state(['!pressed', '!disabled'])
+            btn.state(['!pressed', '!disabled', '!focus'])
 
         for btn in self.buttonsAudio:
-            btn.state(['!pressed', '!disabled'])
+            btn.state(['!pressed', '!disabled', '!focus'])
 
         self.buttonsAudio[button_id].state(['pressed', 'disabled'])
+
+        # save previous slide/audio
+        self.saveSlide()
+        self.saveAudio()
+
+        self.slide_selected = None
 
         self.audio_selected = button_id
         audio = self.sm.getBackgroundTracks()[button_id]
@@ -1258,11 +1273,28 @@ class App(tk.Tk):
         fileEntry.configure(state='readonly')
         fileEntry.grid(row=0, column=1, sticky=tk.W, padx=4, pady=4)
 
-        durationLabel = tk.Label(generalframe, text="Duration")
+        audioFrame = tk.LabelFrame(optionsFrame, text="Audio Options")
+        audioFrame.grid(row=2, column=0, sticky=tk.NSEW, padx=5, pady=5)
+
+        self.inputAudioStart.set(audio.start if audio.start is not None else -1)
+        audioStartLabel = tk.Label(audioFrame, text="Audio Start")
+        audioStartLabel.grid(row=2, column=0, sticky=tk.W, padx=4, pady=4)
+        audioStartEntry = tk.Entry(audioFrame, textvariable=self.inputAudioStart)
+        audioStartEntry.grid(row=2, column=1, sticky=tk.W, padx=4, pady=4)
+        audioStartEntry.bind("<KeyRelease>", self.checkEntryModificationAudio)
+
+        self.inputAudioEnd.set(audio.end if audio.end is not None else -1)
+        audioEndLabel = tk.Label(audioFrame, text="Audio End")
+        audioEndLabel.grid(row=3, column=0, sticky=tk.W, padx=4, pady=4)
+        audioEndEntry = tk.Entry(audioFrame, textvariable=self.inputAudioEnd)
+        audioEndEntry.grid(row=3, column=1, sticky=tk.W, padx=4, pady=4)
+        audioEndEntry.bind("<KeyRelease>", self.checkEntryModificationAudio)
+
+        durationLabel = tk.Label(audioFrame, text="Duration")
         durationLabel.grid(row=1, column=0, sticky=tk.W, padx=4, pady=4)
-        durationEntry = tk.Entry(generalframe)
-        durationEntry.insert(0, audio.duration)
-        durationEntry.configure(state='readonly')
+        durationEntry = tk.Entry(audioFrame)
+        durationEntry.insert(0, audio.audio_duration)
+        durationEntry.configure(state='disabled')
         durationEntry.grid(row=1, column=1, sticky=tk.W, padx=4, pady=4)
 
         buttonsFrame = tk.Frame(optionsFrame)
@@ -1273,9 +1305,28 @@ class App(tk.Tk):
 
         self.frameSlideSettings.addFrame(optionsFrame, tk.NW)
 
+    def checkEntryModificationAudio(self, event=None):
+        self.audio_changed = True
+
+    def saveAudio(self):
+        if self.audio_changed:
+            audio = self.sm.getBackgroundTracks()[self.audio_selected]
+
+            if isinstance(audio, AudioFile):
+                audio.start = float(self.inputAudioStart.get()) if float(self.inputAudioStart.get()) > 0 else None
+                audio.end = float(self.inputAudioEnd.get()) if float(self.inputAudioEnd.get()) > 0 else None
+                audio.calculateDurationAfterTrimming()
+
+            self.audio_changed = False
+
+            # Recalculate audio duration
+            duration = self.sm.getAudioDuration() + self.sm.getVideoAudioDuration()
+            self.audioDurationValue.set(self.formatDuration(duration))
+
     def saveSlideshow(self):
         if self.sm:
             self.saveSlide()
+            self.saveAudio()
             if not self.filename:
                 self.saveAs()
             self.sm.saveConfig(self.filename)
@@ -1292,6 +1343,7 @@ class App(tk.Tk):
     def syncToAudio(self):
         logger.info("Sync slides durations to audio")
         self.saveSlide()
+        self.saveAudio()
         self.sm.adjustDurationsFromAudio()
         self.resetGUI()
         self.loadSlideshowImagesRow()
@@ -1301,6 +1353,7 @@ class App(tk.Tk):
     def resetSlideDurations(self):
         logger.info("Reset slides durations to default")
         self.saveSlide()
+        self.saveAudio()
         self.sm.resetSlideDurations()
         self.resetGUI()
         self.loadSlideshowImagesRow()
@@ -1309,6 +1362,7 @@ class App(tk.Tk):
 
     def createVideo(self):
         self.saveSlide()
+        self.saveAudio()
         filename = asksaveasfilename()
         if filename:
             createVideoThread = threading.Thread(target=self.startVideoCreation, args=(filename,), daemon=True)
@@ -1383,6 +1437,7 @@ class App(tk.Tk):
 
     def addSlide(self):
         self.saveSlide()
+        self.saveAudio()
         filetypes = [".%s" % type for type in self.slideshow_config["IMAGE_EXTENSIONS"]
                      + self.slideshow_config["VIDEO_EXTENSIONS"]]
 
@@ -1405,6 +1460,7 @@ class App(tk.Tk):
 
     def addAudio(self):
         self.saveSlide()
+        self.saveAudio()
         filetypes = [".%s" % type for type in self.slideshow_config["AUDIO_EXTENSIONS"]]
 
         ftypes = [

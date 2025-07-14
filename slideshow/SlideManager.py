@@ -200,9 +200,16 @@ class SlideManager:
         if isinstance(file, dict) and "file" in file:
             filename = file["file"]
 
+        audio_start = None
+        if isinstance(file, dict) and "start" in file:
+            audio_start = file["start"]
+        audio_end = None
+        if isinstance(file, dict) and "end" in file:
+            audio_end = file["end"]
+
         extension = filename.split(".")[-1]
         if extension.lower() in [e.lower() for e in self.config["AUDIO_EXTENSIONS"]]:
-            audio = AudioFile(filename, self.config["ffprobe"])
+            audio = AudioFile(filename, self.config["ffprobe"], audio_start, audio_end)
             self.background_tracks.append(audio)
             logger.debug("added valid audio file")
 
@@ -673,9 +680,30 @@ class SlideManager:
 
         # background-tracks
         music_input_offset = len(self.getSlides()) if not self.config["generate_temp"] else len(self.tempInputFiles)
-        background_audio = ["[%s:a]" % (i + music_input_offset) for i, track in enumerate(self.background_tracks)]
+        background_audio = []
+
+        for i, track in enumerate(self.background_tracks):
+
+            filters = []
+            filters.append(track.getAudioFilter())
+            filters.append("afade=t=in:st=0:d=%s" % (0.5))
+            filters.append("afade=t=out:st=%s:d=%s" % (track.duration - 0.5, 0.5))
+
+            filter_chains.append("[%s:a] %s [a%s]"
+                                 % (i + music_input_offset,
+                                    ",".join(filters),
+                                    i + music_input_offset)
+                                 )
+
+            background_audio.append("[a%s]" % (i + music_input_offset))
 
         if len(background_audio) > 0:
+            # merge background tracks
+            filter_chains.append("%s concat=n=%s:v=0:a=1[background_audio]" % ("".join(background_audio),
+                                                                               len(self.background_tracks)
+                                                                               )
+                                 )
+
             # extract background audio sections between videos
             background_sections = []
 
@@ -705,9 +733,6 @@ class SlideManager:
                                             "fade_out": self.getMusicFadeOutDuration(i)})
 
             if len(background_sections) > 0:
-                # merge background tracks
-                filter_chains.append("%s concat=n=%s:v=0:a=1[background_audio]" % ("".join(background_audio),
-                                                                                   len(self.background_tracks)))
 
                 # split the background tracks in the necessary sections
                 filter_chains.append("[background_audio]asplit=%s %s" % (len(background_sections), "".join(
