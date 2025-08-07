@@ -795,10 +795,8 @@ class SlideManager:
         timestamps = []
         offset = 0
         for track in self.getBackgroundTracks():
-            # add beginning of track
-            timestamps.append(0 + offset)
             # get timestamps of track
-            timestamps = timestamps + [float(timestamp) + offset for timestamp in track.getTimestamps(self.config["aubio"])]
+            timestamps = timestamps + [timestamp + offset for timestamp in track.getTimestamps(self.config["aubio"])]
             # next track has the offsets after the current
             offset = offset + track.duration
 
