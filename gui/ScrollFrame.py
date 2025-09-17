@@ -29,7 +29,7 @@ class ScrollFrame(tk.Frame):
         self.canvas.configure(xscrollcommand=hsbar.set, xscrollincrement=1)
 
         # When the canvas resizes, force the child window to match its width
-        self.canvas.bind("<Configure>", self._on_canvas_configure)
+        # self.canvas.bind("<Configure>", self._on_canvas_configure)
 
     def addFrame(self, frame, anchor=tk.NW):
         self.frame = frame
