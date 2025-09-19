@@ -10,6 +10,9 @@ class ProgressFrame(tk.Toplevel):
     def __init__(self, parent, **options):
         super().__init__()
 
+        self.transient(parent)
+        self.grab_set()
+
         self.title("Processing")
         self.resizable(False, False)
 
