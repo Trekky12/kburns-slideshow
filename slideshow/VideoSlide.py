@@ -95,7 +95,7 @@ class VideoSlide(Slide):
 
             return "atrim=%s,asetpts=PTS-STARTPTS" % (":".join(trim))
 
-        return None
+        return "anull"
 
     def getObject(self, config):
         object = super().getObject(config)
