@@ -211,7 +211,7 @@ class App(tk.Tk):
             self.frameSlides.canvas.xview("scroll", str(diff), "units")
 
     def moveRight(self):
-        if self.slide_selected < len(self.buttons) - 1:
+        if self.moveSlidesBtn.get() > 0 and self.slide_selected > 0 and self.slide_selected < len(self.buttons) - 1:
             self.buttons.insert(self.slide_selected + 1, self.buttons.pop(self.slide_selected))
             self.sm.moveSlide(self.slide_selected, self.slide_selected + 1)
             self.slide_selected += 1
@@ -221,7 +221,7 @@ class App(tk.Tk):
             self.centerSlidesAroundSelected()
 
     def moveLeft(self):
-        if self.slide_selected > 0:
+        if self.moveSlidesBtn.get() > 0 and self.slide_selected > 0:
             self.buttons.insert(self.slide_selected - 1, self.buttons.pop(self.slide_selected))
             self.sm.moveSlide(self.slide_selected, self.slide_selected - 1)
             self.slide_selected -= 1
@@ -231,7 +231,7 @@ class App(tk.Tk):
             self.centerSlidesAroundSelected()
 
     def selectRight(self):
-        if self.slide_selected < len(self.buttons) - 1:
+        if self.slide_selected > 0 and self.slide_selected < len(self.buttons) - 1:
             self.onSlideClicked(self.slide_selected + 1)
             self.centerSlidesAroundSelected()
 
@@ -1222,7 +1222,7 @@ class App(tk.Tk):
 
             # move button to new position
             # https://stackoverflow.com/a/3173159
-            if widget._col != new_column:
+            if widget._col is not None and widget._col != new_column:
                 self.buttons.insert(new_column, self.buttons.pop(widget._col))
                 self.sm.moveSlide(widget._col, new_column)
 
@@ -1453,6 +1453,7 @@ class App(tk.Tk):
         self.loadSlideshowImagesRow()
 
     def deleteSlide(self):
+        self.slide_changed = False
         self.sm.removeSlide(self.slide_selected)
         self.frameSlides.clear()
         self.frameSlideSettings.clear()
@@ -1475,6 +1476,7 @@ class App(tk.Tk):
         self.loadSlideshowAudioRow()
 
     def deleteAudio(self):
+        self.audio_changed = False
         self.sm.removeAudio(self.audio_selected)
         self.frameAudio.clear()
         self.frameSlideSettings.clear()
