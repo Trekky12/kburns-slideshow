@@ -245,7 +245,7 @@ class SlideManager:
     def getOffset(self, idx, frames=True):
         offset = sum([(slide.getFrames() - self.getSlideFadeOutDuration(i) + self.getTransitionOffset(i))
                       for i, slide in enumerate(self.getSlides()[:idx])])
-        return offset if frames else round(offset / self.config["fps"], 5)
+        return int(offset) if frames else round(offset / self.config["fps"], 5)
 
     def getSlideFadeOutDuration(self, idx, frames=True):
         # first slide has no previous slide
@@ -287,7 +287,7 @@ class SlideManager:
     def getSlideFadeOutPosition(self, idx, frames=True):
         slide = self.getSlides()[idx]
         pos_frames = slide.getFrames() - self.getSlideFadeOutDuration(idx)
-        return pos_frames if frames else round(pos_frames / self.config["fps"], 3)
+        return int(pos_frames) if frames else round(pos_frames / self.config["fps"], 3)
 
     ###################################
     #          Transitions            #
@@ -671,7 +671,7 @@ class SlideManager:
                                      % (input_number,
                                         ",".join(filters),
                                         i,
-                                        (int(self.getOffset(i, False))),
+                                        self.getOffset(i, False),
                                         i,
                                         i,
                                         i,
@@ -758,7 +758,7 @@ class SlideManager:
                                          % (i,
                                             audio_track_progress,
                                             section["fade_in"],
-                                            section["end"] - section["start"],
+                                            round(section["end"] - section["start"], 2),
                                             section["fade_out"],
                                             i,
                                             section["start"],
