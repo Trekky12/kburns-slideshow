@@ -655,6 +655,10 @@ class SlideManager:
                     filters.append("afade=t=in:st=0:d=%s" % (self.getSlideFadeOutDuration(i - 1, False)))
                     filters.append("afade=t=out:st=%s:d=%s" % (self.getSlideFadeOutPosition(i, False),
                                                                self.getSlideFadeOutDuration(i, False)))
+                else:
+                    filters.append("afade=t=in:st=0:d=%s" % (0.5))
+                    filters.append("afade=t=out:st=%s:d=%s" % (slide.duration - 0.5, 0.5))
+
                 # filters.append("adelay=%s|%s" % (int(self.getOffset(i, False) * 1000),
                 #                                 int(self.getOffset(i, False) * 1000)))
 
