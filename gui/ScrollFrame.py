@@ -40,6 +40,7 @@ class ScrollFrame(tk.Frame):
         # frame.update_idletasks()
 
         # Whenever the embedded frame changes size, update scrollregion
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         frame.bind("<Configure>", self._on_frame_configure)
 
     def _on_canvas_configure(self, event):
