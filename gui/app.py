@@ -49,7 +49,7 @@ class App(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        self.geometry("800x800")  # Width x Height
+        self.geometry("900x800")  # Width x Height
 
         master_frame = tk.Frame(self)
         master_frame.grid(sticky=tk.NSEW)
@@ -108,33 +108,41 @@ class App(tk.Tk):
         moveButton = ttk.Checkbutton(frameActions, text="Move slides/audio", variable=self.moveSlidesBtn)
         moveButton.grid(row=0, column=3, rowspan=2, sticky=tk.W, padx=2)
 
-        buttonSync = tk.Button(frameActions, text="Sync Video to Audio", command=self.syncToAudio)
+        buttonSync = tk.Button(frameActions, text="Sync Video to Audio",
+                               command=lambda: threading.Thread(target=self.syncToAudio, daemon=True).start())
         buttonSync.grid(row=0, column=4, rowspan=2, sticky=tk.W, padx=2)
 
-        buttonResetTime = tk.Button(frameActions, text="Reset slide durations", command=self.resetSlideDurations)
+        buttonResetTime = tk.Button(frameActions, text="Reset slide durations",
+                                    command=lambda: threading.Thread(target=self.resetSlideDurations, daemon=True).start())
         buttonResetTime.grid(row=0, column=5, rowspan=2, sticky=tk.W, padx=2)
 
         buttonCreateVideo = tk.Button(frameActions, text="Create Video", command=self.createVideo)
         buttonCreateVideo.grid(row=0, column=6, rowspan=2, sticky=tk.W, padx=2)
 
         # Menu
-        menubar = tk.Menu(self)
-        self.filemenu = tk.Menu(menubar, tearoff=0)
-        self.filemenu.add_command(label="New", command=self.newSlideshow)
-        self.filemenu.add_command(label="Open", command=self.openFile)
-        self.filemenu.add_command(label="Save", command=self.saveSlideshow, state="disabled")
+        self.menubar = tk.Menu(self)
+        self.filemenu = tk.Menu(self.menubar, tearoff=0)
+        self.filemenu.add_command(label="New", command=self.newSlideshow, accelerator="Ctrl+N")
+        self.filemenu.add_command(label="Open", command=self.openFile, accelerator="Ctrl+O")
+        self.filemenu.add_command(label="Save", command=self.saveSlideshow, state="disabled", accelerator="Ctrl+S")
         self.filemenu.add_command(label="Save As..", command=self.saveAs, state="disabled")
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=self.on_closing)
-        menubar.add_cascade(label="File", menu=self.filemenu)
+        self.menubar.add_cascade(label="File", menu=self.filemenu)
 
-        self.generalmenu = tk.Menu(menubar, tearoff=0)
+        self.generalmenu = tk.Menu(self.menubar, tearoff=0)
         self.generalmenu.add_command(label="Slideshow Settings", command=self.slideshowSettingsWindow, state="disabled")
         self.generalmenu.add_separator()
         self.generalmenu.add_command(label="General Settings", command=self.generalSettingsWindow)
-        menubar.add_cascade(label="Settings", menu=self.generalmenu)
+        self.menubar.add_cascade(label="Settings", menu=self.generalmenu)
 
-        self.config(menu=menubar)
+        self.config(menu=self.menubar)
+
+        self.bind_all("<Control-n>", self.newSlideshow)
+        self.bind_all("<Control-o>", self.openFile)
+        self.bind_all("<Control-s>", self.saveSlideshow)
+        self.bind_all("<Control-i>", self.addSlide)
+        self.bind_all("<Control-a>", self.addAudio)
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
@@ -157,8 +165,6 @@ class App(tk.Tk):
 
         self.config_path = os.path.join(os.getcwd(), 'config.json')
         self.init()
-        # create empty slideshow
-        # self.createSlideshow()
 
         # Save Slide Input Fields
         self.inputTransition = tk.StringVar()
@@ -200,6 +206,8 @@ class App(tk.Tk):
         self.padColorEntry = None
         self.bindings()
 
+        self.overlay = None
+
     def centerSlidesAroundSelected(self):
         if ((self.buttons[self.slide_selected].winfo_rootx() - self.winfo_rootx()
              + self.buttons[self.slide_selected].winfo_width()) / self.winfo_width() > 0.8):
@@ -211,7 +219,8 @@ class App(tk.Tk):
             self.frameSlides.canvas.xview("scroll", str(diff), "units")
 
     def moveRight(self):
-        if self.moveSlidesBtn.get() > 0 and self.slide_selected > 0 and self.slide_selected < len(self.buttons) - 1:
+        if (self.moveSlidesBtn.get() > 0 and self.slide_selected is not None
+           and self.slide_selected >= 0 and self.slide_selected < len(self.buttons) - 1):
             self.buttons.insert(self.slide_selected + 1, self.buttons.pop(self.slide_selected))
             self.sm.moveSlide(self.slide_selected, self.slide_selected + 1)
             self.slide_selected += 1
@@ -221,7 +230,7 @@ class App(tk.Tk):
             self.centerSlidesAroundSelected()
 
     def moveLeft(self):
-        if self.moveSlidesBtn.get() > 0 and self.slide_selected > 0:
+        if self.moveSlidesBtn.get() > 0 and self.slide_selected is not None and self.slide_selected > 0:
             self.buttons.insert(self.slide_selected - 1, self.buttons.pop(self.slide_selected))
             self.sm.moveSlide(self.slide_selected, self.slide_selected - 1)
             self.slide_selected -= 1
@@ -231,12 +240,12 @@ class App(tk.Tk):
             self.centerSlidesAroundSelected()
 
     def selectRight(self):
-        if self.slide_selected > 0 and self.slide_selected < len(self.buttons) - 1:
+        if self.slide_selected is not None and self.slide_selected >= 0 and self.slide_selected < len(self.buttons) - 1:
             self.onSlideClicked(self.slide_selected + 1)
             self.centerSlidesAroundSelected()
 
     def selectLeft(self):
-        if self.slide_selected > 0:
+        if self.slide_selected is not None and self.slide_selected > 0:
             self.onSlideClicked(self.slide_selected - 1)
             self.centerSlidesAroundSelected()
 
@@ -274,7 +283,7 @@ class App(tk.Tk):
             messagebox.askyesno("Restart",
                                 "To apply general slide settings to the current slideshow, "
                                 "the current slideshow needs to be reloaded. \n\nDo you want to reload the slides?"):
-            self.createSlideshow(input_files, audio_files)
+            threading.Thread(target=self.createSlideshow, args=(input_files, audio_files,), daemon=True).start()
 
     def slideshowSettingsWindow(self):
         filewin = SettingsFrame(self)
@@ -477,13 +486,13 @@ class App(tk.Tk):
         self.sm = None
         self.loadConfig()
 
-    def newSlideshow(self):
+    def newSlideshow(self, event=None):
         if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
             self.saveSlideshow()
         self.init()
         self.createSlideshow()
 
-    def openFile(self):
+    def openFile(self, event=None):
         if self.hasSlides() and messagebox.askyesno("New", "Do you want to save the current slideshow?"):
             self.saveSlideshow()
 
@@ -508,15 +517,14 @@ class App(tk.Tk):
                     audio_files = file_content["audio"]
                     logger.debug("get audio")
 
-            res = self.createSlideshow(input_files, audio_files)
-            if res:
-                self.title("%s (%s)" % (self.general_title, self.filename))
+            threading.Thread(target=self.createSlideshow, args=(input_files, audio_files,), daemon=True).start()
         except Exception as e:
             print("file must be a JSON file")
             print(e)
             logger.error("file %s must be a JSON file", self.filename)
 
     def createSlideshow(self, input_files=[], audio_files=[]):
+        self.showOverlay()
         self.resetGUI()
         self.generalmenu.entryconfig("Slideshow Settings", state="disabled")
 
@@ -527,12 +535,16 @@ class App(tk.Tk):
             self.generalmenu.entryconfig("Slideshow Settings", state="normal")
             self.filemenu.entryconfig("Save", state="normal")
             self.filemenu.entryconfig("Save As..", state="normal")
+            self.hideOverlay()
         except Exception as e:
+            self.hideOverlay()
             logger.error("Could not initiate Slideshow Manager, Error: %s", e)
             messagebox.showerror(
                 "Error", "Could not initiate Slideshow Manager.\nPlease check general Settings.\n\nError: %s" % (e))
             return False
 
+        if self.filename:
+            self.title("%s (%s)" % (self.general_title, self.filename))
         return True
 
     def resetGUI(self):
@@ -541,6 +553,20 @@ class App(tk.Tk):
         self.frameSlideSettings.clear()
         self.addSlideButton["state"] = tk.DISABLED
         self.addAudioButton["state"] = tk.DISABLED
+
+    def reloadVideoSlides(self):
+        self.showOverlay()
+        self.frameSlides.clear()
+        self.frameSlideSettings.clear()
+        self.loadSlideshowImagesRow()
+        self.hideOverlay()
+
+    def reloadAudioSlides(self):
+        self.showOverlay()
+        self.frameAudio.clear()
+        self.frameSlideSettings.clear()
+        self.loadSlideshowAudioRow()
+        self.hideOverlay()
 
     def loadSlideshowImagesRow(self):
         canvas2 = self.frameSlides.getCanvas()
@@ -922,7 +948,7 @@ class App(tk.Tk):
         overlayTransitionYCombo.bind("<<ComboboxSelected>>", self.checkEntryModification)
 
         # Right column (image preview)
-        imageframe = tk.LabelFrame(optionsFrame, text="Image")
+        imageframe = tk.LabelFrame(optionsFrame, text="Preview")
         imageframe.grid(row=0, column=1, rowspan=5, sticky=tk.NW, padx=5, pady=5)
 
         # get image path from button and create "bigger" preview
@@ -946,7 +972,7 @@ class App(tk.Tk):
     def getPreviewImage(self, img_path, zoom_direction_x=None, zoom_direction_y=None, zoom_direction_z=None,
                         zoom_rate=None, scale=None, pad_color='black', blurred_padding=False):
         output_ratio = float(self.slideshow_config["output_width"]) / float(self.slideshow_config["output_height"])
-        thumb_width = 250
+        thumb_width = 350
         thumb_height = int(thumb_width / output_ratio)
 
         slideImage = Image.open(img_path)
@@ -1323,13 +1349,14 @@ class App(tk.Tk):
             duration = self.sm.getAudioDuration() + self.sm.getVideoAudioDuration()
             self.audioDurationValue.set(self.formatDuration(duration))
 
-    def saveSlideshow(self):
+    def saveSlideshow(self, event=None):
         if self.sm:
             self.saveSlide()
             self.saveAudio()
             if not self.filename:
                 self.saveAs()
-            self.sm.saveConfig(self.filename)
+            if self.filename:
+                self.sm.saveConfig(self.filename)
 
     def saveAs(self):
         ftypes = [
@@ -1342,6 +1369,7 @@ class App(tk.Tk):
 
     def syncToAudio(self):
         logger.info("Sync slides durations to audio")
+        self.showOverlay()
         self.saveSlide()
         self.saveAudio()
         self.sm.adjustDurationsFromAudio()
@@ -1349,9 +1377,11 @@ class App(tk.Tk):
         self.loadSlideshowImagesRow()
         self.loadSlideshowAudioRow()
         self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
+        self.hideOverlay()
 
     def resetSlideDurations(self):
         logger.info("Reset slides durations to default")
+        self.showOverlay()
         self.saveSlide()
         self.saveAudio()
         self.sm.resetSlideDurations()
@@ -1359,6 +1389,7 @@ class App(tk.Tk):
         self.loadSlideshowImagesRow()
         self.loadSlideshowAudioRow()
         self.videoDurationValue.set(self.formatDuration(self.sm.getTotalDuration()))
+        self.hideOverlay()
 
     def createVideo(self):
         self.saveSlide()
@@ -1435,7 +1466,10 @@ class App(tk.Tk):
         # close popup
         progressPopup.destroy()
 
-    def addSlide(self):
+    def addSlide(self, event=None):
+        if self.sm is None:
+            return
+
         self.saveSlide()
         self.saveAudio()
         filetypes = [".%s" % type for type in self.slideshow_config["IMAGE_EXTENSIONS"]
@@ -1446,20 +1480,20 @@ class App(tk.Tk):
         ]
 
         filenames = askopenfilenames(filetypes=ftypes)
-        for file in list(filenames):
-            self.sm.addSlide(file, self.slide_selected)
-        self.frameSlides.clear()
-        self.frameSlideSettings.clear()
-        self.loadSlideshowImagesRow()
+        if len(filenames) > 0:
+            for file in list(filenames):
+                self.sm.addSlide(file, self.slide_selected)
+            threading.Thread(target=self.reloadVideoSlides, daemon=True).start()
 
     def deleteSlide(self):
         self.slide_changed = False
         self.sm.removeSlide(self.slide_selected)
-        self.frameSlides.clear()
-        self.frameSlideSettings.clear()
-        self.loadSlideshowImagesRow()
+        threading.Thread(target=self.reloadVideoSlides, daemon=True).start()
 
-    def addAudio(self):
+    def addAudio(self, event=None):
+        if self.sm is None:
+            return
+
         self.saveSlide()
         self.saveAudio()
         filetypes = [".%s" % type for type in self.slideshow_config["AUDIO_EXTENSIONS"]]
@@ -1469,18 +1503,15 @@ class App(tk.Tk):
         ]
 
         filenames = askopenfilenames(filetypes=ftypes)
-        for file in list(filenames):
-            self.sm.addAudio(file)
-        self.frameAudio.clear()
-        self.frameSlideSettings.clear()
-        self.loadSlideshowAudioRow()
+        if len(filenames) > 0:
+            for file in list(filenames):
+                self.sm.addAudio(file)
+            threading.Thread(target=self.reloadAudioSlides, daemon=True).start()
 
     def deleteAudio(self):
         self.audio_changed = False
         self.sm.removeAudio(self.audio_selected)
-        self.frameAudio.clear()
-        self.frameSlideSettings.clear()
-        self.loadSlideshowAudioRow()
+        threading.Thread(target=self.reloadAudioSlides, daemon=True).start()
 
     def formatDuration(self, seconds):
         s = int(seconds % 60)
@@ -1488,3 +1519,32 @@ class App(tk.Tk):
         h = int(seconds / (60 * 60)) % 24
 
         return '%02d:%02d:%02d' % (h, m, s)
+
+    def setMenuBarState(self, state="disabled"):
+        end = self.menubar.index("end")
+        if end is not None:
+            for i in range(end + 1):
+                self.menubar.entryconfig(i, state=state)
+
+    def updateOverlayPosition(self, event=None):
+        if self.overlay and self.overlay.winfo_exists():
+            self.overlay.geometry(f"{self.winfo_width()}x{self.winfo_height()}+{self.winfo_rootx()}+{self.winfo_rooty()}")
+
+    def showOverlay(self):
+        self.setMenuBarState('disabled')
+        self.overlay = tk.Frame(self, highlightthickness=0)
+        self.overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # Block input
+        self.overlay.bind("<Button>", lambda e: "break")
+        self.overlay.bind("<Key>", lambda e: "break")
+
+        progress = ttk.Progressbar(self.overlay, mode="indeterminate", length=200)
+        progress.place(relx=0.5, rely=0.5, anchor="center")
+        progress.start()
+
+    def hideOverlay(self):
+        self.overlay.destroy()
+        self.overlay = None
+        self.unbind("<Configure>")
+        self.setMenuBarState('normal')
